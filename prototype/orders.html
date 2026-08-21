@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Man Tailor — Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/print.css">
+</head>
+<body>
+
+<div id="sidebarMount"></div>
+
+<div class="main">
+  <div id="topbarMount"></div>
+
+  <div class="content">
+    <div class="hero-row">
+      <div>
+        <div class="hero-eyebrow">Order Studio</div>
+        <div class="hero-title">ALL ORDERS</div>
+        <div class="hero-date" id="orderCount"></div>
+      </div>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="new-order.html">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          New Order
+        </a>
+      </div>
+    </div>
+    <div class="stitch"></div>
+
+    <div class="filter-bar">
+      <input type="text" id="fSearch" placeholder="Search order no. or customer...">
+      <select id="fStatus">
+        <option value="">All Statuses</option>
+        <option value="progress">In Progress</option>
+        <option value="ready">Ready</option>
+        <option value="delivered">Delivered</option>
+      </select>
+      <select id="fKarigar"><option value="">All Karigars</option></select>
+      <input type="date" id="fFrom" title="Deadline from">
+      <input type="date" id="fTo" title="Deadline to">
+      <select id="fSort">
+        <option value="deadline-asc">Deadline: Soonest</option>
+        <option value="deadline-desc">Deadline: Latest</option>
+        <option value="assigned-desc">Newest Assigned</option>
+      </select>
+    </div>
+
+    <div class="panel">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Order No.</th>
+              <th>Customer</th>
+              <th>Karigar</th>
+              <th>Assigned</th>
+              <th>Deadline</th>
+              <th>Amount</th>
+              <th>Paid</th>
+              <th>Balance</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+      </div>
+      <div id="ordersEmpty"></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/seed.js"></script>
+<script src="js/shared.js"></script>
+<script>Shared.init('orders');</script>
+<script src="js/orders.js"></script>
+</body>
+</html>

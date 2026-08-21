@@ -1,0 +1,65 @@
+<?php
+
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\KarigarController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\UploadController;
+use Illuminate\Support\Facades\Route;
+
+// Auth
+Route::post('/auth/login', [AuthController::class, 'login']);
+
+Route::middleware('api.auth')->group(function () {
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::put('/auth/password', [SettingsController::class, 'changePassword']);
+
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index']);
+
+    // Customers
+    Route::get('/customers', [CustomerController::class, 'index']);
+    Route::post('/customers', [CustomerController::class, 'store']);
+    Route::get('/customers/{id}', [CustomerController::class, 'show']);
+    Route::put('/customers/{id}', [CustomerController::class, 'update']);
+    Route::get('/customers/{id}/measurements', [CustomerController::class, 'getMeasurements']);
+    Route::put('/customers/{id}/measurements/{templateKey}', [CustomerController::class, 'upsertMeasurement']);
+
+    // Karigars
+    Route::get('/karigars', [KarigarController::class, 'index']);
+    Route::post('/karigars', [KarigarController::class, 'store']);
+    Route::get('/karigars/{id}', [KarigarController::class, 'show']);
+    Route::put('/karigars/{id}', [KarigarController::class, 'update']);
+    Route::delete('/karigars/{id}', [KarigarController::class, 'destroy']);
+
+    // Orders
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
+    Route::put('/orders/{id}', [OrderController::class, 'update']);
+    Route::delete('/orders/{id}', [OrderController::class, 'destroy']);
+
+    // Payments
+    Route::get('/payments', [PaymentController::class, 'index']);
+    Route::post('/payments', [PaymentController::class, 'store']);
+    Route::get('/payments/summary', [PaymentController::class, 'summary']);
+    Route::get('/payments/balances', [PaymentController::class, 'balances']);
+
+    // Settings
+    Route::get('/settings', [SettingsController::class, 'show']);
+    Route::put('/settings', [SettingsController::class, 'update']);
+    Route::post('/settings/logo', [SettingsController::class, 'uploadLogo']);
+    Route::post('/settings/banner', [SettingsController::class, 'uploadBanner']);
+    Route::get('/templates', [SettingsController::class, 'getTemplates']);
+    Route::put('/templates/{key}', [SettingsController::class, 'updateTemplate']);
+
+    // Uploads
+    Route::post('/uploads/order/{id}', [UploadController::class, 'store']);
+    Route::get('/uploads/{path}', [UploadController::class, 'serve'])->where('path', '.*');
+    Route::delete('/uploads/{photoId}', [UploadController::class, 'destroy']);
+});

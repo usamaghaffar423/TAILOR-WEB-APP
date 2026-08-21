@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Man Tailor — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+
+<div id="sidebarMount"></div>
+
+<div class="main">
+  <div id="topbarMount"></div>
+
+  <div class="content">
+    <div class="hero-row">
+      <div>
+        <div class="hero-eyebrow">Order Studio</div>
+        <div class="hero-title">SETTINGS</div>
+      </div>
+    </div>
+    <div class="stitch"></div>
+
+    <!-- Shop Details -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">1</span>Shop Details</div>
+
+      <div class="form-grid cols-2" style="margin-top:16px;">
+        <div class="field">
+          <label>Shop Logo</label>
+          <div class="logo-upload">
+            <div class="logo-upload-preview" id="logoPreview">TM</div>
+            <div class="logo-upload-actions">
+              <button type="button" class="btn btn-outline btn-sm" id="btnLogoChange">Upload Logo</button>
+              <button type="button" class="btn btn-danger btn-sm" id="btnLogoRemove" style="display:none;">Remove</button>
+            </div>
+          </div>
+          <input type="file" id="logoInput" accept="image/*" style="display:none;">
+          <div class="hint">Shown in the sidebar brand mark.</div>
+        </div>
+        <div class="field">
+          <label>Shop Banner</label>
+          <div class="banner-upload-preview" id="bannerPreview">No banner uploaded</div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button type="button" class="btn btn-outline btn-sm" id="btnBannerChange">Upload Banner</button>
+            <button type="button" class="btn btn-danger btn-sm" id="btnBannerRemove" style="display:none;">Remove</button>
+          </div>
+          <input type="file" id="bannerInput" accept="image/*" style="display:none;">
+          <div class="hint">Shown as a letterhead on printed customer measurement sheets.</div>
+        </div>
+      </div>
+
+      <div class="form-grid" style="margin-top:16px;">
+        <div class="field"><label>Shop Name</label><input type="text" id="sName"></div>
+        <div class="field"><label>Phone</label><input type="text" id="sPhone"></div>
+        <div class="field span-3"><label>Address</label><input type="text" id="sAddress"></div>
+      </div>
+      <div class="hero-actions" style="justify-content:flex-end;margin-top:16px;">
+        <button class="btn btn-primary" id="btnSaveShop">Save Shop Details</button>
+      </div>
+    </div>
+
+    <!-- Karigar management -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">2</span>Karigar Management</div>
+      <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div class="hint" style="font-size:12.5px;color:var(--text-muted);">Add, view, and manage karigars — capacity, speciality, and delivery performance.</div>
+        <a class="btn btn-outline" href="karigars.html">Manage Karigars →</a>
+      </div>
+    </div>
+
+    <!-- Measurement template editor -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">3</span>Measurement Template Editor</div>
+      <div class="form-grid cols-2" style="margin-top:14px;">
+        <div class="field span-2">
+          <label>Template</label>
+          <select id="tplSelect"></select>
+        </div>
+      </div>
+      <div id="tplFields" style="margin-top:16px;display:flex;flex-direction:column;gap:10px;"></div>
+      <div class="hero-actions" style="justify-content:space-between;margin-top:16px;">
+        <button class="btn btn-outline" id="btnAddField">+ Add Field</button>
+        <button class="btn btn-primary" id="btnSaveTemplate">Save Template Changes</button>
+      </div>
+    </div>
+
+    <!-- Theme default -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">4</span>Theme Default</div>
+      <div class="swatch-group" id="themeDefaultGroup" style="margin-top:14px;">
+        <div class="swatch-chip" data-val="dark">Dark</div>
+        <div class="swatch-chip" data-val="light">Light</div>
+      </div>
+      <div class="hint" style="margin-top:10px;">Applies when no theme choice has been saved on this browser yet.</div>
+    </div>
+  </div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/seed.js"></script>
+<script src="js/shared.js"></script>
+<script>Shared.init('settings');</script>
+<script src="js/settings.js"></script>
+</body>
+</html>

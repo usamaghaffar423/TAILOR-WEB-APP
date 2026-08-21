@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Man Tailor — Karigar Detail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/print.css">
+</head>
+<body>
+
+<div id="sidebarMount"></div>
+
+<div class="main">
+  <div id="topbarMount"></div>
+
+  <div class="content">
+    <div class="hero-row">
+      <div>
+        <div class="hero-eyebrow"><a href="karigars.html" style="color:var(--red);text-decoration:none;">Karigars</a> / Detail</div>
+        <div class="hero-title" id="karName">—</div>
+        <div class="hero-date mono" id="karSub"></div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-outline" id="btnEditKarigar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg>
+          Edit Karigar
+        </button>
+      </div>
+    </div>
+    <div class="stitch"></div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Active Orders</div>
+        <div class="kpi-num" id="kAct">0</div>
+        <div class="kpi-sub" id="kActSub"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Orders</div>
+        <div class="kpi-num" id="kTotal">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Delivered</div>
+        <div class="kpi-num" id="kDelivered">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">On-Time Rate</div>
+        <div class="kpi-num" id="kRate">—</div>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <select id="fMonth"><option value="">All Months</option></select>
+      <select id="fStatus">
+        <option value="">All Statuses</option>
+        <option value="progress">In Progress</option>
+        <option value="ready">Ready</option>
+        <option value="delivered">Delivered</option>
+      </select>
+    </div>
+
+    <div class="panel">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Order No.</th><th>Customer</th><th>Assigned</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="karOrders"></tbody>
+        </table>
+      </div>
+      <div id="karOrdersEmpty"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Karigar Modal -->
+<div class="modal-overlay" id="modalEditKarigar">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Edit Karigar</h3>
+      <button class="modal-close" data-close-modal="modalEditKarigar">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Full Name</label><input type="text" id="ekName"></div>
+      <div class="field"><label>Phone</label><input type="text" id="ekPhone"></div>
+      <div class="field"><label>Speciality</label><input type="text" id="ekSpeciality"></div>
+      <div class="field"><label>Max Capacity (active orders)</label><input type="number" id="ekCapacity" min="1"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" data-close-modal="modalEditKarigar">Cancel</button>
+      <button class="btn btn-primary" id="ekSave">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/seed.js"></script>
+<script src="js/shared.js"></script>
+<script>Shared.init('karigars');</script>
+<script src="js/karigar-detail.js"></script>
+</body>
+</html>

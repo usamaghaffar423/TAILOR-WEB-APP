@@ -1,0 +1,20 @@
+/* Print stylesheet — used for the customer measurement sheet.
+   Hides app chrome, shows only elements marked .print-area. */
+@media print{
+  body *{visibility:hidden;}
+  .print-area, .print-area *{visibility:visible;}
+  .print-area{
+    position:absolute; left:0; top:0; width:100%; padding:0; margin:0; background:#fff; color:#111;
+  }
+  .sidebar, .topbar, .hero-actions, .no-print{display:none !important;}
+  .print-banner{display:block !important;}
+  .print-area .stitch{background-image:repeating-linear-gradient(90deg, #E51A2E 0 10px, transparent 10px 18px);}
+  .print-sheet{border:none !important; box-shadow:none !important; padding:0 !important;}
+  a[href]::after{content:"";}
+  /* Advanced Measurements is force-opened via the beforeprint handler in
+     shared.js (closed <details> content can't be reliably revealed by CSS
+     alone); this just cleans up its printed appearance once open. */
+  .adv-toggle{border:none !important; padding-top:6px !important;}
+  .adv-toggle summary{display:none !important;}
+  @page{margin:16mm;}
+}

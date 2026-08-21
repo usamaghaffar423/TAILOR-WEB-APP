@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Man Tailor — Karigars</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+
+<div id="sidebarMount"></div>
+
+<div class="main">
+  <div id="topbarMount"></div>
+
+  <div class="content">
+    <div class="hero-row">
+      <div>
+        <div class="hero-eyebrow">Order Studio</div>
+        <div class="hero-title">KARIGARS</div>
+        <div class="hero-date" id="karCount"></div>
+      </div>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="btnAddKarigar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Add Karigar
+        </button>
+      </div>
+    </div>
+    <div class="stitch"></div>
+
+    <div class="filter-bar">
+      <input type="text" id="fSearch" placeholder="Search name or speciality...">
+    </div>
+
+    <div id="karGrid" class="card-grid"></div>
+    <div id="karEmpty"></div>
+  </div>
+</div>
+
+<!-- Add Karigar Modal -->
+<div class="modal-overlay" id="modalAddKarigar">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Add Karigar</h3>
+      <button class="modal-close" data-close-modal="modalAddKarigar">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Full Name</label><input type="text" id="nkName" placeholder="e.g. Rasheed Khan"></div>
+      <div class="field"><label>Phone</label><input type="text" id="nkPhone" placeholder="+92 3xx xxxxxxx"></div>
+      <div class="field"><label>Speciality</label><input type="text" id="nkSpeciality" placeholder="e.g. Shalwar Kameez"></div>
+      <div class="field"><label>Max Capacity (active orders)</label><input type="number" id="nkCapacity" placeholder="6" min="1"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" data-close-modal="modalAddKarigar">Cancel</button>
+      <button class="btn btn-primary" id="nkSave">Save Karigar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/seed.js"></script>
+<script src="js/shared.js"></script>
+<script>Shared.init('karigars');</script>
+<script src="js/karigars.js"></script>
+</body>
+</html>

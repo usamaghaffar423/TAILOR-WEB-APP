@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Top Man Tailor — New Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shared.css">
+</head>
+<body>
+
+<div id="sidebarMount"></div>
+
+<div class="main">
+  <div id="topbarMount"></div>
+
+  <div class="content">
+    <div class="hero-row">
+      <div>
+        <div class="hero-eyebrow">Order Studio</div>
+        <div class="hero-title">NEW ORDER</div>
+        <div class="hero-date">Fill in customer, measurements and style details</div>
+      </div>
+    </div>
+    <div class="stitch"></div>
+
+    <!-- Existing customer search -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">↻</span>Existing Customer?</div>
+      <div class="form-grid cols-2" style="margin-top:14px;">
+        <div class="field span-2">
+          <label>Search by name, phone, or customer ID</label>
+          <input type="text" id="custSearch" placeholder="Start typing to find a repeat customer...">
+          <div id="custResults" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;display:none;margin-top:6px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. Customer Details -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">1</span>Customer Details</div>
+      <div class="form-grid">
+        <div class="field"><label>Full Name</label><input type="text" id="cName" placeholder="e.g. Ahmad Khan"></div>
+        <div class="field"><label>Phone</label><input type="text" id="cPhone" placeholder="+92 3xx xxxxxxx"></div>
+        <div class="field mono"><label>Customer ID</label><input type="text" id="cId" disabled></div>
+        <div class="field span-3"><label>Address</label><input type="text" id="cAddress" placeholder="Street, area, city"></div>
+      </div>
+    </div>
+
+    <!-- 2. Measurements -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">2</span>Measurements</div>
+      <div class="form-grid cols-2">
+        <div class="field span-2">
+          <label>Garment Template</label>
+          <select id="mTemplate"></select>
+        </div>
+      </div>
+      <div class="form-grid cols-4" id="measFields" style="margin-top:16px;"></div>
+      <div class="form-grid cols-2" style="margin-top:14px;">
+        <div class="field span-2"><label>Notes</label><textarea id="mNotes" placeholder="Fit preferences, special instructions..."></textarea></div>
+      </div>
+    </div>
+
+    <!-- 3. Style Customization -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">3</span>Style Customization</div>
+      <div class="grid-2" style="margin-top:16px;align-items:start;">
+        <div>
+          <div class="field"><label>Collar</label><div class="style-option-grid" id="swCollar"></div></div>
+          <div class="field" style="margin-top:16px;"><label>Sleeve</label><div class="style-option-grid" id="swSleeve"></div></div>
+          <div class="field" style="margin-top:16px;"><label>Cuff</label><div class="style-option-grid" id="swCuff"></div></div>
+
+          <div id="kameezOnlyFields">
+            <div class="field" style="margin-top:16px;"><label>Garment Style</label><div class="style-option-grid" id="swRegion"></div></div>
+            <div class="field" style="margin-top:16px;"><label>Fit</label><div class="style-option-grid" id="swFit"></div></div>
+            <div class="field" style="margin-top:16px;"><label>Length</label><div class="style-option-grid" id="swLength"></div></div>
+            <div class="field" id="pukhtoonShalwarField" style="margin-top:16px;"><label>Shalwar Style (Pukhtoon)</label><div class="style-option-grid" id="swPukhtoonShalwar"></div></div>
+            <div class="field" id="punjabiShalwarField" style="margin-top:16px;"><label>Shalwar Style (Punjabi)</label><div class="style-option-grid" id="swPunjabiShalwar"></div></div>
+            <div class="field" id="moriField" style="margin-top:16px;"><label>Mori / Pauncha (Bottom Opening)</label><div class="style-option-grid" id="swMori"></div></div>
+            <div class="field" style="margin-top:16px;"><label>Daman / Hem Style</label><div class="style-option-grid" id="swDaman"></div></div>
+          </div>
+
+          <div class="field" style="margin-top:16px;">
+            <label>Fabric Color</label>
+            <div class="color-dot-group" id="colorDots"></div>
+            <input type="color" id="customColorInput" value="#E51A2E" style="display:none;">
+          </div>
+
+          <details class="adv-toggle">
+            <summary>More Style Options</summary>
+            <div class="adv-toggle-body">
+              <div class="field"><label>Neck</label><div class="style-option-grid" id="swNeck"></div></div>
+              <div class="field" style="margin-top:16px;"><label>Front Style</label><div class="style-option-grid" id="swPlacket"></div></div>
+              <div class="field" style="margin-top:16px;"><label>Qameez Pocket</label><div class="style-option-grid" id="swPocket"></div></div>
+              <div id="kameezOnlyAdvanced">
+                <div class="field" style="margin-top:16px;"><label>Shalwar Pocket</label><div class="style-option-grid" id="swPocketShalwar"></div></div>
+                <div class="field" id="waistTypeField" style="margin-top:16px;"><label>Waist Type (Pukhtoon)</label><div class="style-option-grid" id="swWaistType"></div></div>
+              </div>
+              <div class="form-grid cols-2" style="margin-top:16px;">
+                <div class="field"><label>Pocket Position</label><div class="swatch-group" id="swPocketPosition"></div></div>
+                <div class="field"><label>Pocket Depth</label><div class="swatch-group" id="swPocketDepth"></div></div>
+              </div>
+              <div class="form-grid cols-2" style="margin-top:16px;">
+                <div class="field"><label>Fabric</label><select id="sFabric"></select></div>
+                <div class="field"><label>Button Style</label><select id="sButtonStyle"></select></div>
+                <div class="field"><label>Button Count</label><select id="sButtonCount"></select></div>
+              </div>
+            </div>
+          </details>
+        </div>
+        <div class="panel" style="background:var(--surface-2); position:sticky; top:90px;">
+          <div class="preview-panel" id="previewPanel"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Photo Attach -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">4</span>Reference Photos</div>
+      <div style="margin-top:14px;">
+        <label class="photo-drop" for="photoInput" id="photoDrop" tabindex="0">
+          <div class="photo-drop-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          </div>
+          <div class="photo-drop-text">Click to upload or drag &amp; drop</div>
+          <div class="photo-drop-hint">Fabric samples or design references · PNG, JPG · multiple allowed</div>
+        </label>
+        <input type="file" id="photoInput" accept="image/*" multiple style="display:none;">
+        <!-- Prototype only: photos are stored as base64 in localStorage. Production build will upload to R2/S3 and store a URL reference instead. -->
+        <div class="photo-count" id="photoCount"></div>
+        <div class="photo-thumbs" id="photoThumbs"></div>
+      </div>
+    </div>
+
+    <!-- 5. Assign & Deadline -->
+    <div class="form-section">
+      <div class="form-section-title"><span class="num">5</span>Assign &amp; Deadline</div>
+      <div class="form-grid">
+        <div class="field"><label>Karigar</label><select id="aKarigar"></select></div>
+        <div class="field"><label>Deadline</label><input type="date" id="aDeadline"></div>
+        <div class="field"><label>Order Status</label>
+          <select id="aStatus">
+            <option value="progress">In Progress</option>
+            <option value="ready">Ready</option>
+            <option value="delivered">Delivered</option>
+          </select>
+        </div>
+        <div class="field"><label>Total Order Amount (Rs)</label><input type="number" id="aTotal" min="0" placeholder="e.g. 4500"></div>
+        <div class="field">
+          <label>Payment Status</label>
+          <select id="aPaymentStatus">
+            <option value="none">No Payment Yet</option>
+            <option value="partial">Partial Payment (Advance)</option>
+            <option value="full">Paid in Full</option>
+          </select>
+          <div class="hint">Most customers pay on delivery — "No Payment Yet" is fine for now.</div>
+        </div>
+        <div class="field" id="aMethodField">
+          <label>Payment Method</label>
+          <select id="aMethod">
+            <option value="cash">Cash</option>
+            <option value="easypaisa">Easypaisa</option>
+            <option value="jazzcash">JazzCash</option>
+            <option value="bank">Bank</option>
+          </select>
+        </div>
+        <div class="field" id="aAmountField"><label>Amount Paid Now (Rs)</label><input type="number" id="aAdvance" min="0" placeholder="e.g. 2000"></div>
+        <div class="field"><label>Remaining Balance (Rs)</label><input type="text" id="aRemaining" class="mono" disabled></div>
+      </div>
+    </div>
+
+    <div class="hero-actions" style="justify-content:flex-end;margin-bottom:40px;">
+      <a class="btn btn-outline" href="orders.html">Cancel</a>
+      <button class="btn btn-primary" id="btnSaveOrder">Save Order</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/seed.js"></script>
+<script src="js/shared.js"></script>
+<script>Shared.init('new-order');</script>
+<script src="js/new-order.js"></script>
+</body>
+</html>
