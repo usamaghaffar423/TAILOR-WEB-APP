@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/auth';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 
@@ -124,6 +125,10 @@ export function Sidebar({ open, onOverlayClick }: SidebarProps) {
   const shopName = shop?.name || 'Top Man Tailor';
   const mark = shopName.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
 
+  const location = useLocation();
+  const onRetailRoute = location.pathname.startsWith('/retail');
+  const [retailOpen, setRetailOpen] = useState(onRetailRoute);
+
   return (
     <>
       <aside className={`sidebar${open ? ' open' : ''}`}>
@@ -150,24 +155,48 @@ export function Sidebar({ open, onOverlayClick }: SidebarProps) {
               {item.label}
             </NavLink>
           ))}
-        </nav>
-        <div style={{ padding: '10px 18px 4px', fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', color: 'var(--text-faint)' }}>
-          دکان (Shop)
-        </div>
-        <nav className="nav">
-          {RETAIL_NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-            >
+
+          <button
+            type="button"
+            className={`nav-item${onRetailRoute ? ' active' : ''}`}
+            onClick={() => setRetailOpen((v) => !v)}
+            aria-expanded={retailOpen}
+            style={{ justifyContent: 'space-between' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                {item.icon}
+                <path d="M3 9l1.5-5h15L21 9" />
+                <path d="M3 9h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path d="M9 13a3 3 0 006 0" />
               </svg>
-              {item.label}
-            </NavLink>
-          ))}
+              Shop
+            </span>
+            <svg
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+              style={{ width: 14, height: 14, flexShrink: 0, transition: 'transform .15s', transform: retailOpen ? 'rotate(90deg)' : 'none' }}
+            >
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+
+          {retailOpen && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {RETAIL_NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+                  style={{ paddingLeft: 40, fontSize: 12.5 }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ width: 15, height: 15 }}>
+                    {item.icon}
+                  </svg>
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+          )}
         </nav>
         <div className="sidebar-foot">
           <b>Order Studio</b>
