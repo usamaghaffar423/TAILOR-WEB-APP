@@ -45,6 +45,15 @@ function displayValue(val: string | string[] | undefined): string {
   return val || '—';
 }
 
+const sectionHead: React.CSSProperties = {
+  fontWeight: 700,
+  fontSize: 16,
+  background: '#eee',
+  padding: '8px 14px',
+  marginBottom: 12,
+  borderRight: '4px solid #111',
+};
+
 export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
   const { data: orderRes, isLoading, error } = useQuery({
     queryKey: ['orders', orderId],
@@ -68,7 +77,7 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
   const template = templatesRes?.data.find((t) => t.template_key === order?.measurement_snapshot.template_key) || null;
   const urduStyleRows = order ? buildUrduStyleRows(order) : [];
 
-  const groups = template ? [...new Set(template.fields.map((f) => f.group || 'Measurements'))] : [];
+  const groups = template ? [...new Set(template.fields.map((f) => f.group || 'پیمائش'))] : [];
   const showGroups = groups.length > 1;
   let lastGroup: string | null = null;
 
@@ -94,60 +103,91 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
         <div
           className="karigar-bill-print-area"
           dir="rtl"
-          style={{ background: '#fff', color: '#111', padding: 20, borderRadius: 8, textAlign: 'right' }}
+          style={{ background: '#fff', color: '#111', padding: '36px 40px', textAlign: 'right', fontSize: 15, lineHeight: 1.65 }}
         >
-          <div style={{ fontSize: 19, fontWeight: 700, marginBottom: 14, borderBottom: '1px solid #ddd', paddingBottom: 10 }}>
-            {shop?.name || 'Top Man Tailor'}
+          <div style={{ textAlign: 'center', marginBottom: 28, borderBottom: '3px solid #111', paddingBottom: 18 }}>
+            <div style={{ fontSize: 32, fontWeight: 700 }}>{shop?.name || 'Top Man Tailor'}</div>
+            <div style={{ fontSize: 15, color: '#555', marginTop: 6 }}>ورک آرڈر — کاریگر کاپی</div>
           </div>
 
-          <div style={{ fontSize: 13, marginBottom: 16, lineHeight: 1.9 }}>
-            <div>آرڈر نمبر: <b>{order.order_no}</b></div>
-            <div>تاریخ: {formatDate(order.created_at)}</div>
-            <div>آخری تاریخ: <b>{formatDate(order.deadline)}</b></div>
-            <div>گاہک کا نام: {order.customer?.name || '—'}</div>
-            <div>فون نمبر: {order.customer?.phone || '—'}</div>
-            <div>لباس کی قسم: {template?.label || order.measurement_snapshot.template_label}</div>
-          </div>
+          <table style={{ width: '100%', marginBottom: 26, borderCollapse: 'collapse' }}>
+            <tbody>
+              <tr>
+                <td style={{ width: '50%', verticalAlign: 'top', paddingLeft: 20 }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 10, borderBottom: '1px solid #ccc', paddingBottom: 6 }}>آرڈر کی تفصیلات</div>
+                  <div style={{ marginBottom: 7 }}>آرڈر نمبر: <b><bdi>{order.order_no}</bdi></b></div>
+                  <div style={{ marginBottom: 7 }}>تاریخ: <bdi>{formatDate(order.created_at)}</bdi></div>
+                  <div style={{ marginBottom: 7 }}>آخری تاریخ: <b style={{ fontSize: 17 }}><bdi>{formatDate(order.deadline)}</bdi></b></div>
+                  <div>لباس کی قسم: <b><bdi>{template?.label || order.measurement_snapshot.template_label || '—'}</bdi></b></div>
+                </td>
+                <td style={{ width: '50%', verticalAlign: 'top' }}>
+                  <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 10, borderBottom: '1px solid #ccc', paddingBottom: 6 }}>گاہک کی تفصیلات</div>
+                  <div style={{ marginBottom: 7 }}>نام: <b><bdi>{order.customer?.name || '—'}</bdi></b></div>
+                  <div>فون: <bdi>{order.customer?.phone || '—'}</bdi></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
           {template && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, marginBottom: 6, fontSize: 14 }}>پیمائش</div>
-              <div style={{ fontSize: 13, lineHeight: 1.9 }}>
-                {template.fields.map((f) => {
-                  const g = f.group || 'Measurements';
-                  const heading = showGroups && g !== lastGroup;
-                  if (heading) lastGroup = g;
-                  return (
-                    <Fragment key={f.key}>
-                      {heading && <div style={{ fontWeight: 700, marginTop: 8 }}>{g}</div>}
-                      <div>{f.label}: <b>{displayValue(order.measurement_snapshot.fields?.[f.key])}</b></div>
-                    </Fragment>
-                  );
-                })}
-              </div>
+            <div style={{ marginBottom: 26 }}>
+              <div style={sectionHead}>پیمائش</div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14.5 }}>
+                <tbody>
+                  {template.fields.map((f) => {
+                    const g = f.group || 'پیمائش';
+                    const heading = showGroups && g !== lastGroup;
+                    if (heading) lastGroup = g;
+                    return (
+                      <Fragment key={f.key}>
+                        {heading && (
+                          <tr>
+                            <td colSpan={2} style={{ fontWeight: 700, fontSize: 14, color: '#555', paddingTop: lastGroup !== groups[0] ? 14 : 0, paddingBottom: 4 }}>
+                              {g}
+                            </td>
+                          </tr>
+                        )}
+                        <tr>
+                          <td style={{ padding: '7px 10px', borderBottom: '1px solid #eee', width: '55%' }}>{f.label}</td>
+                          <td style={{ padding: '7px 10px', borderBottom: '1px solid #eee', fontWeight: 700 }}><bdi>{displayValue(order.measurement_snapshot.fields?.[f.key])}</bdi></td>
+                        </tr>
+                      </Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
               {order.measurement_snapshot.notes && (
-                <div style={{ marginTop: 8, fontSize: 12.5 }}>نوٹس: {order.measurement_snapshot.notes}</div>
+                <div style={{ marginTop: 10, fontSize: 13.5, background: '#f7f7f7', padding: '8px 12px', borderRadius: 4 }}>نوٹس: <bdi>{order.measurement_snapshot.notes}</bdi></div>
               )}
             </div>
           )}
 
           {urduStyleRows.length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, marginBottom: 6, fontSize: 14 }}>اسٹائل کی تفصیلات</div>
-              <div style={{ fontSize: 13, lineHeight: 1.9 }}>
+            <div style={{ marginBottom: 26 }}>
+              <div style={sectionHead}>اسٹائل کی تفصیلات</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                 {urduStyleRows.map(([label, value]) => (
-                  <div key={label}>{label}: <b>{value}</b></div>
+                  <div key={label} style={{ border: '1px solid #ddd', borderRadius: 6, padding: '9px 12px' }}>
+                    <div style={{ fontSize: 11.5, color: '#777' }}>{label}</div>
+                    <div style={{ fontSize: 14.5, fontWeight: 700 }}><bdi>{value}</bdi></div>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div style={{ fontSize: 13, marginBottom: 30 }}>
-            <div>کاریگر کا نام: {order.karigar?.name || '—'}</div>
-            <div>تفویض کردہ تاریخ: {formatDate(order.assigned_date)}</div>
-          </div>
+          <table style={{ width: '100%', marginTop: 10, fontSize: 15, borderTop: '1px solid #ccc', paddingTop: 14 }}>
+            <tbody>
+              <tr>
+                <td style={{ paddingTop: 14 }}>کاریگر: <b><bdi>{order.karigar?.name || '—'}</bdi></b></td>
+                <td style={{ paddingTop: 14, textAlign: 'left' }}>تفویض کردہ تاریخ: <bdi>{formatDate(order.assigned_date)}</bdi></td>
+              </tr>
+            </tbody>
+          </table>
 
-          <div style={{ fontSize: 14, marginTop: 40 }}>دستخط کاریگر: _______________</div>
+          <div style={{ marginTop: 70, fontSize: 16, borderTop: '1px solid #111', paddingTop: 16, width: 300 }}>
+            دستخط کاریگر: _______________
+          </div>
         </div>
       )}
     </Dialog>

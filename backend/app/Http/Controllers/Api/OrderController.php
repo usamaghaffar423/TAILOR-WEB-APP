@@ -7,6 +7,7 @@ use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Requests\UpdateOrderStatusRequest;
 use App\Models\Measurement;
+use App\Models\MeasurementTemplate;
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Http\JsonResponse;
@@ -83,16 +84,23 @@ class OrderController extends Controller
     public function store(StoreOrderRequest $request): JsonResponse
     {
         try {
+            $templateKey = $request->input('template_key');
             $measurement = Measurement::query()
                 ->where('customer_id', $request->input('customer_id'))
-                ->where('template_key', $request->input('template_key'))
+                ->where('template_key', $templateKey)
                 ->first();
+            $template = MeasurementTemplate::query()->where('template_key', $templateKey)->first();
 
             $order = Order::query()->create([
                 'order_no' => $this->nextOrderNo(),
                 'customer_id' => $request->input('customer_id'),
                 'style' => $request->input('style'),
-                'measurement_snapshot' => $measurement?->fields ?? [],
+                'measurement_snapshot' => [
+                    'template_key' => $templateKey,
+                    'template_label' => $template->label ?? $templateKey,
+                    'fields' => $measurement?->fields ?? [],
+                    'notes' => $measurement?->notes,
+                ],
                 'karigar_id' => $request->input('karigar_id'),
                 'assigned_date' => Carbon::today()->toDateString(),
                 'deadline' => $request->input('deadline'),

@@ -548,7 +548,25 @@ table.data-table tbody tr.clickable:hover{background:var(--surface-2);}
 .karigar-bill-print-area {
   font-family: 'Noto Nastaliq Urdu', 'Inter', sans-serif;
 }
+/* Wider on-screen preview for the two bills — closer to actual page
+   proportions than the standard .modal-box.wide (640px) used elsewhere. */
+.modal-box:has(.customer-bill-print-area),
+.modal-box:has(.karigar-bill-print-area) {
+  max-width: 860px;
+}
 @media print {
   .customer-bill-print-area { display: block !important; }
   .karigar-bill-print-area { display: block !important; }
+  /* Let the bill fill the full printed page instead of staying constrained
+     to the on-screen modal width/height. */
+  .modal-box:has(.customer-bill-print-area),
+  .modal-box:has(.karigar-bill-print-area) {
+    max-width: none !important;
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
 }
