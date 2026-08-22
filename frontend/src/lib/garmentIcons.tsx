@@ -404,3 +404,19 @@ export const WHATSAPP_ICON = (
     <path d="M12 2a10 10 0 00-8.6 15L2 22l5.2-1.4A10 10 0 1012 2z" fill="none" stroke="currentColor" strokeWidth={1.6} />
   </svg>
 );
+export const CUSTOMER_BILL_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2h12v18l-3-2-3 2-3-2-3 2V2z" />
+    <line x1={9} y1={7} x2={15} y2={7} />
+    <line x1={9} y1={11} x2={15} y2={11} />
+  </svg>
+);
+export const KARIGAR_BILL_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+    <rect x={5} y={4} width={14} height={17} rx={2} />
+    <path d="M9 2h6v3H9z" />
+    <line x1={8} y1={10} x2={16} y2={10} />
+    <line x1={8} y1={14} x2={16} y2={14} />
+    <line x1={8} y1={18} x2={13} y2={18} />
+  </svg>
+);

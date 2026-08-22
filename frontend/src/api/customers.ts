@@ -34,7 +34,7 @@ export const customersApi = {
   getMeasurements: (id: number) =>
     apiFetch<{ data: Measurement[] }>(`/customers/${id}/measurements`),
 
-  upsertMeasurement: (id: number, templateKey: string, fields: Record<string, string>, notes?: string | null) =>
+  upsertMeasurement: (id: number, templateKey: string, fields: Record<string, string | string[]>, notes?: string | null) =>
     apiFetch<{ data: Measurement }>(`/customers/${id}/measurements/${templateKey}`, {
       method: 'PUT',
       body: JSON.stringify({ fields, notes }),

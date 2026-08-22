@@ -3,8 +3,15 @@ import type { MeasurementTemplate } from '@/types';
 
 interface MeasurementBlockProps {
   template: MeasurementTemplate;
-  fields: Record<string, string>;
+  fields: Record<string, string | string[]>;
   notes?: string | null;
+}
+
+function displayValue(val: string | string[] | undefined): string {
+  if (Array.isArray(val)) {
+    return val.length > 0 ? val.join(' / ') : '—';
+  }
+  return val || '—';
 }
 
 export function MeasurementBlock({ template, fields, notes }: MeasurementBlockProps) {
@@ -32,7 +39,7 @@ export function MeasurementBlock({ template, fields, notes }: MeasurementBlockPr
               )}
               <div className="oc-meas-item">
                 <span className="k">{f.label}</span>
-                <span className="v mono">{fields?.[f.key] || '—'}</span>
+                <span className="v mono">{displayValue(fields?.[f.key])}</span>
               </div>
             </Fragment>
           );
@@ -46,7 +53,7 @@ export function MeasurementBlock({ template, fields, notes }: MeasurementBlockPr
             {advanced.map((f) => (
               <div key={f.key} className="oc-meas-item">
                 <span className="k">{f.label}</span>
-                <span className="v mono">{fields?.[f.key] || '—'}</span>
+                <span className="v mono">{displayValue(fields?.[f.key])}</span>
               </div>
             ))}
           </div>

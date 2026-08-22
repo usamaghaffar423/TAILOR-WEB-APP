@@ -49,7 +49,7 @@ export interface Measurement {
   id: number;
   customer_id: number;
   template_key: string;
-  fields: Record<string, string>;
+  fields: Record<string, string | string[]>;
   notes: string | null;
   updated_at: string;
 }
@@ -91,7 +91,7 @@ export interface OrderStyle {
 export interface MeasurementSnapshot {
   template_key: string;
   template_label: string;
-  fields: Record<string, string>;
+  fields: Record<string, string | string[]>;
   notes: string | null;
 }
 

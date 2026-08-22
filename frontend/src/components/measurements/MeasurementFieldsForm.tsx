@@ -3,8 +3,8 @@ import type { MeasurementTemplate } from '@/types';
 
 interface MeasurementFieldsFormProps {
   template: MeasurementTemplate;
-  fields: Record<string, string>;
-  onFieldChange: (key: string, value: string) => void;
+  fields: Record<string, string | string[]>;
+  onFieldChange: (key: string, value: string | string[]) => void;
 }
 
 export function MeasurementFieldsForm({ template, fields, onFieldChange }: MeasurementFieldsFormProps) {
@@ -15,16 +15,42 @@ export function MeasurementFieldsForm({ template, fields, onFieldChange }: Measu
   let lastGroup: string | null = null;
 
   function fieldInput(key: string, label: string) {
+    const raw = fields[key];
+    const values = Array.isArray(raw) ? raw : [raw ?? ''];
+    const list = values.length > 0 ? values : [''];
+
+    function updateAt(idx: number, val: string) {
+      const next = [...list];
+      next[idx] = val;
+      onFieldChange(key, next.length === 1 ? next[0] : next);
+    }
+    function addEntry() {
+      onFieldChange(key, [...list, '']);
+    }
+    function removeAt(idx: number) {
+      const next = list.filter((_, i) => i !== idx);
+      onFieldChange(key, next.length === 1 ? next[0] : next);
+    }
+
     return (
       <div className="field">
         <label>{label}</label>
-        <input
-          type="text"
-          className="mono"
-          value={fields[key] || ''}
-          placeholder="in inches"
-          onChange={(e) => onFieldChange(key, e.target.value)}
-        />
+        {list.map((val, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 6, marginBottom: idx < list.length - 1 ? 6 : 0 }}>
+            <input
+              type="text"
+              className="mono"
+              value={val}
+              placeholder="in inches"
+              onChange={(e) => updateAt(idx, e.target.value)}
+              style={{ flex: 1 }}
+            />
+            <button type="button" className="row-icon-btn" title="Add value" onClick={addEntry}>+</button>
+            {idx > 0 && (
+              <button type="button" className="row-icon-btn" title="Remove value" onClick={() => removeAt(idx)}>&minus;</button>
+            )}
+          </div>
+        ))}
       </div>
     );
   }

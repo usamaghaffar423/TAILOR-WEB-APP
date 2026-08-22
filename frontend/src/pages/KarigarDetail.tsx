@@ -10,9 +10,11 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { OrderCardModal } from '@/components/orders/OrderCardModal';
+import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
+import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
 import { EditKarigarModal } from '@/components/karigars/EditKarigarModal';
-import { WHATSAPP_ICON, PAYMENT_ICON } from '@/lib/garmentIcons';
+import { WHATSAPP_ICON, PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON } from '@/lib/garmentIcons';
 import { formatDateShort } from '@/lib/format';
 import { sendOrderWhatsApp } from '@/lib/orderCard';
 import type { OrderStatus } from '@/types';
@@ -27,6 +29,8 @@ export default function KarigarDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [cardOrderId, setCardOrderId] = useState<number | null>(null);
   const [payOrderId, setPayOrderId] = useState<number | null>(null);
+  const [customerBillOrderId, setCustomerBillOrderId] = useState<number | null>(null);
+  const [karigarBillOrderId, setKarigarBillOrderId] = useState<number | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['karigars', karigarId, month],
@@ -136,6 +140,8 @@ export default function KarigarDetail() {
                       </button>
                       <button className="row-icon-btn" title="Send order to karigar on WhatsApp" onClick={() => handleWhatsApp(o.id)}>{WHATSAPP_ICON}</button>
                       <button className="row-icon-btn" title="Add payment" onClick={() => setPayOrderId(o.id)}>{PAYMENT_ICON}</button>
+                      <button className="row-icon-btn" title="Customer Bill" onClick={() => setCustomerBillOrderId(o.id)}>{CUSTOMER_BILL_ICON}</button>
+                      <button className="row-icon-btn" title="Karigar Bill" onClick={() => setKarigarBillOrderId(o.id)}>{KARIGAR_BILL_ICON}</button>
                     </div>
                   </td>
                 </tr>
@@ -155,6 +161,8 @@ export default function KarigarDetail() {
         }}
       />
       <OrderCardModal orderId={cardOrderId} onClose={() => setCardOrderId(null)} />
+      <CustomerBillModal orderId={customerBillOrderId} onClose={() => setCustomerBillOrderId(null)} />
+      <KarigarBillModal orderId={karigarBillOrderId} onClose={() => setKarigarBillOrderId(null)} />
       {payOrderId !== null && (
         <AddPaymentModal
           orderId={payOrderId}

@@ -4,15 +4,17 @@ import { toast } from 'sonner';
 import { ordersApi } from '@/api/orders';
 import { formatDateShort, formatCurrency } from '@/lib/format';
 import type { OrderListItem, OrderStatus } from '@/types';
-import { PAYMENT_ICON } from '@/lib/garmentIcons';
+import { PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON } from '@/lib/garmentIcons';
 
 interface OrderRowProps {
   order: OrderListItem;
   onViewCard: (id: number) => void;
   onAddPayment: (id: number) => void;
+  onCustomerBill: (id: number) => void;
+  onKarigarBill: (id: number) => void;
 }
 
-export function OrderRow({ order, onViewCard, onAddPayment }: OrderRowProps) {
+export function OrderRow({ order, onViewCard, onAddPayment, onCustomerBill, onKarigarBill }: OrderRowProps) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: (status: OrderStatus) => ordersApi.updateStatus(order.id, status),
@@ -61,6 +63,8 @@ export function OrderRow({ order, onViewCard, onAddPayment }: OrderRowProps) {
             </svg>
           </button>
           <button className="row-icon-btn" title="Add payment" onClick={() => onAddPayment(order.id)}>{PAYMENT_ICON}</button>
+          <button className="row-icon-btn" title="Customer Bill" onClick={() => onCustomerBill(order.id)}>{CUSTOMER_BILL_ICON}</button>
+          <button className="row-icon-btn" title="Karigar Bill" onClick={() => onKarigarBill(order.id)}>{KARIGAR_BILL_ICON}</button>
         </div>
       </td>
     </tr>

@@ -11,8 +11,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { MeasurementBlock } from '@/components/measurements/MeasurementBlock';
 import { MeasurementFieldsForm } from '@/components/measurements/MeasurementFieldsForm';
 import { OrderCardModal } from '@/components/orders/OrderCardModal';
+import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
+import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
-import { EDIT_ICON, PAYMENT_ICON } from '@/lib/garmentIcons';
+import { EDIT_ICON, PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON } from '@/lib/garmentIcons';
 import { formatCurrency, formatDate, formatDateShort } from '@/lib/format';
 
 export default function CustomerDetail() {
@@ -31,10 +33,12 @@ export default function CustomerDetail() {
   const [editPhone, setEditPhone] = useState('');
   const [editAddress, setEditAddress] = useState('');
   const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
-  const [editFields, setEditFields] = useState<Record<string, string>>({});
+  const [editFields, setEditFields] = useState<Record<string, string | string[]>>({});
   const [editNotes, setEditNotes] = useState('');
   const [cardOrderId, setCardOrderId] = useState<number | null>(null);
   const [payOrderId, setPayOrderId] = useState<number | null>(null);
+  const [customerBillOrderId, setCustomerBillOrderId] = useState<number | null>(null);
+  const [karigarBillOrderId, setKarigarBillOrderId] = useState<number | null>(null);
 
   function refresh() {
     queryClient.invalidateQueries({ queryKey: ['customers', customerId] });
@@ -74,7 +78,7 @@ export default function CustomerDetail() {
     setContactEditing(true);
   }
 
-  function startEditMeasurement(templateKey: string, fields: Record<string, string>, notes: string | null) {
+  function startEditMeasurement(templateKey: string, fields: Record<string, string | string[]>, notes: string | null) {
     setEditingTemplate(templateKey);
     setEditFields(fields);
     setEditNotes(notes || '');
@@ -209,6 +213,8 @@ export default function CustomerDetail() {
                         <Badge status={o.status} />
                         <div className="row-actions">
                           <button className="row-icon-btn" title="Add payment" onClick={(e) => { e.stopPropagation(); setPayOrderId(o.id); }}>{PAYMENT_ICON}</button>
+                          <button className="row-icon-btn" title="Customer Bill" onClick={(e) => { e.stopPropagation(); setCustomerBillOrderId(o.id); }}>{CUSTOMER_BILL_ICON}</button>
+                          <button className="row-icon-btn" title="Karigar Bill" onClick={(e) => { e.stopPropagation(); setKarigarBillOrderId(o.id); }}>{KARIGAR_BILL_ICON}</button>
                         </div>
                       </div>
                     );
@@ -220,6 +226,8 @@ export default function CustomerDetail() {
       </div>
 
       <OrderCardModal orderId={cardOrderId} onClose={() => setCardOrderId(null)} />
+      <CustomerBillModal orderId={customerBillOrderId} onClose={() => setCustomerBillOrderId(null)} />
+      <KarigarBillModal orderId={karigarBillOrderId} onClose={() => setKarigarBillOrderId(null)} />
       {payOrderId !== null && (
         <AddPaymentModal
           orderId={payOrderId}

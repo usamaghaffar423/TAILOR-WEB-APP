@@ -7,6 +7,8 @@ import { StitchDivider } from '@/components/ui/StitchDivider';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { OrderRow } from '@/components/orders/OrderRow';
 import { OrderCardModal } from '@/components/orders/OrderCardModal';
+import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
+import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
 import type { OrderStatus } from '@/types';
 
@@ -19,6 +21,8 @@ export default function Orders() {
   const [to, setTo] = useState('');
   const [cardOrderId, setCardOrderId] = useState<number | null>(null);
   const [payOrderId, setPayOrderId] = useState<number | null>(null);
+  const [customerBillOrderId, setCustomerBillOrderId] = useState<number | null>(null);
+  const [karigarBillOrderId, setKarigarBillOrderId] = useState<number | null>(null);
 
   const { data: karigarsRes } = useQuery({ queryKey: ['karigars'], queryFn: () => karigarsApi.index() });
   const { data, isLoading, error, refetch } = useQuery({
@@ -86,7 +90,14 @@ export default function Orders() {
               </thead>
               <tbody>
                 {orders.map((o) => (
-                  <OrderRow key={o.id} order={o} onViewCard={setCardOrderId} onAddPayment={setPayOrderId} />
+                  <OrderRow
+                    key={o.id}
+                    order={o}
+                    onViewCard={setCardOrderId}
+                    onAddPayment={setPayOrderId}
+                    onCustomerBill={setCustomerBillOrderId}
+                    onKarigarBill={setKarigarBillOrderId}
+                  />
                 ))}
               </tbody>
             </table>
@@ -95,6 +106,8 @@ export default function Orders() {
       )}
 
       <OrderCardModal orderId={cardOrderId} onClose={() => setCardOrderId(null)} />
+      <CustomerBillModal orderId={customerBillOrderId} onClose={() => setCustomerBillOrderId(null)} />
+      <KarigarBillModal orderId={karigarBillOrderId} onClose={() => setKarigarBillOrderId(null)} />
       {payOrderId !== null && (
         <AddPaymentModal
           orderId={payOrderId}

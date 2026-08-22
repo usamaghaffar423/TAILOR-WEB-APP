@@ -76,7 +76,7 @@ export default function NewOrder() {
 
   // ---- Measurements ----
   const [templateKey, setTemplateKey] = useState('');
-  const [fields, setFields] = useState<Record<string, string>>({});
+  const [fields, setFields] = useState<Record<string, string | string[]>>({});
   const [notes, setNotes] = useState('');
   useEffect(() => {
     if (templatesRes && !templateKey && templatesRes.data.length > 0) {
