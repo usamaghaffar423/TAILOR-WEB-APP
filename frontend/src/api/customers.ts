@@ -1,9 +1,10 @@
 import { apiFetch } from './client';
-import type { Customer, Measurement, Order } from '@/types';
+import type { Customer, Measurement, CustomerOrderItem } from '@/types';
 
-export interface CustomerDetail extends Customer {
+export interface CustomerDetail {
+  customer: Customer;
   measurements: Measurement[];
-  orders: Order[];
+  orders: CustomerOrderItem[];
 }
 
 export interface CreateCustomerPayload {

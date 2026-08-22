@@ -74,9 +74,12 @@ export interface OrderStyle {
   length?: string;
   placket?: string;
   pocket?: string;
+  pocketShalwar?: string;
+  pocketPosition?: string;
+  pocketDepth?: string;
   daman?: string;
-  pukhtoonShalwar?: string;
-  punjabiShalwar?: string;
+  shalwarStyle?: string; // region-specific shalwar style (Pukhtoon or Punjabi set, per regionalStyle)
+  salwar?: string; // legacy — orders saved before the Pukhtoon/Punjabi update
   mori?: string;
   waistType?: string;
   fabric?: string;
@@ -121,14 +124,60 @@ export interface Order {
   delivered_date: string | null;
   total_amount: string; // decimal as string
   created_at: string;
-  // Eager-loaded relationships (present on show, may be absent on list)
+  // Eager-loaded relationships — present on show()/store(), which use ->load([...]).
   customer?: Customer;
   karigar?: Karigar;
   photos?: OrderPhoto[];
   payments?: Payment[];
-  // Computed by API on list endpoints
   paid_amount?: string;
   pending_amount?: string;
+}
+
+// GET /api/orders — a flat, lightweight row shape (no style/measurement_snapshot,
+// no nested customer/karigar objects). Distinct from the full Order returned by
+// show()/store(), which DOES eager-load nested customer/karigar/photos/payments.
+export interface OrderListItem {
+  id: number;
+  order_no: string;
+  status: OrderStatus;
+  deadline: string;
+  assigned_date: string;
+  delivered_date: string | null;
+  total_amount: string;
+  customer_id: number;
+  customer_name: string;
+  customer_phone: string;
+  karigar_id: number;
+  karigar_name: string;
+  paid_amount: string;
+}
+
+// Order row shape as returned inside GET /api/karigars/{id} (already scoped to
+// one karigar, so only the customer name is included, not karigar info).
+export interface KarigarOrderItem {
+  id: number;
+  order_no: string;
+  status: OrderStatus;
+  deadline: string;
+  assigned_date: string;
+  delivered_date: string | null;
+  total_amount: string;
+  customer_name: string;
+  paid_amount: string;
+}
+
+// Order row shape as returned inside GET /api/customers/{id} (already scoped to
+// one customer, so only the karigar name is included, not customer info).
+export interface CustomerOrderItem {
+  id: number;
+  order_no: string;
+  status: OrderStatus;
+  deadline: string;
+  assigned_date: string;
+  delivered_date: string | null;
+  total_amount: string;
+  karigar_name: string;
+  paid_amount: string;
 }
 
 // Dashboard shapes
@@ -178,14 +227,14 @@ export interface PaymentSummary {
   thisMonth: string;
   allTime: string;
   totalPending: string;
-  pendingOrderCount: number;
 }
 
 export interface OrderBalance {
-  order_id: number;
+  id: number;
   order_no: string;
+  status: OrderStatus;
   customer_name: string;
-  customer_phone: string;
+  karigar_name: string;
   total_amount: string;
   paid_amount: string;
   pending_amount: string;

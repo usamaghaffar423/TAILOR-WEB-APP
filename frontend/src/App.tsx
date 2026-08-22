@@ -1,10 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
-import { Toaster } from 'sonner';
+import { lazy, Suspense, useEffect } from 'react';
 import { useAuthStore } from '@/store/auth';
+import { authApi } from '@/api/auth';
+import { AppShell } from '@/components/layout/AppShell';
+import { Toast } from '@/components/ui/Toast';
 
-// Pages — all lazy-loaded to keep initial bundle small
-import { lazy, Suspense } from 'react';
 const Login       = lazy(() => import('@/pages/Login'));
 const Dashboard   = lazy(() => import('@/pages/Dashboard'));
 const Orders      = lazy(() => import('@/pages/Orders'));
@@ -31,20 +32,32 @@ const queryClient = new QueryClient({
   },
 });
 
-// Auth guard — wraps all protected routes
+// Auth guard — wraps all protected routes. A token alone in localStorage
+// doesn't carry the admin/shop payload, so hydrate it via /auth/me before
+// rendering anything that depends on it (Sidebar brand, Topbar avatar).
 function AuthGuard() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  return <Outlet />;
-}
+  const token = useAuthStore((s) => s.token);
+  const admin = useAuthStore((s) => s.admin);
+  const setAuth = useAuthStore((s) => s.setAuth);
 
-// Placeholder shell — replace with real AppShell in Phase 4
-function AppShell() {
-  return (
-    <div style={{ padding: '2rem', color: 'var(--text)' }}>
-      <Outlet />
-    </div>
-  );
+  const { data, isLoading } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: () => authApi.me(),
+    enabled: isAuthenticated && admin === null,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (data && token) {
+      setAuth(token, data.data.admin, data.data.shop);
+    }
+  }, [data, token, setAuth]);
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (admin === null && isLoading) return null;
+
+  return <Outlet />;
 }
 
 const router = createBrowserRouter([
@@ -82,17 +95,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          style: {
-            background: 'var(--surface)',
-            color: 'var(--text)',
-            border: '1px solid var(--border-strong)',
-            borderLeft: '3px solid var(--red)',
-          },
-        }}
-      />
+      <Toast />
     </QueryClientProvider>
   );
 }

@@ -1,8 +1,9 @@
 import { apiFetch } from './client';
-import type { Karigar, Order } from '@/types';
+import type { Karigar, KarigarOrderItem } from '@/types';
 
-export interface KarigarDetail extends Karigar {
-  orders: Order[];
+export interface KarigarDetail {
+  karigar: Karigar;
+  orders: KarigarOrderItem[];
 }
 
 export interface CreateKarigarPayload {

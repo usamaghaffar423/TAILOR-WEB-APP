@@ -1,6 +1,11 @@
 import { apiFetch } from './client';
 import type { Payment, PaymentMethod, PaymentSummary, OrderBalance } from '@/types';
 
+export interface PaymentListItem extends Payment {
+  order_no: string;
+  customer_name: string;
+}
+
 export interface PaymentFilters {
   method?: PaymentMethod;
   from?: string;
@@ -29,7 +34,7 @@ function buildQuery(filters: PaymentFilters): string {
 
 export const paymentsApi = {
   index: (filters: PaymentFilters = {}) =>
-    apiFetch<{ data: Payment[] }>(`/payments${buildQuery(filters)}`),
+    apiFetch<{ data: PaymentListItem[] }>(`/payments${buildQuery(filters)}`),
 
   store: (payload: CreatePaymentPayload) =>
     apiFetch<{ data: Payment }>('/payments', {
