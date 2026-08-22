@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Models\Admin;
+use App\Models\AdminToken;
 use App\Models\ShopSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,9 +23,15 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Invalid credentials.'], 401);
             }
 
+            // Each login gets its own token row, so signing in from another
+            // device/tab (or a fresh test session) never invalidates an
+            // already-active session elsewhere.
             $plainToken = bin2hex(random_bytes(32));
-            $admin->api_token = hash('sha256', $plainToken);
-            $admin->save();
+            AdminToken::query()->create([
+                'admin_id' => $admin->id,
+                'token' => hash('sha256', $plainToken),
+                'last_used_at' => now(),
+            ]);
 
             return response()->json([
                 'data' => [
@@ -43,9 +50,9 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         try {
-            $admin = $request->attributes->get('admin');
-            $admin->api_token = null;
-            $admin->save();
+            // Only the token used for this request is revoked — other
+            // active sessions for the same admin are left untouched.
+            $request->attributes->get('adminToken')?->delete();
 
             return response()->json(['message' => 'Logged out successfully.']);
         } catch (Throwable $e) {

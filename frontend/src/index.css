@@ -546,33 +546,16 @@ table.data-table tbody tr.clickable:hover{background:var(--surface-2);}
    rules above already isolate whichever one is open. These dedicated
    classes are additive, per spec, and give each bill its own scoped hook.
 
-   The two bills are intentionally different shapes: Karigar Bill is a
-   full-page work order (wide, dense measurement tables). Customer Bill is
-   a narrow, receipt-style slip (like a retail till receipt) — it should
-   stay narrow both on screen and when printed, not expand to fill the page. */
+   Both bills share the same narrow, receipt-style shape (like a retail till
+   receipt) — they stay narrow both on screen and when printed, not expand
+   to fill the page. */
 .karigar-bill-print-area {
   font-family: 'Noto Nastaliq Urdu', 'Inter', sans-serif;
-}
-/* Wider on-screen preview for the Karigar Bill — closer to actual page
-   proportions than the standard .modal-box.wide (640px) used elsewhere. */
-.modal-box:has(.karigar-bill-print-area) {
-  max-width: 860px;
 }
 @media print {
   .customer-bill-print-area { display: block !important; }
   .karigar-bill-print-area { display: block !important; }
-  /* Let the Karigar Bill fill the full printed page instead of staying
-     constrained to the on-screen modal width/height. The Customer Bill
-     deliberately keeps the modal's normal (narrow) print sizing. */
-  .modal-box:has(.karigar-bill-print-area) {
-    max-width: none !important;
-    width: 100% !important;
-    max-height: none !important;
-    overflow: visible !important;
-    box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
-  }
+  .modal-box:has(.karigar-bill-print-area),
   .modal-box:has(.customer-bill-print-area) {
     box-shadow: none !important;
     border: none !important;

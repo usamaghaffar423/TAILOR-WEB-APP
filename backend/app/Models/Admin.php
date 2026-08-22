@@ -11,7 +11,6 @@ class Admin extends Model
     protected $fillable = [
         'email',
         'password_hash',
-        'api_token',
         'shop_name',
     ];
 

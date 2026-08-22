@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Admin;
+use App\Models\AdminToken;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,14 +19,16 @@ class ApiTokenAuth
 
         $hashed = hash('sha256', $token);
 
-        $admin = Admin::query()->whereNotNull('api_token')->get()
-            ->first(fn (Admin $candidate) => hash_equals($candidate->api_token, $hashed));
+        $adminToken = AdminToken::query()->where('token', $hashed)->with('admin')->first();
 
-        if (! $admin) {
+        if (! $adminToken || ! $adminToken->admin) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
 
-        $request->attributes->set('admin', $admin);
+        $adminToken->update(['last_used_at' => now()]);
+
+        $request->attributes->set('admin', $adminToken->admin);
+        $request->attributes->set('adminToken', $adminToken);
 
         return $next($request);
     }
