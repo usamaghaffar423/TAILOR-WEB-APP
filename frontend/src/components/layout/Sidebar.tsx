@@ -67,6 +67,52 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+const RETAIL_NAV_ITEMS: NavItem[] = [
+  {
+    to: '/retail',
+    end: true,
+    label: 'Retail Dashboard',
+    icon: (
+      <>
+        <path d="M3 9l1.5-5h15L21 9" />
+        <path d="M3 9h18v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+        <path d="M9 13a3 3 0 006 0" />
+      </>
+    ),
+  },
+  {
+    to: '/retail/products',
+    label: 'Products',
+    icon: (
+      <>
+        <path d="M20 7H4a1 1 0 00-1 1v3a2 2 0 002 2h14a2 2 0 002-2V8a1 1 0 00-1-1z" />
+        <path d="M5 13v6a1 1 0 001 1h12a1 1 0 001-1v-6" />
+      </>
+    ),
+  },
+  {
+    to: '/retail/inventory',
+    label: 'Inventory',
+    icon: (
+      <>
+        <path d="M21 8L12 3 3 8v8l9 5 9-5V8z" />
+        <path d="M3 8l9 5 9-5M12 13v8" />
+      </>
+    ),
+  },
+  { to: '/retail/pos', label: 'New Sale (POS)', icon: <path d="M6 3h12l1 5H5l1-5zM5 8h14l-1.5 11.5A2 2 0 0115.5 21h-7a2 2 0 01-2-1.5L5 8z" /> },
+  {
+    to: '/retail/sales',
+    label: 'Sales History',
+    icon: (
+      <>
+        <path d="M9 5H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V9.5" />
+        <path d="M9 3h9v6M12 12l6-6" />
+      </>
+    ),
+  },
+];
+
 interface SidebarProps {
   open: boolean;
   onOverlayClick: () => void;
@@ -92,6 +138,24 @@ export function Sidebar({ open, onOverlayClick }: SidebarProps) {
         </div>
         <nav className="nav">
           {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                {item.icon}
+              </svg>
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+        <div style={{ padding: '10px 18px 4px', fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', color: 'var(--text-faint)' }}>
+          دکان (Shop)
+        </div>
+        <nav className="nav">
+          {RETAIL_NAV_ITEMS.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

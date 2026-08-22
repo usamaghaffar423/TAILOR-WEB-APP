@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/auth';
 import { authApi } from '@/api/auth';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
+import { retailRoutes } from '@/features/retail/routes';
 
 const Login       = lazy(() => import('@/pages/Login'));
 const Dashboard   = lazy(() => import('@/pages/Dashboard'));
@@ -84,6 +85,7 @@ const router = createBrowserRouter([
           { path: 'karigars/:id',         element: <Suspense fallback={null}><KarigarDetail /></Suspense> },
           { path: 'payments',             element: <Suspense fallback={null}><Payments /></Suspense> },
           { path: 'settings',             element: <Suspense fallback={null}><Settings /></Suspense> },
+          ...retailRoutes,
           { path: '*',                    element: <Navigate to="/" replace /> },
         ],
       },
