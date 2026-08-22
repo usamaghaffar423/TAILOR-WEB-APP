@@ -16,9 +16,13 @@ export default function Login() {
   const mutation = useMutation({
     mutationFn: async () => {
       const loginRes = await authApi.login(email.trim(), password);
-      // Login only returns { token, admin } — shop settings come from /auth/me,
-      // which needs the token attached first.
-      useAuthStore.setState({ token: loginRes.data.token, isAuthenticated: true });
+      // Login only returns { token, admin } — shop settings come from /auth/me.
+      // Set just the token (not isAuthenticated) so apiFetch attaches it as the
+      // Authorization header for the me() call below, without navigating away
+      // yet — flipping isAuthenticated here would unmount this component and
+      // its mutation observer before setAuth() below ever runs, so the token
+      // would never actually get persisted to localStorage.
+      useAuthStore.setState({ token: loginRes.data.token });
       const meRes = await authApi.me();
       return { token: loginRes.data.token, admin: meRes.data.admin, shop: meRes.data.shop };
     },
