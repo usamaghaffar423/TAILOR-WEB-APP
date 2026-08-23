@@ -80,7 +80,8 @@ export default function NewOrder() {
   const [notes, setNotes] = useState('');
   useEffect(() => {
     if (templatesRes && !templateKey && templatesRes.data.length > 0) {
-      setTemplateKey(templatesRes.data[0].template_key);
+      const shalwarQameez = templatesRes.data.find((t) => t.template_key === 'shalwar-kameez-men');
+      setTemplateKey((shalwarQameez || templatesRes.data[0]).template_key);
     }
   }, [templatesRes, templateKey]);
   const template = templatesRes?.data.find((t) => t.template_key === templateKey) || null;

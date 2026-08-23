@@ -1,4 +1,7 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { settingsApi } from '@/api/settings';
+import { Button } from '@/components/ui/Button';
 import type { MeasurementTemplate } from '@/types';
 
 interface MeasurementFieldsFormProps {
@@ -7,12 +10,48 @@ interface MeasurementFieldsFormProps {
   onFieldChange: (key: string, value: string | string[]) => void;
 }
 
+function slugify(label: string, existingKeys: Set<string>): string {
+  const base = label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || `field_${Date.now()}`;
+  if (!existingKeys.has(base)) return base;
+  let n = 2;
+  while (existingKeys.has(`${base}_${n}`)) n++;
+  return `${base}_${n}`;
+}
+
 export function MeasurementFieldsForm({ template, fields, onFieldChange }: MeasurementFieldsFormProps) {
   const core = template.fields.filter((f) => !f.advanced);
   const advanced = template.fields.filter((f) => f.advanced);
   const groups = [...new Set(core.map((f) => f.group || 'Measurements'))];
   const showGroups = groups.length > 1;
   let lastGroup: string | null = null;
+
+  const queryClient = useQueryClient();
+  const [addingField, setAddingField] = useState(false);
+  const [newFieldLabel, setNewFieldLabel] = useState('');
+
+  const addFieldMutation = useMutation({
+    mutationFn: (label: string) => {
+      const existingKeys = new Set(template.fields.map((f) => f.key));
+      const key = slugify(label, existingKeys);
+      const lastFieldGroup = template.fields[template.fields.length - 1]?.group;
+      return settingsApi.updateTemplate(template.template_key, {
+        label: template.label,
+        fields: [...template.fields, { key, label: label.trim(), ...(lastFieldGroup ? { group: lastFieldGroup } : {}) }],
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['templates'] });
+      setNewFieldLabel('');
+      setAddingField(false);
+    },
+  });
+
+  function submitNewField(e: React.FormEvent) {
+    e.preventDefault();
+    const label = newFieldLabel.trim();
+    if (!label) return;
+    addFieldMutation.mutate(label);
+  }
 
   function fieldInput(key: string, label: string) {
     const raw = fields[key];
@@ -85,6 +124,36 @@ export function MeasurementFieldsForm({ template, fields, onFieldChange }: Measu
           </details>
         </div>
       )}
+
+      <div className="grid-span-4" style={{ marginTop: 6 }}>
+        {addingField ? (
+          <form onSubmit={submitNewField} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <input
+              type="text"
+              value={newFieldLabel}
+              onChange={(e) => setNewFieldLabel(e.target.value)}
+              placeholder="Field name, e.g. Cuff Width"
+              autoFocus
+              style={{ flex: 1, maxWidth: 260 }}
+            />
+            <button type="submit" className="row-icon-btn" title="Add field" disabled={!newFieldLabel.trim() || addFieldMutation.isPending}>
+              {addFieldMutation.isPending ? '…' : '+'}
+            </button>
+            <button
+              type="button"
+              className="row-icon-btn"
+              title="Cancel"
+              onClick={() => { setAddingField(false); setNewFieldLabel(''); }}
+            >
+              &times;
+            </button>
+          </form>
+        ) : (
+          <Button type="button" variant="outline" sm onClick={() => setAddingField(true)}>
+            + Add Field
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

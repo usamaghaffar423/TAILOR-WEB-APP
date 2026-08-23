@@ -80,7 +80,8 @@ export default function Settings() {
   const [tplFields, setTplFields] = useState<MeasurementTemplateField[]>([]);
   useEffect(() => {
     if (templatesRes && !tplKey && templatesRes.data.length > 0) {
-      setTplKey(templatesRes.data[0].template_key);
+      const shalwarQameez = templatesRes.data.find((t) => t.template_key === 'shalwar-kameez-men');
+      setTplKey((shalwarQameez || templatesRes.data[0]).template_key);
     }
   }, [templatesRes, tplKey]);
   useEffect(() => {
