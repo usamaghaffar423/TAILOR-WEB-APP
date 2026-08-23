@@ -6,6 +6,7 @@ import { authApi } from '@/api/auth';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { retailRoutes } from '@/features/retail/routes';
+import { healthRoutes } from '@/features/health/routes';
 
 const Login       = lazy(() => import('@/pages/Login'));
 const Dashboard   = lazy(() => import('@/pages/Dashboard'));
@@ -70,6 +71,9 @@ const router = createBrowserRouter([
       </Suspense>
     ),
   },
+  // Top-level, outside AuthGuard/AppShell — its own PIN gate is the security
+  // boundary, and it must never show the app sidebar/topbar.
+  ...healthRoutes,
   {
     element: <AuthGuard />,
     children: [
