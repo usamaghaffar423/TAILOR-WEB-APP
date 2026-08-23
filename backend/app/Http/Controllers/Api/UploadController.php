@@ -46,9 +46,15 @@ class UploadController extends Controller
         }
     }
 
-    public function serve(Request $request, string $path): StreamedResponse|JsonResponse
+    public function serve(Request $request): StreamedResponse|JsonResponse
     {
         try {
+            $path = $request->query('path', '');
+
+            if ($path === '' || str_contains($path, '..')) {
+                return response()->json(['message' => 'Not found.'], 404);
+            }
+
             $fullPath = "uploads/{$path}";
 
             if (! Storage::disk('local')->exists($fullPath)) {

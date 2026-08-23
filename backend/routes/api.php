@@ -60,6 +60,10 @@ Route::middleware('api.auth')->group(function () {
 
     // Uploads
     Route::post('/uploads/order/{id}', [UploadController::class, 'store']);
-    Route::get('/uploads/{path}', [UploadController::class, 'serve'])->where('path', '.*');
+    // Path is a query param (not a URL segment) so the request URL never ends
+    // in an image extension — Hostinger's edge CDN otherwise intercepts any
+    // /api/* path ending in .jpg/.png before it reaches Laravel, skipping
+    // the CORS middleware entirely and breaking cross-origin image fetches.
+    Route::get('/uploads', [UploadController::class, 'serve']);
     Route::delete('/uploads/{photoId}', [UploadController::class, 'destroy']);
 });

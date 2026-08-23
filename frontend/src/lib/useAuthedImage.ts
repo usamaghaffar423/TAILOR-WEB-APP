@@ -3,9 +3,14 @@ import { useAuthStore } from '@/store/auth';
 
 const API_URL = import.meta.env.VITE_API_URL ?? '';
 
-/** Fetches a storage-relative path (e.g. `uploads/shop/logo.png`) through the
- * authenticated `/api/uploads/{path}` route and returns a blob object URL —
- * plain <img src> can't attach the Bearer token this API requires. */
+/** Fetches a storage-relative path (e.g. `shop/logo.png`) through the
+ * authenticated `/api/uploads?path=...` route and returns a blob object URL —
+ * plain <img src> can't attach the Bearer token this API requires. The path
+ * is a query param rather than a URL segment so the request URL never ends
+ * in an image extension: Hostinger's edge CDN otherwise intercepts any
+ * /api/* path ending in .jpg/.png before it reaches Laravel, stripping CORS
+ * headers and silently breaking the image in the deployed (cross-origin)
+ * frontend even though it works fine through the local dev proxy. */
 export function useAuthedImage(path: string | null | undefined): string | null {
   const token = useAuthStore((s) => s.token);
   const [url, setUrl] = useState<string | null>(null);
@@ -18,7 +23,7 @@ export function useAuthedImage(path: string | null | undefined): string | null {
     let objectUrl: string | null = null;
     let cancelled = false;
 
-    fetch(`${API_URL}/api/uploads/${path}`, {
+    fetch(`${API_URL}/api/uploads?path=${encodeURIComponent(path)}`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((res) => (res.ok ? res.blob() : Promise.reject(res)))
