@@ -13,7 +13,10 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    // Lets the browser cache the CORS preflight response instead of repeating
+    // it before every single authenticated request. Browsers cap this
+    // themselves (Chrome ~2h, Firefox 24h) regardless of the value sent.
+    'max_age' => 86400,
 
     'supports_credentials' => false,
 ];
