@@ -99,7 +99,9 @@ button, input, select, textarea { font-family: inherit; }
   width:224px; flex-shrink:0; background:var(--sidebar-bg);
   display:flex; flex-direction:column; position:fixed; top:0; left:0; height:100vh;
   border-right:1px solid rgba(255,255,255,0.06); z-index:60;
+  overflow-y:auto; scrollbar-width:none; -ms-overflow-style:none;
 }
+.sidebar::-webkit-scrollbar{display:none;}
 .brand{display:flex; align-items:center; gap:11px; padding:26px 22px 22px;}
 .brand-mark{
   width:38px; height:38px; border-radius:8px; background:var(--red);
@@ -111,7 +113,7 @@ button, input, select, textarea { font-family: inherit; }
 .brand-name{font-family:'Bebas Neue',sans-serif; font-size:18px; color:#fff; letter-spacing:0.03em; line-height:1;}
 .brand-sub{font-size:9px; color:#6E6E76; letter-spacing:0.13em; text-transform:uppercase; margin-top:4px;}
 
-nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; overflow-y:auto;}
+nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shrink:0;}
 .nav-item{
   display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:10px;
   color:var(--sidebar-text); font-size:13.5px; font-weight:500; cursor:pointer;

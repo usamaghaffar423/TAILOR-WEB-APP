@@ -70,10 +70,33 @@ export interface CartItem {
   unit_price: number;
 }
 
+export interface RetailRevenueStat {
+  total: string;
+  count: number;
+}
+
+export interface RetailPaymentBreakdownRow {
+  payment_method: RetailPaymentMethod;
+  total: string;
+  count: number;
+}
+
+export interface RetailTopProduct {
+  product_name: string;
+  qty_sold: string;
+  revenue: string;
+}
+
 export interface RetailDashboardSummary {
-  today_sales_count: number;
-  today_revenue: string;
+  revenue: {
+    today: RetailRevenueStat;
+    this_week: RetailRevenueStat;
+    this_month: RetailRevenueStat;
+    all_time: RetailRevenueStat;
+  };
   total_products: number;
+  total_variants: number;
+  inventory_value: number;
   low_stock_count: number;
   low_stock_items: {
     variant_id: number;
@@ -83,6 +106,8 @@ export interface RetailDashboardSummary {
     quantity_in_stock: number;
     threshold: number;
   }[];
+  payment_breakdown: RetailPaymentBreakdownRow[];
+  top_products: RetailTopProduct[];
   recent_sales: RetailSale[];
 }
 

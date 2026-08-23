@@ -1,10 +1,35 @@
 import { Fragment, useState } from 'react';
 import { StitchDivider } from '@/components/ui/StitchDivider';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency, formatDate, toDateInputValue } from '@/lib/format';
 import { useRetailSale, useRetailSales } from '../hooks/useRetailSales';
+import { useRetailProducts } from '../hooks/useRetailProducts';
 import { METHOD_LABEL, METHOD_OPTIONS } from '../lib/paymentMethod';
 import type { RetailPaymentMethod, RetailSale } from '../types';
+
+type Preset = 'all' | 'today' | 'week' | 'month' | 'custom';
+
+function presetRange(preset: Preset): { from: string; to: string } {
+  const today = new Date();
+  const to = toDateInputValue(today);
+
+  if (preset === 'today') return { from: to, to };
+
+  if (preset === 'week') {
+    const day = today.getDay(); // 0 = Sunday
+    const diffToMonday = day === 0 ? 6 : day - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - diffToMonday);
+    return { from: toDateInputValue(monday), to };
+  }
+
+  if (preset === 'month') {
+    const first = new Date(today.getFullYear(), today.getMonth(), 1);
+    return { from: toDateInputValue(first), to };
+  }
+
+  return { from: '', to: '' };
+}
 
 function SaleRow({ sale, expanded, onToggle }: { sale: RetailSale; expanded: boolean; onToggle: () => void }) {
   const { data: detailRes } = useRetailSale(expanded ? sale.id : null);
@@ -47,20 +72,36 @@ function SaleRow({ sale, expanded, onToggle }: { sale: RetailSale; expanded: boo
 }
 
 export default function SalesHistoryPage() {
+  const [preset, setPreset] = useState<Preset>('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [method, setMethod] = useState<RetailPaymentMethod | ''>('');
+  const [productId, setProductId] = useState<number | ''>('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
+
+  const { data: productsRes } = useRetailProducts();
+  const products = productsRes?.data || [];
+
+  function applyPreset(p: Preset) {
+    setPreset(p);
+    const { from, to } = presetRange(p);
+    setDateFrom(from);
+    setDateTo(to);
+    setPage(1);
+  }
 
   const { data, isLoading, error } = useRetailSales({
     date_from: dateFrom || undefined,
     date_to: dateTo || undefined,
     payment_method: method || undefined,
+    product_id: productId || undefined,
     page,
   });
 
   const sales = data?.data || [];
+
+  const totalForFilter = sales.reduce((sum, s) => sum + Number(s.total_amount), 0);
 
   return (
     <>
@@ -72,13 +113,34 @@ export default function SalesHistoryPage() {
       </div>
       <StitchDivider />
 
+      <div className="swatch-group" style={{ marginTop: 0, marginBottom: 12 }}>
+        <div className={`swatch-chip${preset === 'all' ? ' selected' : ''}`} onClick={() => applyPreset('all')}>All Time</div>
+        <div className={`swatch-chip${preset === 'today' ? ' selected' : ''}`} onClick={() => applyPreset('today')}>Today</div>
+        <div className={`swatch-chip${preset === 'week' ? ' selected' : ''}`} onClick={() => applyPreset('week')}>This Week</div>
+        <div className={`swatch-chip${preset === 'month' ? ' selected' : ''}`} onClick={() => applyPreset('month')}>This Month</div>
+      </div>
+
       <div className="filter-bar">
-        <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} />
-        <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} />
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => { setDateFrom(e.target.value); setPreset('custom'); setPage(1); }}
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => { setDateTo(e.target.value); setPreset('custom'); setPage(1); }}
+        />
         <select value={method} onChange={(e) => { setMethod(e.target.value as RetailPaymentMethod | ''); setPage(1); }}>
           <option value="">All Methods</option>
           {METHOD_OPTIONS.map((m) => (
             <option key={m} value={m}>{METHOD_LABEL[m]}</option>
+          ))}
+        </select>
+        <select value={productId} onChange={(e) => { setProductId(e.target.value ? Number(e.target.value) : ''); setPage(1); }}>
+          <option value="">All Products</option>
+          {products.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
       </div>
@@ -91,6 +153,10 @@ export default function SalesHistoryPage() {
           <EmptyState title="No sales found" subtitle="Try adjusting your filters." />
         ) : (
           <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, fontSize: 12.5, color: 'var(--text-faint)' }}>
+              <span>{data.total} sale{data.total === 1 ? '' : 's'} matching filters</span>
+              <span>Page total: <b style={{ color: 'var(--text)' }}>{formatCurrency(totalForFilter)}</b></span>
+            </div>
             <div className="table-wrap">
               <table className="data-table">
                 <thead>

@@ -33,6 +33,12 @@ class RetailSaleController extends Controller
                 $query->where('payment_method', $method);
             }
 
+            if ($productId = $request->query('product_id')) {
+                $query->whereHas('items.variant', function ($q) use ($productId) {
+                    $q->where('retail_product_id', $productId);
+                });
+            }
+
             $sales = $query->paginate(20);
 
             return response()->json($sales);

@@ -5,6 +5,7 @@ export interface SalesFilters {
   date_from?: string;
   date_to?: string;
   payment_method?: RetailPaymentMethod;
+  product_id?: number;
   page?: number;
 }
 
