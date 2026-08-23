@@ -141,7 +141,10 @@ class SettingsController extends Controller
     {
         $extension = $file->getClientOriginalExtension();
         $filename = $baseName.'.'.$extension;
-        $file->storeAs('uploads/shop', $filename, 'public');
+        // Must match the disk UploadController::serve() reads from ('local'),
+        // not 'public' — the two disks have different root directories, so a
+        // file saved to one is invisible to a lookup against the other.
+        $file->storeAs('uploads/shop', $filename, 'local');
 
         return 'shop/'.$filename;
     }
