@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
@@ -17,6 +17,7 @@ interface AddPaymentModalProps {
 }
 
 export function AddPaymentModal({ orderId: presetOrderId, open, onClose, onSaved }: AddPaymentModalProps) {
+  const queryClient = useQueryClient();
   const [pickedOrderId, setPickedOrderId] = useState<number | null>(null);
   const [orderSearch, setOrderSearch] = useState('');
   const [amount, setAmount] = useState('');
@@ -55,6 +56,15 @@ export function AddPaymentModal({ orderId: presetOrderId, open, onClose, onSaved
       setNote('');
       setPickedOrderId(null);
       setOrderSearch('');
+      // A payment changes paid/pending amounts shown on Orders, Payments,
+      // Dashboard, and the customer/karigar detail pages this order might
+      // be viewed from — invalidate here so it's correct regardless of
+      // which page opened this modal.
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['karigars'] });
       onSaved();
     },
     onError: (e: Error) => toast.error(e.message),

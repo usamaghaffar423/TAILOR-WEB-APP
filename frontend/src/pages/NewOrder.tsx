@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { StitchDivider } from '@/components/ui/StitchDivider';
 import { Button } from '@/components/ui/Button';
@@ -34,6 +34,7 @@ type PaymentStatus = 'none' | 'partial' | 'full';
 
 export default function NewOrder() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
 
   const { data: templatesRes } = useQuery({ queryKey: ['templates'], queryFn: () => settingsApi.getTemplates() });
@@ -199,6 +200,12 @@ export default function NewOrder() {
     },
     onSuccess: (order) => {
       toast.success(`Order ${order.order_no} created`);
+      // A new order touches orders, dashboard KPIs, the customer it was
+      // created/updated for, and the assigned karigar's workload.
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      queryClient.invalidateQueries({ queryKey: ['karigars'] });
       navigate(`/orders?q=${encodeURIComponent(order.order_no)}`);
     },
     onError: (e: Error) => toast.error(e.message),

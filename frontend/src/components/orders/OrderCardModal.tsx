@@ -82,6 +82,9 @@ export function OrderCardModal({ orderId, onClose }: OrderCardModalProps) {
   function refresh() {
     queryClient.invalidateQueries({ queryKey: ['orders', orderId] });
     queryClient.invalidateQueries({ queryKey: ['orders'] });
+    // Order edits (status, total, deadline) and payments both shift
+    // Dashboard KPIs.
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
   }
 
   function handleWhatsApp(audience: 'karigar' | 'customer') {

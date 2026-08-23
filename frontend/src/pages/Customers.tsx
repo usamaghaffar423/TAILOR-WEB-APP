@@ -14,6 +14,7 @@ export default function Customers() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['customers', q],
     queryFn: () => customersApi.index(q || undefined),
+    staleTime: 15 * 60_000,
   });
 
   const customers = data?.data || [];

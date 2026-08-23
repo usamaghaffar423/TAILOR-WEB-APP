@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,6 +21,12 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::prefix('api')->group(base_path('routes/health.php'));
         },
     )
+    ->withSchedule(function (Schedule $schedule) {
+        // Belt-and-braces cache reset — normal writes already bust the
+        // specific keys they invalidate; this just clears anything
+        // orphaned (e.g. an admin who edited storage/cache files by hand).
+        $schedule->command('cache:flush-app')->cron('0 3 */3 * *');
+    })
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'api.auth' => \App\Http\Middleware\ApiTokenAuth::class,

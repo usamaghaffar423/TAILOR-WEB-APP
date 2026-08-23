@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
@@ -14,6 +14,7 @@ interface EditKarigarModalProps {
 }
 
 export function EditKarigarModal({ karigar, open, onClose, onSaved }: EditKarigarModalProps) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState(karigar.name);
   const [phone, setPhone] = useState(karigar.phone || '');
   const [speciality, setSpeciality] = useState(karigar.speciality || '');
@@ -29,6 +30,9 @@ export function EditKarigarModal({ karigar, open, onClose, onSaved }: EditKariga
       }),
     onSuccess: () => {
       toast.success('Karigar updated');
+      // Broad key so both the karigars list and this (or any) detail view
+      // pick up the change, not just whichever page happens to be mounted.
+      queryClient.invalidateQueries({ queryKey: ['karigars'] });
       onSaved();
     },
     onError: (e: Error) => toast.error(e.message),

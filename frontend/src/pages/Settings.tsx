@@ -13,7 +13,7 @@ export default function Settings() {
   const queryClient = useQueryClient();
   const admin = useAuthStore((s) => s.admin);
 
-  const { data: settingsRes } = useQuery({ queryKey: ['settings'], queryFn: () => settingsApi.show() });
+  const { data: settingsRes } = useQuery({ queryKey: ['settings'], queryFn: () => settingsApi.show(), staleTime: 30 * 60_000 });
   const { data: templatesRes } = useQuery({ queryKey: ['templates'], queryFn: () => settingsApi.getTemplates() });
   const shop = settingsRes?.data;
 

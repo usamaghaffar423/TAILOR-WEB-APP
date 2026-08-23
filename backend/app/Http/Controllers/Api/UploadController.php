@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderPhotosRequest;
 use App\Models\Order;
 use App\Models\OrderPhoto;
+use App\Services\Cache\CacheBuster;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,10 @@ use Throwable;
 
 class UploadController extends Controller
 {
+    public function __construct(private CacheBuster $cacheBuster)
+    {
+    }
+
     public function store(StoreOrderPhotosRequest $request, int $orderId): JsonResponse
     {
         try {
@@ -37,6 +42,10 @@ class UploadController extends Controller
                     'file_path' => $relativePath,
                 ]);
             }
+
+            // Order::show() eager-loads the photos relation, so its cache
+            // entry is now stale.
+            $this->cacheBuster->bustOrders();
 
             return response()->json(['data' => $photos, 'message' => 'Uploaded successfully.'], 201);
         } catch (Throwable $e) {
@@ -80,6 +89,8 @@ class UploadController extends Controller
 
             Storage::disk('local')->delete("uploads/{$photo->file_path}");
             $photo->delete();
+
+            $this->cacheBuster->bustOrders();
 
             return response()->json(['message' => 'Deleted successfully.']);
         } catch (Throwable $e) {

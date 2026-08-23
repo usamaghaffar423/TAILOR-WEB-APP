@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Karigar;
 use App\Models\Order;
+use App\Services\Cache\CacheKeys;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -16,66 +18,66 @@ class DashboardController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $today = Carbon::today();
-            $tomorrow = Carbon::tomorrow();
-            $weekStart = Carbon::now()->startOfWeek(Carbon::MONDAY);
-            $weekEnd = Carbon::now()->endOfWeek(Carbon::SUNDAY);
+            $data = Cache::remember(CacheKeys::dashboard(), CacheKeys::DASHBOARD_TTL, function () {
+                $today = Carbon::today();
+                $tomorrow = Carbon::tomorrow();
+                $weekStart = Carbon::now()->startOfWeek(Carbon::MONDAY);
+                $weekEnd = Carbon::now()->endOfWeek(Carbon::SUNDAY);
 
-            $totalOrders = Order::query()->count();
-            $newThisWeek = Order::query()->where('created_at', '>=', $weekStart)->count();
-            $inProgress = Order::query()->where('status', 'progress')->count();
-            $karigarCount = Order::query()->where('status', 'progress')->distinct('karigar_id')->count('karigar_id');
-            $dueThisWeek = Order::query()
-                ->whereBetween('deadline', [$today->toDateString(), $weekEnd->toDateString()])
-                ->where('status', '!=', 'delivered')
-                ->count();
-            $dueTomorrow = Order::query()
-                ->whereDate('deadline', $tomorrow->toDateString())
-                ->where('status', '!=', 'delivered')
-                ->count();
+                $totalOrders = Order::query()->count();
+                $newThisWeek = Order::query()->where('created_at', '>=', $weekStart)->count();
+                $inProgress = Order::query()->where('status', 'progress')->count();
+                $karigarCount = Order::query()->where('status', 'progress')->distinct('karigar_id')->count('karigar_id');
+                $dueThisWeek = Order::query()
+                    ->whereBetween('deadline', [$today->toDateString(), $weekEnd->toDateString()])
+                    ->where('status', '!=', 'delivered')
+                    ->count();
+                $dueTomorrow = Order::query()
+                    ->whereDate('deadline', $tomorrow->toDateString())
+                    ->where('status', '!=', 'delivered')
+                    ->count();
 
-            $pendingPayments = $this->pendingPaymentsSummary();
+                $pendingPayments = $this->pendingPaymentsSummary();
 
-            $recentOrders = Order::query()
-                ->join('customers', 'customers.id', '=', 'orders.customer_id')
-                ->orderByDesc('orders.created_at')
-                ->limit(8)
-                ->get([
-                    'orders.id',
-                    'orders.order_no',
-                    'orders.status',
-                    'orders.deadline',
-                    'orders.total_amount',
-                    'customers.name as customer_name',
-                ]);
+                $recentOrders = Order::query()
+                    ->join('customers', 'customers.id', '=', 'orders.customer_id')
+                    ->orderByDesc('orders.created_at')
+                    ->limit(8)
+                    ->get([
+                        'orders.id',
+                        'orders.order_no',
+                        'orders.status',
+                        'orders.deadline',
+                        'orders.total_amount',
+                        'customers.name as customer_name',
+                    ]);
 
-            $karigarWorkload = Karigar::query()
-                ->withCount(['orders as active_orders' => function ($query) {
-                    $query->where('status', '!=', 'delivered');
-                }])
-                ->get(['id', 'name', 'max_capacity'])
-                ->map(fn (Karigar $karigar) => [
-                    'id' => $karigar->id,
-                    'name' => $karigar->name,
-                    'activeOrders' => $karigar->active_orders,
-                    'maxCapacity' => $karigar->max_capacity,
-                ]);
+                $karigarWorkload = Karigar::query()
+                    ->withCount(['orders as active_orders' => function ($query) {
+                        $query->where('status', '!=', 'delivered');
+                    }])
+                    ->get(['id', 'name', 'max_capacity'])
+                    ->map(fn (Karigar $karigar) => [
+                        'id' => $karigar->id,
+                        'name' => $karigar->name,
+                        'activeOrders' => $karigar->active_orders,
+                        'maxCapacity' => $karigar->max_capacity,
+                    ]);
 
-            $deadlinesThisWeek = Order::query()
-                ->join('customers', 'customers.id', '=', 'orders.customer_id')
-                ->whereBetween('orders.deadline', [$today->toDateString(), $weekEnd->toDateString()])
-                ->where('orders.status', '!=', 'delivered')
-                ->orderBy('orders.deadline')
-                ->get([
-                    'orders.id',
-                    'orders.order_no',
-                    'orders.status',
-                    'orders.deadline',
-                    'customers.name as customer_name',
-                ]);
+                $deadlinesThisWeek = Order::query()
+                    ->join('customers', 'customers.id', '=', 'orders.customer_id')
+                    ->whereBetween('orders.deadline', [$today->toDateString(), $weekEnd->toDateString()])
+                    ->where('orders.status', '!=', 'delivered')
+                    ->orderBy('orders.deadline')
+                    ->get([
+                        'orders.id',
+                        'orders.order_no',
+                        'orders.status',
+                        'orders.deadline',
+                        'customers.name as customer_name',
+                    ]);
 
-            return response()->json([
-                'data' => [
+                return [
                     'kpis' => [
                         'totalOrders' => $totalOrders,
                         'newThisWeek' => $newThisWeek,
@@ -88,8 +90,10 @@ class DashboardController extends Controller
                     'recentOrders' => $recentOrders,
                     'karigarWorkload' => $karigarWorkload,
                     'deadlinesThisWeek' => $deadlinesThisWeek,
-                ],
-            ]);
+                ];
+            });
+
+            return response()->json(['data' => $data]);
         } catch (Throwable $e) {
             report($e);
 

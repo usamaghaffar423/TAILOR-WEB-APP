@@ -282,7 +282,7 @@ function Dashboard({ onLock }: { onLock: () => void }) {
 
   async function fetchPingInfo() {
     try {
-      const res = await fetch(`${API_URL}/api/ping`, { headers: { Accept: 'application/json' } });
+      const res = await fetch(`${API_URL}/api/ping`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
       if (res.ok) setPingInfo(await res.json());
     } catch {
       // Already reflected in the ping check's own status — nothing more to do here.

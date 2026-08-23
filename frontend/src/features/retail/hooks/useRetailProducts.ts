@@ -6,6 +6,7 @@ export function useRetailProducts() {
   return useQuery({
     queryKey: ['retail-products'],
     queryFn: () => retailProductsApi.list(),
+    staleTime: 10 * 60_000,
   });
 }
 
@@ -14,6 +15,7 @@ export function useRetailProduct(id: number | null) {
     queryKey: ['retail-products', id],
     queryFn: () => retailProductsApi.get(id as number),
     enabled: id !== null,
+    staleTime: 10 * 60_000,
   });
 }
 
@@ -23,6 +25,8 @@ export function useCreateRetailProduct() {
     mutationFn: (payload: CreateRetailProductPayload) => retailProductsApi.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['retail-products'] });
+      // total_products (and total_variants, if variants were included) changes.
+      queryClient.invalidateQueries({ queryKey: ['retail-dashboard'] });
     },
   });
 }
@@ -35,6 +39,10 @@ export function useUpdateRetailProduct() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['retail-products'] });
       queryClient.invalidateQueries({ queryKey: ['retail-products', variables.id] });
+      // sale_price is embedded in cached inventory rows, and is_active
+      // affects the dashboard's total_products count.
+      queryClient.invalidateQueries({ queryKey: ['retail-inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['retail-dashboard'] });
     },
   });
 }
@@ -45,6 +53,7 @@ export function useDeactivateRetailProduct() {
     mutationFn: (id: number) => retailProductsApi.deactivate(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['retail-products'] });
+      queryClient.invalidateQueries({ queryKey: ['retail-dashboard'] });
     },
   });
 }
@@ -57,6 +66,9 @@ export function useAddRetailVariant() {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['retail-products'] });
       queryClient.invalidateQueries({ queryKey: ['retail-products', variables.productId] });
+      // New variant also creates a new inventory row and shifts total_variants.
+      queryClient.invalidateQueries({ queryKey: ['retail-inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['retail-dashboard'] });
     },
   });
 }
@@ -78,6 +90,8 @@ export function useDeleteRetailVariant() {
     mutationFn: (variantId: number) => retailProductsApi.deleteVariant(variantId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['retail-products'] });
+      queryClient.invalidateQueries({ queryKey: ['retail-inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['retail-dashboard'] });
     },
   });
 }

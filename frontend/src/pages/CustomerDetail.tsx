@@ -25,6 +25,7 @@ export default function CustomerDetail() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['customers', customerId],
     queryFn: () => customersApi.show(customerId),
+    staleTime: 15 * 60_000,
   });
   const { data: templatesRes } = useQuery({ queryKey: ['templates'], queryFn: () => settingsApi.getTemplates() });
 

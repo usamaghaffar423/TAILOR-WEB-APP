@@ -30,7 +30,7 @@ export function ReceiptModal({ sale, onClose }: ReceiptModalProps) {
   const { data: shopRes } = useQuery({
     queryKey: ['settings'],
     queryFn: () => settingsApi.show(),
-    staleTime: 5 * 60_000,
+    staleTime: 30 * 60_000,
   });
   const shop = shopRes?.data;
   const logoUrl = useAuthedImage(shop?.logo_path);

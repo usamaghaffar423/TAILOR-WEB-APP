@@ -7,6 +7,7 @@ use App\Models\Retail\RetailInventoryItem;
 use App\Models\Retail\RetailProduct;
 use App\Models\Retail\RetailProductVariant;
 use App\Models\Retail\RetailSaleItem;
+use App\Services\Cache\CacheBuster;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -14,6 +15,10 @@ use Throwable;
 
 class RetailVariantController extends Controller
 {
+    public function __construct(private CacheBuster $cacheBuster)
+    {
+    }
+
     public function store(Request $request, int $productId): JsonResponse
     {
         try {
@@ -46,6 +51,9 @@ class RetailVariantController extends Controller
                 'low_stock_threshold' => 5,
             ]);
 
+            // New variant + its inventory row.
+            $this->cacheBuster->bustRetailInventory();
+
             return response()->json(['data' => $variant->load('inventory'), 'message' => 'Variant added.'], 201);
         } catch (Throwable $e) {
             report($e);
@@ -74,6 +82,8 @@ class RetailVariantController extends Controller
             $relativePath = "retail/variants/{$variantId}/{$filename}";
             $variant->update(['image_path' => $relativePath]);
 
+            $this->cacheBuster->bustRetailProducts();
+
             return response()->json(['data' => $variant, 'message' => 'Image uploaded successfully.']);
         } catch (Throwable $e) {
             report($e);
@@ -96,6 +106,8 @@ class RetailVariantController extends Controller
             }
 
             $variant->delete();
+
+            $this->cacheBuster->bustRetailInventory();
 
             return response()->json(['message' => 'Deleted successfully.']);
         } catch (Throwable $e) {

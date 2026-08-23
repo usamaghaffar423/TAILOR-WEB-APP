@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
@@ -12,6 +12,7 @@ interface AddCustomerModalProps {
 }
 
 export function AddCustomerModal({ open, onClose, onSaved }: AddCustomerModalProps) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
@@ -23,6 +24,7 @@ export function AddCustomerModal({ open, onClose, onSaved }: AddCustomerModalPro
       setName('');
       setPhone('');
       setAddress('');
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       onSaved();
     },
     onError: (e: Error) => toast.error(e.message),

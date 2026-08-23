@@ -63,6 +63,10 @@ export function useHealthChecks(token: string | null) {
             method: check.method,
             headers,
             signal: controller.signal,
+            // Health checks measure real, current latency — never served
+            // from TanStack Query (this hook doesn't use it) or the
+            // browser's own HTTP cache.
+            cache: 'no-store',
           });
 
           const elapsed = Math.round(performance.now() - start);

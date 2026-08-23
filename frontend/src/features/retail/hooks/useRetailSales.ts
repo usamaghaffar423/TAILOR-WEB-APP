@@ -26,6 +26,10 @@ export function useCreateSale() {
       queryClient.invalidateQueries({ queryKey: ['retail-inventory'] });
       queryClient.invalidateQueries({ queryKey: ['retail-products'] });
       queryClient.invalidateQueries({ queryKey: ['retail-dashboard'] });
+      // Retail and tailoring are separate data domains with no overlap,
+      // but explicitly invalidated too in case anything ever surfaces
+      // combined business metrics across both.
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

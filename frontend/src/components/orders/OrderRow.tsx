@@ -21,6 +21,9 @@ export function OrderRow({ order, onViewCard, onAddPayment, onCustomerBill, onKa
     onSuccess: () => {
       toast.success('Order status updated');
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      // Status changes shift Dashboard's inProgress count, karigar
+      // workload, and due-this-week/deadlines lists.
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
     onError: (e: Error) => toast.error(e.message),
   });

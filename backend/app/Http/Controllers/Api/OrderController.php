@@ -10,68 +10,86 @@ use App\Models\Measurement;
 use App\Models\MeasurementTemplate;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Services\Cache\CacheBuster;
+use App\Services\Cache\CacheKeys;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class OrderController extends Controller
 {
+    public function __construct(private CacheBuster $cacheBuster)
+    {
+    }
+
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = DB::table('orders')
-                ->join('customers', 'customers.id', '=', 'orders.customer_id')
-                ->join('karigars', 'karigars.id', '=', 'orders.karigar_id')
-                ->leftJoin('payments', 'payments.order_id', '=', 'orders.id');
+            $filters = [
+                'status' => $request->query('status'),
+                'karigar_id' => $request->query('karigar_id'),
+                'q' => $request->query('q'),
+                'from' => $request->query('from'),
+                'to' => $request->query('to'),
+            ];
 
-            if ($status = $request->query('status')) {
-                $query->where('orders.status', $status);
-            }
+            $orders = Cache::remember(CacheKeys::orders($filters), CacheKeys::ORDERS_TTL, function () use ($filters) {
+                $query = DB::table('orders')
+                    ->join('customers', 'customers.id', '=', 'orders.customer_id')
+                    ->join('karigars', 'karigars.id', '=', 'orders.karigar_id')
+                    ->leftJoin('payments', 'payments.order_id', '=', 'orders.id');
 
-            if ($karigarId = $request->query('karigar_id')) {
-                $query->where('orders.karigar_id', $karigarId);
-            }
+                if ($filters['status']) {
+                    $query->where('orders.status', $filters['status']);
+                }
 
-            if ($q = $request->query('q')) {
-                $query->where(function ($sub) use ($q) {
-                    $sub->where('orders.order_no', 'like', "%{$q}%")
-                        ->orWhere('customers.name', 'like', "%{$q}%");
-                });
-            }
+                if ($filters['karigar_id']) {
+                    $query->where('orders.karigar_id', $filters['karigar_id']);
+                }
 
-            if ($from = $request->query('from')) {
-                $query->whereDate('orders.deadline', '>=', $from);
-            }
+                if ($filters['q']) {
+                    $q = $filters['q'];
+                    $query->where(function ($sub) use ($q) {
+                        $sub->where('orders.order_no', 'like', "%{$q}%")
+                            ->orWhere('customers.name', 'like', "%{$q}%");
+                    });
+                }
 
-            if ($to = $request->query('to')) {
-                $query->whereDate('orders.deadline', '<=', $to);
-            }
+                if ($filters['from']) {
+                    $query->whereDate('orders.deadline', '>=', $filters['from']);
+                }
 
-            $orders = $query
-                ->groupBy(
-                    'orders.id', 'orders.order_no', 'orders.status', 'orders.deadline',
-                    'orders.assigned_date', 'orders.delivered_date', 'orders.total_amount',
-                    'orders.created_at', 'customers.id', 'customers.name', 'customers.phone',
-                    'karigars.id', 'karigars.name'
-                )
-                ->orderByDesc('orders.created_at')
-                ->get([
-                    'orders.id',
-                    'orders.order_no',
-                    'orders.status',
-                    'orders.deadline',
-                    'orders.assigned_date',
-                    'orders.delivered_date',
-                    'orders.total_amount',
-                    'customers.id as customer_id',
-                    'customers.name as customer_name',
-                    'customers.phone as customer_phone',
-                    'karigars.id as karigar_id',
-                    'karigars.name as karigar_name',
-                    DB::raw('COALESCE(SUM(payments.amount), 0) as paid_amount'),
-                ]);
+                if ($filters['to']) {
+                    $query->whereDate('orders.deadline', '<=', $filters['to']);
+                }
+
+                return $query
+                    ->groupBy(
+                        'orders.id', 'orders.order_no', 'orders.status', 'orders.deadline',
+                        'orders.assigned_date', 'orders.delivered_date', 'orders.total_amount',
+                        'orders.created_at', 'customers.id', 'customers.name', 'customers.phone',
+                        'karigars.id', 'karigars.name'
+                    )
+                    ->orderByDesc('orders.created_at')
+                    ->get([
+                        'orders.id',
+                        'orders.order_no',
+                        'orders.status',
+                        'orders.deadline',
+                        'orders.assigned_date',
+                        'orders.delivered_date',
+                        'orders.total_amount',
+                        'customers.id as customer_id',
+                        'customers.name as customer_name',
+                        'customers.phone as customer_phone',
+                        'karigars.id as karigar_id',
+                        'karigars.name as karigar_name',
+                        DB::raw('COALESCE(SUM(payments.amount), 0) as paid_amount'),
+                    ]);
+            });
 
             return response()->json(['data' => $orders]);
         } catch (Throwable $e) {
@@ -121,6 +139,11 @@ class OrderController extends Controller
 
             $order->load(['customer', 'karigar', 'photos', 'payments']);
 
+            $this->cacheBuster->bustOrders();
+            if ($advanceAmount && (float) $advanceAmount > 0) {
+                $this->cacheBuster->bustPayments();
+            }
+
             return response()->json(['data' => $order, 'message' => 'Created successfully.'], 201);
         } catch (Throwable $e) {
             report($e);
@@ -132,7 +155,9 @@ class OrderController extends Controller
     public function show(Request $request, int $id): JsonResponse
     {
         try {
-            $order = Order::query()->with(['customer', 'karigar', 'photos', 'payments'])->find($id);
+            $order = Cache::remember(CacheKeys::orderShow($id), CacheKeys::ORDERS_TTL, function () use ($id) {
+                return Order::query()->with(['customer', 'karigar', 'photos', 'payments'])->find($id);
+            });
 
             if (! $order) {
                 return response()->json(['message' => 'Not found.'], 404);
@@ -160,6 +185,8 @@ class OrderController extends Controller
             $order->status = $status;
             $order->delivered_date = $status === 'delivered' ? Carbon::today()->toDateString() : null;
             $order->save();
+
+            $this->cacheBuster->bustOrders();
 
             return response()->json(['data' => $order, 'message' => 'Status updated successfully.']);
         } catch (Throwable $e) {
@@ -189,6 +216,8 @@ class OrderController extends Controller
                 : null;
             $order->save();
 
+            $this->cacheBuster->bustOrders();
+
             return response()->json(['data' => $order, 'message' => 'Updated successfully.']);
         } catch (Throwable $e) {
             report($e);
@@ -207,6 +236,8 @@ class OrderController extends Controller
             }
 
             $order->delete();
+
+            $this->cacheBuster->bustOrders();
 
             return response()->json(['message' => 'Deleted successfully.']);
         } catch (Throwable $e) {

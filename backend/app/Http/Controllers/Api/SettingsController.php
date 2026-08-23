@@ -10,17 +10,28 @@ use App\Http\Requests\UploadBannerRequest;
 use App\Http\Requests\UploadLogoRequest;
 use App\Models\MeasurementTemplate;
 use App\Models\ShopSettings;
+use App\Services\Cache\CacheBuster;
+use App\Services\Cache\CacheKeys;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Throwable;
 
 class SettingsController extends Controller
 {
+    public function __construct(private CacheBuster $cacheBuster)
+    {
+    }
+
     public function show(Request $request): JsonResponse
     {
         try {
-            $settings = ShopSettings::query()->find(1);
+            $settings = Cache::remember(
+                CacheKeys::settings(),
+                CacheKeys::SETTINGS_TTL,
+                fn () => ShopSettings::query()->find(1)
+            );
 
             return response()->json(['data' => $settings]);
         } catch (Throwable $e) {
@@ -42,6 +53,8 @@ class SettingsController extends Controller
                 'theme_default' => $request->input('theme_default'),
             ]);
 
+            $this->cacheBuster->bustSettings();
+
             return response()->json(['data' => $settings, 'message' => 'Updated successfully.']);
         } catch (Throwable $e) {
             report($e);
@@ -57,6 +70,8 @@ class SettingsController extends Controller
 
             $settings = ShopSettings::query()->find(1);
             $settings->update(['logo_path' => $path]);
+
+            $this->cacheBuster->bustSettings();
 
             return response()->json(['data' => ['logo_path' => $path], 'message' => 'Logo uploaded successfully.']);
         } catch (Throwable $e) {
@@ -74,6 +89,8 @@ class SettingsController extends Controller
             $settings = ShopSettings::query()->find(1);
             $settings->update(['banner_path' => $path]);
 
+            $this->cacheBuster->bustSettings();
+
             return response()->json(['data' => ['banner_path' => $path], 'message' => 'Banner uploaded successfully.']);
         } catch (Throwable $e) {
             report($e);
@@ -85,7 +102,11 @@ class SettingsController extends Controller
     public function getTemplates(Request $request): JsonResponse
     {
         try {
-            $templates = MeasurementTemplate::query()->orderBy('label')->get();
+            $templates = Cache::remember(
+                CacheKeys::templates(),
+                CacheKeys::MEASUREMENT_TEMPLATES_TTL,
+                fn () => MeasurementTemplate::query()->orderBy('label')->get()
+            );
 
             return response()->json(['data' => $templates]);
         } catch (Throwable $e) {
@@ -108,6 +129,8 @@ class SettingsController extends Controller
                 'label' => $request->input('label'),
                 'fields' => $request->input('fields'),
             ]);
+
+            $this->cacheBuster->bustTemplates();
 
             return response()->json(['data' => $template, 'message' => 'Updated successfully.']);
         } catch (Throwable $e) {

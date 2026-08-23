@@ -5,6 +5,7 @@ export function useRetailInventory(lowStockOnly = false) {
   return useQuery({
     queryKey: ['retail-inventory', lowStockOnly],
     queryFn: () => retailInventoryApi.list(lowStockOnly),
+    staleTime: 60_000,
   });
 }
 

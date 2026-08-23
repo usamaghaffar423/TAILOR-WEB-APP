@@ -4,42 +4,58 @@ namespace App\Http\Controllers\Retail;
 
 use App\Http\Controllers\Controller;
 use App\Models\Retail\RetailSale;
+use App\Services\Cache\CacheBuster;
+use App\Services\Cache\CacheKeys;
 use App\Services\Retail\RetailSaleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use RuntimeException;
 use Throwable;
 
 class RetailSaleController extends Controller
 {
-    public function __construct(private RetailSaleService $sales)
-    {
+    public function __construct(
+        private RetailSaleService $sales,
+        private CacheBuster $cacheBuster
+    ) {
     }
 
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = RetailSale::query()->withCount('items')->latest('sale_date');
+            $filters = [
+                'date_from' => $request->query('date_from'),
+                'date_to' => $request->query('date_to'),
+                'payment_method' => $request->query('payment_method'),
+                'product_id' => $request->query('product_id'),
+                'page' => max(1, (int) $request->query('page', 1)),
+            ];
 
-            if ($from = $request->query('date_from')) {
-                $query->whereDate('sale_date', '>=', $from);
-            }
+            $sales = Cache::remember(CacheKeys::retailSales($filters), CacheKeys::RETAIL_SALES_TTL, function () use ($filters) {
+                $query = RetailSale::query()->withCount('items')->latest('sale_date');
 
-            if ($to = $request->query('date_to')) {
-                $query->whereDate('sale_date', '<=', $to);
-            }
+                if ($filters['date_from']) {
+                    $query->whereDate('sale_date', '>=', $filters['date_from']);
+                }
 
-            if ($method = $request->query('payment_method')) {
-                $query->where('payment_method', $method);
-            }
+                if ($filters['date_to']) {
+                    $query->whereDate('sale_date', '<=', $filters['date_to']);
+                }
 
-            if ($productId = $request->query('product_id')) {
-                $query->whereHas('items.variant', function ($q) use ($productId) {
-                    $q->where('retail_product_id', $productId);
-                });
-            }
+                if ($filters['payment_method']) {
+                    $query->where('payment_method', $filters['payment_method']);
+                }
 
-            $sales = $query->paginate(20);
+                if ($filters['product_id']) {
+                    $productId = $filters['product_id'];
+                    $query->whereHas('items.variant', function ($q) use ($productId) {
+                        $q->where('retail_product_id', $productId);
+                    });
+                }
+
+                return $query->paginate(20, ['*'], 'page', $filters['page']);
+            });
 
             return response()->json($sales);
         } catch (Throwable $e) {
@@ -70,6 +86,10 @@ class RetailSaleController extends Controller
                 $adminId
             );
 
+            // A confirmed sale both records a sale and deducts stock.
+            $this->cacheBuster->bustRetailSales();
+            $this->cacheBuster->bustRetailInventory();
+
             return response()->json(['data' => $sale, 'message' => 'Sale recorded.'], 201);
         } catch (RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
@@ -83,7 +103,11 @@ class RetailSaleController extends Controller
     public function show(int $id): JsonResponse
     {
         try {
-            $sale = RetailSale::query()->with('items.variant.product')->find($id);
+            $sale = Cache::remember(
+                CacheKeys::retailSaleShow($id),
+                CacheKeys::RETAIL_SALES_TTL,
+                fn () => RetailSale::query()->with('items.variant.product')->find($id)
+            );
 
             if (! $sale) {
                 return response()->json(['message' => 'Not found.'], 404);

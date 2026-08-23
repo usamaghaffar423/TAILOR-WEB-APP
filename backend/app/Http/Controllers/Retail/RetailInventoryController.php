@@ -5,27 +5,36 @@ namespace App\Http\Controllers\Retail;
 use App\Http\Controllers\Controller;
 use App\Models\Retail\RetailInventoryItem;
 use App\Models\Retail\RetailStockMovement;
+use App\Services\Cache\CacheBuster;
+use App\Services\Cache\CacheKeys;
 use App\Services\Retail\RetailInventoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 class RetailInventoryController extends Controller
 {
-    public function __construct(private RetailInventoryService $inventory)
-    {
+    public function __construct(
+        private RetailInventoryService $inventory,
+        private CacheBuster $cacheBuster
+    ) {
     }
 
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = RetailInventoryItem::query()->with('variant.product');
+            $lowStockOnly = $request->boolean('low_stock');
 
-            if ($request->boolean('low_stock')) {
-                $query->whereColumn('quantity_in_stock', '<=', 'low_stock_threshold');
-            }
+            $items = Cache::remember(CacheKeys::retailInventory($lowStockOnly), CacheKeys::RETAIL_INVENTORY_TTL, function () use ($lowStockOnly) {
+                $query = RetailInventoryItem::query()->with('variant.product');
 
-            $items = $query->get();
+                if ($lowStockOnly) {
+                    $query->whereColumn('quantity_in_stock', '<=', 'low_stock_threshold');
+                }
+
+                return $query->get();
+            });
 
             return response()->json(['data' => $items]);
         } catch (Throwable $e) {
@@ -48,6 +57,8 @@ class RetailInventoryController extends Controller
 
             $item = RetailInventoryItem::where('retail_product_variant_id', $variantId)->firstOrFail();
 
+            $this->cacheBuster->bustRetailInventory();
+
             return response()->json(['data' => $item, 'message' => 'Stock updated.']);
         } catch (Throwable $e) {
             report($e);
@@ -69,6 +80,8 @@ class RetailInventoryController extends Controller
 
             $item = RetailInventoryItem::where('retail_product_variant_id', $variantId)->firstOrFail();
 
+            $this->cacheBuster->bustRetailInventory();
+
             return response()->json(['data' => $item, 'message' => 'Stock adjusted.']);
         } catch (Throwable $e) {
             report($e);
@@ -80,9 +93,15 @@ class RetailInventoryController extends Controller
     public function movements(int $variantId): JsonResponse
     {
         try {
-            $movements = RetailStockMovement::where('retail_product_variant_id', $variantId)
-                ->latest()
-                ->paginate(15);
+            $page = max(1, (int) request()->query('page', 1));
+
+            $movements = Cache::remember(
+                CacheKeys::retailMovements($variantId, $page),
+                CacheKeys::RETAIL_INVENTORY_TTL,
+                fn () => RetailStockMovement::where('retail_product_variant_id', $variantId)
+                    ->latest()
+                    ->paginate(15, ['*'], 'page', $page)
+            );
 
             return response()->json($movements);
         } catch (Throwable $e) {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
@@ -12,6 +12,7 @@ interface AddKarigarModalProps {
 }
 
 export function AddKarigarModal({ open, onClose, onSaved }: AddKarigarModalProps) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [speciality, setSpeciality] = useState('');
@@ -31,6 +32,7 @@ export function AddKarigarModal({ open, onClose, onSaved }: AddKarigarModalProps
       setPhone('');
       setSpeciality('');
       setCapacity('6');
+      queryClient.invalidateQueries({ queryKey: ['karigars'] });
       onSaved();
     },
     onError: (e: Error) => toast.error(e.message),

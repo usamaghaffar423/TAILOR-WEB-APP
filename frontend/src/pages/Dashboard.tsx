@@ -14,6 +14,7 @@ export default function Dashboard() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => dashboardApi.index(),
+    staleTime: 3 * 60_000,
   });
 
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
