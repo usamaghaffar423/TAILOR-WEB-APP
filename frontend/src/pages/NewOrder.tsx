@@ -27,6 +27,7 @@ import {
   WAIST_TYPE_OPTS, DAMAN_OPTS, FABRIC_OPTS,
   BUTTON_STYLE_OPTS, BUTTON_COUNT_OPTS, COLOR_OPTS,
 } from '@/lib/styleOptions';
+import { bilingual } from '@/lib/styleOptionsUrdu';
 import type { Customer, OrderStatus, PaymentMethod } from '@/types';
 
 type PaymentStatus = 'none' | 'partial' | 'full';
@@ -352,9 +353,9 @@ export default function NewOrder() {
                   <div className="field"><label>Pocket Depth</label><StyleChipPicker options={POCKET_DEPTH_OPTS} value={pocketDepth} onChange={setPocketDepth} /></div>
                 </div>
                 <div className="form-grid cols-2" style={{ marginTop: 16 }}>
-                  <div className="field"><label>Fabric</label><select value={fabric} onChange={(e) => setFabric(e.target.value)}>{FABRIC_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}</select></div>
-                  <div className="field"><label>Button Style</label><select value={buttonStyle} onChange={(e) => setButtonStyle(e.target.value)}>{BUTTON_STYLE_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}</select></div>
-                  <div className="field"><label>Button Count</label><select value={buttonCount} onChange={(e) => setButtonCount(e.target.value)}>{BUTTON_COUNT_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}</select></div>
+                  <div className="field"><label>Fabric</label><select value={fabric} onChange={(e) => setFabric(e.target.value)}>{FABRIC_OPTS.map((o) => <option key={o} value={o}>{bilingual(o)}</option>)}</select></div>
+                  <div className="field"><label>Button Style</label><select value={buttonStyle} onChange={(e) => setButtonStyle(e.target.value)}>{BUTTON_STYLE_OPTS.map((o) => <option key={o} value={o}>{bilingual(o)}</option>)}</select></div>
+                  <div className="field"><label>Button Count</label><select value={buttonCount} onChange={(e) => setButtonCount(e.target.value)}>{BUTTON_COUNT_OPTS.map((o) => <option key={o} value={o}>{bilingual(o)}</option>)}</select></div>
                 </div>
               </div>
             </details>

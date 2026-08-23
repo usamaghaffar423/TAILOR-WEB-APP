@@ -1,3 +1,5 @@
+import { URDU_LABELS } from '@/lib/styleOptionsUrdu';
+
 interface StyleChipPickerProps {
   options: readonly string[];
   value: string;
@@ -14,6 +16,12 @@ export function StyleChipPicker({ options, value, onChange }: StyleChipPickerPro
           onClick={() => onChange(o)}
         >
           {o}
+          {URDU_LABELS[o] && (
+            <>
+              {' / '}
+              <bdi className="label-urdu">{URDU_LABELS[o]}</bdi>
+            </>
+          )}
         </div>
       ))}
     </div>

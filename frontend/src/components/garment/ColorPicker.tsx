@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { COLOR_OPTS } from '@/lib/styleOptions';
+import { URDU_LABELS } from '@/lib/styleOptionsUrdu';
 
 interface ColorPickerProps {
   value: string;
@@ -12,20 +13,23 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 
   return (
     <div className="color-dot-group">
-      {COLOR_OPTS.map((c) => (
-        <div
-          key={c.hex}
-          className={`color-dot${c.hex === value ? ' selected' : ''}`}
-          style={{ background: c.hex }}
-          title={c.name}
-          aria-label={c.name}
-          onClick={() => onChange(c.hex)}
-        />
-      ))}
+      {COLOR_OPTS.map((c) => {
+        const label = URDU_LABELS[c.name] ? `${c.name} / ${URDU_LABELS[c.name]}` : c.name;
+        return (
+          <div
+            key={c.hex}
+            className={`color-dot${c.hex === value ? ' selected' : ''}`}
+            style={{ background: c.hex }}
+            title={label}
+            aria-label={label}
+            onClick={() => onChange(c.hex)}
+          />
+        );
+      })}
       <div
         className={`color-dot${isCustom ? ' selected' : ''}`}
-        title="Custom color"
-        aria-label="Custom color"
+        title="Custom Color / حسب منشا رنگ"
+        aria-label="Custom Color / حسب منشا رنگ"
         style={{
           background: isCustom ? value : 'var(--surface)',
           border: '1.5px dashed var(--border-strong)',

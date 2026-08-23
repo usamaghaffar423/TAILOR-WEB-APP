@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { URDU_LABELS } from '@/lib/styleOptionsUrdu';
 
 interface StyleOptionPickerProps {
   options: readonly string[];
@@ -26,7 +27,15 @@ export function StyleOptionPicker({ options, iconMap, value, onChange }: StyleOp
           }}
         >
           {iconMap[o] || null}
-          <span className="label">{o}</span>
+          <span className="label">
+            {o}
+            {URDU_LABELS[o] && (
+              <>
+                {' / '}
+                <bdi className="label-urdu">{URDU_LABELS[o]}</bdi>
+              </>
+            )}
+          </span>
         </div>
       ))}
     </div>
