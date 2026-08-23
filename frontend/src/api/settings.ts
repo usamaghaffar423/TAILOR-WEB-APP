@@ -48,4 +48,6 @@ export const settingsApi = {
       method: 'PUT',
       body: JSON.stringify({ current_password, new_password }),
     }),
+
+  clearCache: () => apiFetch<{ message: string }>('/settings/clear-cache', { method: 'POST' }),
 };

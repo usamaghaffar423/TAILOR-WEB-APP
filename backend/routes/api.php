@@ -57,6 +57,7 @@ Route::middleware('api.auth')->group(function () {
     Route::post('/settings/banner', [SettingsController::class, 'uploadBanner']);
     Route::get('/templates', [SettingsController::class, 'getTemplates']);
     Route::put('/templates/{key}', [SettingsController::class, 'updateTemplate']);
+    Route::post('/settings/clear-cache', [SettingsController::class, 'clearCache']);
 
     // Uploads
     Route::post('/uploads/order/{id}', [UploadController::class, 'store']);

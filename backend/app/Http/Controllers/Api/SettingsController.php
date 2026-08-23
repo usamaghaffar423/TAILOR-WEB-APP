@@ -140,6 +140,19 @@ class SettingsController extends Controller
         }
     }
 
+    public function clearCache(Request $request): JsonResponse
+    {
+        try {
+            Cache::flush();
+
+            return response()->json(['message' => 'Cache cleared successfully.']);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => 'Server error.'], 500);
+        }
+    }
+
     public function changePassword(ChangePasswordRequest $request): JsonResponse
     {
         try {

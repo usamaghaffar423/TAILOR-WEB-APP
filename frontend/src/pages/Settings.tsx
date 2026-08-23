@@ -101,6 +101,15 @@ export default function Settings() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const clearCacheMutation = useMutation({
+    mutationFn: () => settingsApi.clearCache(),
+    onSuccess: () => {
+      toast.success('Cache cleared');
+      queryClient.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const passwordMutation = useMutation({
@@ -260,6 +269,18 @@ export default function Settings() {
         <p style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 10 }}>
           Manage karigars (add, edit, remove) from the <a href="/karigars" style={{ color: 'var(--red)' }}>Karigars</a> page.
         </p>
+      </div>
+
+      <div className="form-section">
+        <div className="form-section-title"><span className="num">6</span>System Cache</div>
+        <p style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 10 }}>
+          Clears all cached data on the server (dashboard, orders, customers, karigars, payments, settings, templates, and retail). Use this if data looks stale — it refreshes automatically every 3 days regardless.
+        </p>
+        <div style={{ marginTop: 14 }}>
+          <Button variant="outline" onClick={() => clearCacheMutation.mutate()} disabled={clearCacheMutation.isPending}>
+            {clearCacheMutation.isPending ? 'Clearing…' : 'Clear Cache'}
+          </Button>
+        </div>
       </div>
 
       <p style={{ fontSize: 11, color: 'var(--text-faint)' }}>Signed in as {admin?.email}</p>
