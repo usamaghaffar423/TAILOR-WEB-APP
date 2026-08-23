@@ -154,7 +154,7 @@ nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shr
 
 .theme-toggle{
   display:flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--border);
-  border-radius:999px; padding:4px; cursor:pointer; flex-shrink:0;
+  border-radius:999px; padding:4px; cursor:pointer; flex-shrink:0; margin-left:auto;
 }
 .theme-toggle button{
   border:none; background:none; width:32px; height:28px; border-radius:999px; cursor:pointer;
