@@ -265,10 +265,18 @@ export default function NewOrder() {
               return (
                 <div className="field" key={f.key}>
                   <label>{f.label}</label>
-                  <select value={styleValues[f.key] || ''} onChange={(e) => setStyleField(f.key, e.target.value)}>
-                    <option value="">Select…</option>
-                    {options.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
+                  {f.freeText ? (
+                    <input
+                      type="text"
+                      value={styleValues[f.key] || ''}
+                      onChange={(e) => setStyleField(f.key, e.target.value)}
+                    />
+                  ) : (
+                    <select value={styleValues[f.key] || ''} onChange={(e) => setStyleField(f.key, e.target.value)}>
+                      <option value="">Select…</option>
+                      {options.map((o) => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  )}
                 </div>
               );
             })}
