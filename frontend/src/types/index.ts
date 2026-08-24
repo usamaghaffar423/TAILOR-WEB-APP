@@ -83,7 +83,6 @@ export interface OrderStyle {
   sada_asteen?: string;
   down_shoulder?: string;
   design?: string;
-  note?: string;
 }
 
 export interface MeasurementSnapshot {

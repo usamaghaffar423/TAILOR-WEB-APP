@@ -300,6 +300,7 @@ nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shr
 }
 .field input:focus, .field select:focus, .field textarea:focus{border-color:var(--red);}
 .field textarea{resize:vertical; min-height:70px; font-family:inherit;}
+.field textarea.notes-big{min-height:140px;}
 .field .hint{font-size:10.5px; color:var(--text-faint);}
 .field.mono input{font-family:'IBM Plex Mono',monospace;}
 
@@ -332,6 +333,20 @@ nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shr
 .dropdown-option{padding:8px 10px; border-radius:7px; font-size:13px; color:var(--text); cursor:pointer; transition:background .12s, color .12s;}
 .dropdown-option:hover{background:var(--red-pale); color:var(--red-bright);}
 .dropdown-option.selected{background:var(--red); color:#fff; font-weight:600;}
+
+/* Brand date input — shows dd/mm/yyyy regardless of browser/OS locale,
+   while still using a real <input type="date"> underneath for the picker. */
+.date-input{
+  position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px;
+  background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:10px 12px;
+  color:var(--text); font-size:13.5px; cursor:pointer; transition:border-color .15s; width:100%;
+}
+.date-input:hover{border-color:var(--red);}
+.date-input .placeholder{color:var(--text-faint);}
+.date-input svg{width:14px; height:14px; stroke:var(--text-faint); flex-shrink:0;}
+.date-input-native{
+  position:absolute; inset:0; width:100%; height:100%; opacity:0; border:none; padding:0; margin:0; cursor:pointer;
+}
 
 /* Filter-bar usage — compact, content-sized instead of stretching full width */
 .dropdown.dropdown-filter{width:auto;}

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { StitchDivider } from '@/components/ui/StitchDivider';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
+import { DateInput } from '@/components/ui/DateInput';
 import { MeasurementFieldsForm } from '@/components/measurements/MeasurementFieldsForm';
 import { customersApi } from '@/api/customers';
 import { karigarsApi } from '@/api/karigars';
@@ -261,9 +262,6 @@ export default function NewOrder() {
             <MeasurementFieldsForm template={template} fields={fields} onFieldChange={(key, value) => setFields((f) => ({ ...f, [key]: value }))} />
           </div>
         )}
-        <div className="form-grid cols-2" style={{ marginTop: 14 }}>
-          <div className="field span-2"><label>Notes</label><textarea placeholder="Fit preferences, special instructions..." value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
-        </div>
       </div>
 
       <div className="form-section">
@@ -300,7 +298,21 @@ export default function NewOrder() {
       </div>
 
       <div className="form-section">
-        <div className="form-section-title"><span className="num">4</span>Reference Photos</div>
+        <div className="form-section-title"><span className="num">4</span>Notes</div>
+        <div className="form-grid" style={{ marginTop: 14 }}>
+          <div className="field span-3">
+            <textarea
+              className="notes-big"
+              placeholder="Fit preferences, special instructions, style notes — anything the karigar or customer bill should carry..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="form-section">
+        <div className="form-section-title"><span className="num">5</span>Reference Photos</div>
         <div style={{ marginTop: 14 }}>
           <label
             className={`photo-drop${dragOver ? ' dragover' : ''}`}
@@ -351,7 +363,7 @@ export default function NewOrder() {
       </div>
 
       <div className="form-section">
-        <div className="form-section-title"><span className="num">5</span>Assign &amp; Deadline</div>
+        <div className="form-section-title"><span className="num">6</span>Assign &amp; Deadline</div>
         <div className="form-grid">
           <div className="field">
             <label>Karigar</label>
@@ -362,7 +374,7 @@ export default function NewOrder() {
               options={karigarsRes?.data.map((k) => ({ value: String(k.id), label: `${k.name} — ${k.speciality || ''}` })) || []}
             />
           </div>
-          <div className="field"><label>Deadline</label><input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} /></div>
+          <div className="field"><label>Deadline</label><DateInput value={deadline} onChange={setDeadline} /></div>
           <div className="field">
             <label>Order Status</label>
             <Dropdown value={status} onChange={(v) => setStatus(v as OrderStatus)} options={ORDER_STATUS_OPTIONS} />

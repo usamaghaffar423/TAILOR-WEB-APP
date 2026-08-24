@@ -148,6 +148,14 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
             </>
           )}
 
+          {order.measurement_snapshot.notes && (
+            <>
+              <hr style={divider} />
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#777', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Notes</div>
+              <div style={{ fontSize: 12.5, whiteSpace: 'pre-wrap' }}>{order.measurement_snapshot.notes}</div>
+            </>
+          )}
+
           <hr style={divider} />
 
           <div style={{ textAlign: 'center', fontSize: 12, color: '#555' }}>

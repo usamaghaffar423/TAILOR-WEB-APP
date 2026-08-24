@@ -29,7 +29,6 @@ export const STYLE_FIELDS: StyleFieldDef[] = [
   { key: 'moda', label: 'Moda', labelUrdu: 'مودا', freeText: true },
   { key: 'design', label: 'Design', labelUrdu: 'ڈیزائن' },
   { key: 'pati', label: 'Pati', labelUrdu: 'پٹی', freeText: true },
-  { key: 'note', label: 'Note', labelUrdu: 'نوٹ', freeText: true },
 ];
 
 export const STYLE_FIELD_OPTIONS: Partial<Record<keyof OrderStyle, string[]>> = {
