@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { ordersApi } from '@/api/orders';
 import { paymentsApi } from '@/api/payments';
 import { formatCurrency } from '@/lib/format';
+import { PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
 import type { PaymentMethod } from '@/types';
 
 interface AddPaymentModalProps {
@@ -145,12 +147,7 @@ export function AddPaymentModal({ orderId: presetOrderId, open, onClose, onSaved
       </div>
       <div className="field">
         <label>Method</label>
-        <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
-          <option value="cash">Cash</option>
-          <option value="easypaisa">Easypaisa</option>
-          <option value="jazzcash">JazzCash</option>
-          <option value="bank">Bank</option>
-        </select>
+        <Dropdown value={method} onChange={(v) => setMethod(v as PaymentMethod)} options={PAYMENT_METHOD_OPTIONS} />
       </div>
       <div className="field">
         <label>Note (optional)</label>

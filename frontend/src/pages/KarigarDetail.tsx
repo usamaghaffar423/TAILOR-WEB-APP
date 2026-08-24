@@ -14,6 +14,8 @@ import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
 import { EditKarigarModal } from '@/components/karigars/EditKarigarModal';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
 import { WHATSAPP_ICON, PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON } from '@/lib/garmentIcons';
 import { formatDateShort } from '@/lib/format';
 import { sendOrderWhatsApp } from '@/lib/orderCard';
@@ -98,20 +100,25 @@ export default function KarigarDetail() {
       </div>
 
       <div className="filter-bar">
-        <select value={month} onChange={(e) => setMonth(e.target.value)}>
-          <option value="">All Months</option>
-          {months.map((m) => {
-            const [y, mo] = m.split('-');
-            const label = new Date(Number(y), Number(mo) - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-            return <option key={m} value={m}>{label}</option>;
-          })}
-        </select>
-        <select value={status} onChange={(e) => setStatus(e.target.value as OrderStatus | '')}>
-          <option value="">All Statuses</option>
-          <option value="progress">In Progress</option>
-          <option value="ready">Ready</option>
-          <option value="delivered">Delivered</option>
-        </select>
+        <Dropdown
+          className="dropdown-filter"
+          value={month}
+          onChange={setMonth}
+          options={[
+            { value: '', label: 'All Months' },
+            ...months.map((m) => {
+              const [y, mo] = m.split('-');
+              const label = new Date(Number(y), Number(mo) - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+              return { value: m, label };
+            }),
+          ]}
+        />
+        <Dropdown
+          className="dropdown-filter"
+          value={status}
+          onChange={(v) => setStatus(v as OrderStatus | '')}
+          options={[{ value: '', label: 'All Statuses' }, ...ORDER_STATUS_OPTIONS]}
+        />
       </div>
 
       {orders.length === 0 ? (

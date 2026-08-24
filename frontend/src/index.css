@@ -323,6 +323,7 @@ nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shr
 .dropdown-trigger:hover{border-color:var(--red);}
 .dropdown-trigger.open{border-color:var(--red);}
 .dropdown-trigger.open svg{transform:rotate(180deg); stroke:var(--red);}
+.dropdown-trigger:disabled{opacity:0.6; cursor:not-allowed;}
 .dropdown-menu{
   position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
   background:var(--surface); border:1px solid var(--border-strong); border-radius:10px;
@@ -331,6 +332,23 @@ nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shr
 .dropdown-option{padding:8px 10px; border-radius:7px; font-size:13px; color:var(--text); cursor:pointer; transition:background .12s, color .12s;}
 .dropdown-option:hover{background:var(--red-pale); color:var(--red-bright);}
 .dropdown-option.selected{background:var(--red); color:#fff; font-weight:600;}
+
+/* Filter-bar usage — compact, content-sized instead of stretching full width */
+.dropdown.dropdown-filter{width:auto;}
+.dropdown.dropdown-filter .dropdown-trigger{width:auto; min-width:150px; padding:9px 12px; font-size:12.5px;}
+.dropdown.dropdown-filter .dropdown-menu{left:0; right:auto; width:max-content; min-width:170px;}
+
+/* Inline colored pill usage (e.g. order status inside a table row) */
+.dropdown.dropdown-pill{width:auto;}
+.dropdown.dropdown-pill .dropdown-trigger{
+  width:auto; display:inline-flex; border-radius:20px; padding:5px 8px 5px 12px; font-size:10.5px;
+  font-weight:700; border-color:transparent; gap:6px;
+}
+.dropdown.dropdown-pill .dropdown-trigger svg{width:9px; height:9px;}
+.dropdown.dropdown-pill .dropdown-menu{left:0; right:auto; width:max-content; min-width:150px;}
+.dropdown-trigger.status-pill-progress{background:var(--red-pale); color:var(--red-bright);}
+.dropdown-trigger.status-pill-ready{background:var(--green-pale); color:var(--green);}
+.dropdown-trigger.status-pill-delivered{background:var(--surface-2); color:var(--text-faint);}
 
 /* Swatches / checklist */
 .swatch-group{display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;}
@@ -416,16 +434,6 @@ table.data-table tbody tr.clickable:hover{background:var(--surface-2);}
   color:var(--text); font-size:12.5px; outline:none;
 }
 .filter-bar select:focus, .filter-bar input:focus{border-color:var(--red);}
-
-/* Status select inline */
-.status-select{
-  border-radius:20px; padding:5px 26px 5px 10px; font-size:10.5px; font-weight:700; border:1px solid var(--border);
-  cursor:pointer; appearance:none; -webkit-appearance:none; background-repeat:no-repeat; background-position:right 8px center; background-size:9px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239B9BA3' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-}
-.status-select.progress{background-color:var(--red-pale); color:var(--red-bright);}
-.status-select.ready{background-color:var(--green-pale); color:var(--green);}
-.status-select.delivered{background-color:var(--surface-2); color:var(--text-faint);}
 
 /* ---------- Cards (customers/karigars grid) ---------- */
 .card-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:16px; margin-top:18px;}

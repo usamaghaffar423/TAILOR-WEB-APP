@@ -13,9 +13,16 @@ import { ordersApi } from '@/api/orders';
 import { uploadsApi } from '@/api/uploads';
 import { formatCurrency } from '@/lib/format';
 import { STYLE_FIELDS, STYLE_FIELD_OPTIONS } from '@/lib/styleFields';
+import { ORDER_STATUS_OPTIONS, PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
 import type { Customer, OrderStatus, PaymentMethod } from '@/types';
 
 type PaymentStatus = 'none' | 'partial' | 'full';
+
+const PAYMENT_STATUS_OPTIONS = [
+  { value: 'none', label: 'No Payment Yet' },
+  { value: 'partial', label: 'Partial Payment (Advance)' },
+  { value: 'full', label: 'Paid in Full' },
+];
 
 export default function NewOrder() {
   const navigate = useNavigate();
@@ -243,12 +250,9 @@ export default function NewOrder() {
           <div className="field span-2">
             <label>Garment Template</label>
             <Dropdown
-              value={template?.label || ''}
-              onChange={(label) => {
-                const t = templatesRes?.data.find((x) => x.label === label);
-                if (t) handleTemplateChange(t.template_key);
-              }}
-              options={templatesRes?.data.map((t) => t.label) || []}
+              value={templateKey}
+              onChange={handleTemplateChange}
+              options={templatesRes?.data.map((t) => ({ value: t.template_key, label: t.label })) || []}
             />
           </div>
         </div>
@@ -351,39 +355,28 @@ export default function NewOrder() {
         <div className="form-grid">
           <div className="field">
             <label>Karigar</label>
-            <select value={karigarId} onChange={(e) => setKarigarId(e.target.value ? Number(e.target.value) : '')}>
-              <option value="">Select karigar…</option>
-              {karigarsRes?.data.map((k) => <option key={k.id} value={k.id}>{k.name} — {k.speciality || ''}</option>)}
-            </select>
+            <Dropdown
+              value={karigarId === '' ? '' : String(karigarId)}
+              onChange={(v) => setKarigarId(v ? Number(v) : '')}
+              placeholder="Select karigar…"
+              options={karigarsRes?.data.map((k) => ({ value: String(k.id), label: `${k.name} — ${k.speciality || ''}` })) || []}
+            />
           </div>
           <div className="field"><label>Deadline</label><input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} /></div>
           <div className="field">
             <label>Order Status</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value as OrderStatus)}>
-              <option value="progress">In Progress</option>
-              <option value="ready">Ready</option>
-              <option value="delivered">Delivered</option>
-            </select>
+            <Dropdown value={status} onChange={(v) => setStatus(v as OrderStatus)} options={ORDER_STATUS_OPTIONS} />
           </div>
           <div className="field"><label>Total Order Amount (Rs)</label><input type="number" min={0} placeholder="e.g. 4500" value={total} onChange={(e) => setTotal(e.target.value)} /></div>
           <div className="field">
             <label>Payment Status</label>
-            <select value={paymentStatus} onChange={(e) => setPaymentStatus(e.target.value as PaymentStatus)}>
-              <option value="none">No Payment Yet</option>
-              <option value="partial">Partial Payment (Advance)</option>
-              <option value="full">Paid in Full</option>
-            </select>
+            <Dropdown value={paymentStatus} onChange={(v) => setPaymentStatus(v as PaymentStatus)} options={PAYMENT_STATUS_OPTIONS} />
             <div className="hint">Most customers pay on delivery — "No Payment Yet" is fine for now.</div>
           </div>
           {paymentStatus !== 'none' && (
             <div className="field">
               <label>Payment Method</label>
-              <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
-                <option value="cash">Cash</option>
-                <option value="easypaisa">Easypaisa</option>
-                <option value="jazzcash">JazzCash</option>
-                <option value="bank">Bank</option>
-              </select>
+              <Dropdown value={method} onChange={(v) => setMethod(v as PaymentMethod)} options={PAYMENT_METHOD_OPTIONS} />
             </div>
           )}
           {paymentStatus === 'partial' && (

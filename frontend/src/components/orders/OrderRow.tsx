@@ -5,6 +5,8 @@ import { ordersApi } from '@/api/orders';
 import { formatDateShort, formatCurrency } from '@/lib/format';
 import type { OrderListItem, OrderStatus } from '@/types';
 import { PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON } from '@/lib/garmentIcons';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
 
 interface OrderRowProps {
   order: OrderListItem;
@@ -46,16 +48,14 @@ export function OrderRow({ order, onViewCard, onAddPayment, onCustomerBill, onKa
       <td className="cell-mono">{formatCurrency(paid)}</td>
       <td className={`cell-mono ${pending > 0 ? 'balance-pending' : 'balance-paid'}`}>{pending > 0 ? formatCurrency(pending) : 'Paid'}</td>
       <td>
-        <select
-          className={`status-select ${order.status}`}
+        <Dropdown
+          className="dropdown-pill"
+          triggerClassName={`status-pill-${order.status}`}
           value={order.status}
+          onChange={(v) => mutation.mutate(v as OrderStatus)}
+          options={ORDER_STATUS_OPTIONS}
           disabled={mutation.isPending}
-          onChange={(e) => mutation.mutate(e.target.value as OrderStatus)}
-        >
-          <option value="progress">In Progress</option>
-          <option value="ready">Ready</option>
-          <option value="delivered">Delivered</option>
-        </select>
+        />
       </td>
       <td>
         <div className="row-actions">

@@ -3,9 +3,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { ordersApi } from '@/api/orders';
 import { karigarsApi } from '@/api/karigars';
 import { toDateInputValue } from '@/lib/format';
+import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
 import type { Order, OrderStatus } from '@/types';
 
 interface EditOrderModalProps {
@@ -68,11 +70,11 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
     >
       <div className="field">
         <label>Karigar</label>
-        <select value={karigarId} onChange={(e) => setKarigarId(Number(e.target.value))}>
-          {karigarsRes?.data.map((k) => (
-            <option key={k.id} value={k.id}>{k.name} — {k.speciality || ''}</option>
-          ))}
-        </select>
+        <Dropdown
+          value={String(karigarId)}
+          onChange={(v) => setKarigarId(Number(v))}
+          options={karigarsRes?.data.map((k) => ({ value: String(k.id), label: `${k.name} — ${k.speciality || ''}` })) || []}
+        />
       </div>
       <div className="field">
         <label>Deadline</label>
@@ -80,11 +82,7 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
       </div>
       <div className="field">
         <label>Order Status</label>
-        <select value={status} onChange={(e) => setStatus(e.target.value as OrderStatus)}>
-          <option value="progress">In Progress</option>
-          <option value="ready">Ready</option>
-          <option value="delivered">Delivered</option>
-        </select>
+        <Dropdown value={status} onChange={(v) => setStatus(v as OrderStatus)} options={ORDER_STATUS_OPTIONS} />
       </div>
       <div className="field">
         <label>Total Order Amount (Rs)</label>

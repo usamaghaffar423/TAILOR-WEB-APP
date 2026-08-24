@@ -10,6 +10,8 @@ import { OrderCardModal } from '@/components/orders/OrderCardModal';
 import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
 import type { OrderStatus } from '@/types';
 
 export default function Orders() {
@@ -51,16 +53,18 @@ export default function Orders() {
 
       <div className="filter-bar">
         <input type="text" placeholder="Search order # or customer..." value={q} onChange={(e) => setQ(e.target.value)} />
-        <select value={status} onChange={(e) => setStatus(e.target.value as OrderStatus | '')}>
-          <option value="">All Statuses</option>
-          <option value="progress">In Progress</option>
-          <option value="ready">Ready</option>
-          <option value="delivered">Delivered</option>
-        </select>
-        <select value={karigarId} onChange={(e) => setKarigarId(e.target.value)}>
-          <option value="">All Karigars</option>
-          {karigarsRes?.data.map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
-        </select>
+        <Dropdown
+          className="dropdown-filter"
+          value={status}
+          onChange={(v) => setStatus(v as OrderStatus | '')}
+          options={[{ value: '', label: 'All Statuses' }, ...ORDER_STATUS_OPTIONS]}
+        />
+        <Dropdown
+          className="dropdown-filter"
+          value={karigarId}
+          onChange={setKarigarId}
+          options={[{ value: '', label: 'All Karigars' }, ...(karigarsRes?.data.map((k) => ({ value: String(k.id), label: k.name })) || [])]}
+        />
         <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
         <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
       </div>

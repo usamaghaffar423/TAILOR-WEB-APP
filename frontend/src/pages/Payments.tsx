@@ -6,6 +6,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { KpiCard } from '@/components/ui/KpiCard';
 import { Button } from '@/components/ui/Button';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
+import { Dropdown } from '@/components/ui/Dropdown';
+import { PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
 import { formatCurrency, formatDateShort } from '@/lib/format';
 import type { PaymentMethod } from '@/types';
 
@@ -123,13 +125,12 @@ export default function Payments() {
         <>
           <div className="filter-bar">
             <input type="text" placeholder="Search order # or customer..." value={q} onChange={(e) => setQ(e.target.value)} />
-            <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod | '')}>
-              <option value="">All Methods</option>
-              <option value="cash">Cash</option>
-              <option value="easypaisa">Easypaisa</option>
-              <option value="jazzcash">JazzCash</option>
-              <option value="bank">Bank</option>
-            </select>
+            <Dropdown
+              className="dropdown-filter"
+              value={method}
+              onChange={(v) => setMethod(v as PaymentMethod | '')}
+              options={[{ value: '', label: 'All Methods' }, ...PAYMENT_METHOD_OPTIONS]}
+            />
             <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
