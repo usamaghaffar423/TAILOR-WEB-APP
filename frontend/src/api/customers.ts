@@ -39,4 +39,6 @@ export const customersApi = {
       method: 'PUT',
       body: JSON.stringify({ fields, notes }),
     }),
+
+  destroy: (id: number) => apiFetch<{ message: string }>(`/customers/${id}`, { method: 'DELETE' }),
 };

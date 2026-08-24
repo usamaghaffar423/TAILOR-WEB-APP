@@ -210,6 +210,35 @@ class CustomerController extends Controller
         }
     }
 
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        try {
+            $customer = Customer::query()->find($id);
+
+            if (! $customer) {
+                return response()->json(['message' => 'Not found.'], 404);
+            }
+
+            $orderCount = DB::table('orders')->where('customer_id', $id)->count();
+
+            if ($orderCount > 0) {
+                return response()->json([
+                    'message' => "Can't delete — this customer has {$orderCount} order(s) on record. Reassign or remove those orders first.",
+                ], 422);
+            }
+
+            $customer->delete();
+
+            $this->cacheBuster->bustCustomers();
+
+            return response()->json(['message' => 'Deleted successfully.']);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => 'Server error.'], 500);
+        }
+    }
+
     private function nextCustomerId(): string
     {
         $max = DB::table('customers')

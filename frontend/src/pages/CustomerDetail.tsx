@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { customersApi } from '@/api/customers';
@@ -21,6 +21,7 @@ export default function CustomerDetail() {
   const { id } = useParams();
   const customerId = Number(id);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['customers', customerId],
@@ -64,6 +65,22 @@ export default function CustomerDetail() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => customersApi.destroy(customerId),
+    onSuccess: () => {
+      toast.success('Customer deleted');
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      navigate('/customers');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function handleDelete() {
+    if (window.confirm('Delete this customer? This cannot be undone.')) {
+      deleteMutation.mutate();
+    }
+  }
 
   if (isLoading) return <p style={{ color: 'var(--text-faint)' }}>Loading customer…</p>;
   if (error || !data) return <EmptyState title="Customer not found" subtitle="It may have been removed." />;
@@ -115,6 +132,7 @@ export default function CustomerDetail() {
           <Link to={`/orders/new?customerId=${customer.id}`}><Button>+ New Order</Button></Link>
           <Button variant="outline" onClick={handleWhatsAppSummary}>WhatsApp Summary</Button>
           <Button variant="outline" onClick={() => window.print()}>Print</Button>
+          <Button variant="outline" onClick={handleDelete} disabled={deleteMutation.isPending}>Delete</Button>
         </div>
       </div>
       <StitchDivider />

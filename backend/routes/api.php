@@ -26,6 +26,7 @@ Route::middleware('api.auth')->group(function () {
     Route::post('/customers', [CustomerController::class, 'store']);
     Route::get('/customers/{id}', [CustomerController::class, 'show']);
     Route::put('/customers/{id}', [CustomerController::class, 'update']);
+    Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
     Route::get('/customers/{id}/measurements', [CustomerController::class, 'getMeasurements']);
     Route::put('/customers/{id}/measurements/{templateKey}', [CustomerController::class, 'upsertMeasurement']);
 
