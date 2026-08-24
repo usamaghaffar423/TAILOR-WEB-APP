@@ -14,16 +14,17 @@ import {
   REGIONAL_ICON, FIT_ICON, LENGTH_ICON, COLLAR_ICON, NECK_ICON, SLEEVE_ICON,
   CUFF_ICON, PLACKET_ICON, POCKET_ICON, POCKET_SHALWAR_ICON, MORI_ICON, WAIST_TYPE_ICON, DAMAN_ICON,
 } from '@/lib/garmentIcons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 
 interface OrderCardModalProps {
   orderId: number | null;
   onClose: () => void;
+  startInEdit?: boolean;
 }
 
-export function OrderCardModal({ orderId, onClose }: OrderCardModalProps) {
+export function OrderCardModal({ orderId, onClose, startInEdit }: OrderCardModalProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -33,6 +34,10 @@ export function OrderCardModal({ orderId, onClose }: OrderCardModalProps) {
     queryFn: () => ordersApi.show(orderId as number),
     enabled: orderId !== null,
   });
+
+  useEffect(() => {
+    if (orderId !== null) setEditOpen(Boolean(startInEdit));
+  }, [orderId, startInEdit]);
   const { data: templatesRes } = useQuery({
     queryKey: ['templates'],
     queryFn: () => settingsApi.getTemplates(),

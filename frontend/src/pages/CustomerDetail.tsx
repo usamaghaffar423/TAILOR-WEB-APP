@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { customersApi } from '@/api/customers';
+import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { StitchDivider } from '@/components/ui/StitchDivider';
 import { Button } from '@/components/ui/Button';
@@ -14,7 +15,7 @@ import { OrderCardModal } from '@/components/orders/OrderCardModal';
 import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
-import { EDIT_ICON, PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON } from '@/lib/garmentIcons';
+import { EDIT_ICON, PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON, DELETE_ICON } from '@/lib/garmentIcons';
 import { formatCurrency, formatDate, formatDateShort } from '@/lib/format';
 
 export default function CustomerDetail() {
@@ -38,6 +39,7 @@ export default function CustomerDetail() {
   const [editFields, setEditFields] = useState<Record<string, string | string[]>>({});
   const [editNotes, setEditNotes] = useState('');
   const [cardOrderId, setCardOrderId] = useState<number | null>(null);
+  const [cardStartInEdit, setCardStartInEdit] = useState(false);
   const [payOrderId, setPayOrderId] = useState<number | null>(null);
   const [customerBillOrderId, setCustomerBillOrderId] = useState<number | null>(null);
   const [karigarBillOrderId, setKarigarBillOrderId] = useState<number | null>(null);
@@ -79,6 +81,23 @@ export default function CustomerDetail() {
   function handleDelete() {
     if (window.confirm('Delete this customer? This cannot be undone.')) {
       deleteMutation.mutate();
+    }
+  }
+
+  const deleteOrderMutation = useMutation({
+    mutationFn: (orderId: number) => ordersApi.destroy(orderId),
+    onSuccess: () => {
+      toast.success('Order deleted');
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      refresh();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  function handleDeleteOrder(orderId: number, orderNo: string) {
+    if (window.confirm(`Delete order ${orderNo}? This cannot be undone.`)) {
+      deleteOrderMutation.mutate(orderId);
     }
   }
 
@@ -222,7 +241,7 @@ export default function CustomerDetail() {
                     const paid = Number(o.paid_amount ?? 0);
                     const pending = Math.max(0, Number(o.total_amount) - paid);
                     return (
-                      <div key={o.id} className="order-row clickable" onClick={() => setCardOrderId(o.id)}>
+                      <div key={o.id} className="order-row clickable" onClick={() => { setCardStartInEdit(false); setCardOrderId(o.id); }}>
                         <div className="order-avatar mono">{o.order_no.replace('ORD-', '#')}</div>
                         <div className="order-info">
                           <div className="order-name">{formatCurrency(o.total_amount)} total</div>
@@ -231,9 +250,11 @@ export default function CustomerDetail() {
                         <div className="order-deadline">Deadline<b>{formatDateShort(o.deadline)}</b></div>
                         <Badge status={o.status} />
                         <div className="row-actions">
+                          <button className="row-icon-btn" title="Edit order" onClick={(e) => { e.stopPropagation(); setCardStartInEdit(true); setCardOrderId(o.id); }}>{EDIT_ICON}</button>
                           <button className="row-icon-btn" title="Add payment" onClick={(e) => { e.stopPropagation(); setPayOrderId(o.id); }}>{PAYMENT_ICON}</button>
                           <button className="row-icon-btn" title="Customer Bill" onClick={(e) => { e.stopPropagation(); setCustomerBillOrderId(o.id); }}>{CUSTOMER_BILL_ICON}</button>
                           <button className="row-icon-btn" title="Karigar Bill" onClick={(e) => { e.stopPropagation(); setKarigarBillOrderId(o.id); }}>{KARIGAR_BILL_ICON}</button>
+                          <button className="row-icon-btn" title="Delete order" onClick={(e) => { e.stopPropagation(); handleDeleteOrder(o.id, o.order_no); }}>{DELETE_ICON}</button>
                         </div>
                       </div>
                     );
@@ -244,7 +265,7 @@ export default function CustomerDetail() {
         </div>
       </div>
 
-      <OrderCardModal orderId={cardOrderId} onClose={() => setCardOrderId(null)} />
+      <OrderCardModal orderId={cardOrderId} startInEdit={cardStartInEdit} onClose={() => setCardOrderId(null)} />
       <CustomerBillModal orderId={customerBillOrderId} onClose={() => setCustomerBillOrderId(null)} />
       <KarigarBillModal orderId={karigarBillOrderId} onClose={() => setKarigarBillOrderId(null)} />
       {payOrderId !== null && (
