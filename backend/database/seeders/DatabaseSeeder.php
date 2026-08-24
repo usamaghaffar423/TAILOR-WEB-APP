@@ -60,15 +60,15 @@ class DatabaseSeeder extends Seeder
             'shalwar-kameez-men' => [
                 'label' => 'Shalwar Qameez',
                 'fields' => [
-                    ['key' => 'lambayee', 'label' => 'Lambayee', 'group' => 'Qameez'],
-                    ['key' => 'teera', 'label' => 'Teera', 'group' => 'Qameez'],
-                    ['key' => 'aasteen', 'label' => 'Aasteen', 'group' => 'Qameez'],
-                    ['key' => 'galla', 'label' => 'Galla', 'group' => 'Qameez'],
-                    ['key' => 'chaati', 'label' => 'Chaati', 'group' => 'Qameez'],
-                    ['key' => 'kamar', 'label' => 'Kamar', 'group' => 'Qameez'],
+                    ['key' => 'length', 'label' => 'Length', 'group' => 'Qameez'],
+                    ['key' => 'shoulder', 'label' => 'Shoulder', 'group' => 'Qameez'],
+                    ['key' => 'sleeves', 'label' => 'Sleeves', 'group' => 'Qameez'],
+                    ['key' => 'collar', 'label' => 'Collar', 'group' => 'Qameez'],
+                    ['key' => 'chest', 'label' => 'Chest', 'group' => 'Qameez'],
+                    ['key' => 'waist', 'label' => 'Waist', 'group' => 'Qameez'],
                     ['key' => 'daman', 'label' => 'Daman', 'group' => 'Qameez'],
-                    ['key' => 'shalwar_lambaye', 'label' => 'Shalwar Lambaye', 'group' => 'Shalwar'],
-                    ['key' => 'pachaa', 'label' => 'Pachaa', 'group' => 'Shalwar'],
+                    ['key' => 'shalwar', 'label' => 'Shalwar', 'group' => 'Shalwar'],
+                    ['key' => 'pacha', 'label' => 'Pacha', 'group' => 'Shalwar'],
                 ],
             ],
             'shalwar-kameez-women' => [

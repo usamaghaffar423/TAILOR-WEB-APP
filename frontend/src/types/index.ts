@@ -1,7 +1,6 @@
 export type OrderStatus = 'progress' | 'ready' | 'delivered';
 export type PaymentMethod = 'cash' | 'easypaisa' | 'jazzcash' | 'bank';
 export type ThemeDefault = 'dark' | 'light';
-export type RegionalStyle = 'Pukhtoon' | 'Punjabi';
 
 export interface Admin {
   id: number;
@@ -67,27 +66,24 @@ export interface Karigar {
 }
 
 export interface OrderStyle {
-  regionalStyle?: RegionalStyle;
-  collar?: string;
-  sleeve?: string;
+  style_collar?: string;
+  half_ban?: string;
+  full_ban?: string;
+  front_pocket?: string;
+  side_pocket?: string;
+  style_daman?: string;
+  chak_pati?: string;
+  moda?: string;
+  pati?: string;
   cuff?: string;
-  neck?: string;
-  fit?: string;
-  length?: string;
-  placket?: string;
-  pocket?: string;
-  pocketShalwar?: string;
-  pocketPosition?: string;
-  pocketDepth?: string;
-  daman?: string;
-  shalwarStyle?: string; // region-specific shalwar style (Pukhtoon or Punjabi set, per regionalStyle)
-  salwar?: string; // legacy — orders saved before the Pukhtoon/Punjabi update
-  mori?: string;
-  waistType?: string;
-  fabric?: string;
-  buttonStyle?: string;
-  buttonCount?: string;
-  color?: string;
+  salai_type?: string;
+  shalwar_design?: string;
+  dhaga?: string;
+  button?: string;
+  sada_asteen?: string;
+  down_shoulder?: string;
+  design?: string;
+  note?: string;
 }
 
 export interface MeasurementSnapshot {

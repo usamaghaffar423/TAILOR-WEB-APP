@@ -6,7 +6,7 @@ import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { formatDate } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
-import { getOrderShalwarStyle, colorName } from '@/lib/orderCard';
+import { STYLE_FIELDS } from '@/lib/styleFields';
 import type { Order } from '@/types';
 
 interface KarigarBillModalProps {
@@ -14,31 +14,13 @@ interface KarigarBillModalProps {
   onClose: () => void;
 }
 
-// Style category names in Urdu, ordered for display. Only categories with an
-// Urdu label are shown — fields without one aren't guessed at.
+// Style rows in Urdu, ordered for display — only fields the order actually
+// has a value for are shown.
 function buildUrduStyleRows(order: Order) {
   const style = order.style || {};
-  const shalwarStyle = getOrderShalwarStyle(style);
-  const rows: Array<[string, string | undefined]> = [
-    ['طرز', style.regionalStyle], // Regional Style
-    ['فٹنگ', style.fit], // Fit
-    ['لمبائی', style.length], // Length
-    ['کالر', style.collar], // Collar
-    ['گلا', style.neck], // Neck
-    ['آستین', style.sleeve], // Sleeve
-    ['کف', style.cuff], // Cuff
-    ['شلوار', shalwarStyle?.label], // Shalwar Style
-    ['پٹی', style.placket], // Placket
-    ['جیب', style.pocket], // Pocket
-    ['موری', style.mori], // Mori
-    ['کمر', style.waistType], // Waist Type
-    ['دامن', style.daman], // Daman
-    ['کپڑا', style.fabric], // Fabric
-    ['بٹن', style.buttonStyle], // Button Style
-    ['بٹن تعداد', style.buttonCount], // Button Count
-    ['رنگ', style.color ? colorName(style.color) : undefined], // Color
-  ];
-  return rows.filter((row): row is [string, string] => Boolean(row[1]));
+  return STYLE_FIELDS
+    .filter((f) => style[f.key])
+    .map((f): [string, string] => [f.labelUrdu, style[f.key] as string]);
 }
 
 function displayValue(val: string | string[] | undefined): string {

@@ -4,10 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { StitchDivider } from '@/components/ui/StitchDivider';
 import { Button } from '@/components/ui/Button';
-import { StyleChipPicker } from '@/components/garment/StyleChipPicker';
-import { StyleOptionPicker } from '@/components/garment/StyleOptionPicker';
-import { ColorPicker } from '@/components/garment/ColorPicker';
-import { GarmentPreview } from '@/components/garment/GarmentPreview';
 import { MeasurementFieldsForm } from '@/components/measurements/MeasurementFieldsForm';
 import { customersApi } from '@/api/customers';
 import { karigarsApi } from '@/api/karigars';
@@ -15,19 +11,7 @@ import { settingsApi } from '@/api/settings';
 import { ordersApi } from '@/api/orders';
 import { uploadsApi } from '@/api/uploads';
 import { formatCurrency } from '@/lib/format';
-import {
-  SLEEVE_ICON, CUFF_ICON, COLLAR_ICON, NECK_ICON, LENGTH_ICON, FIT_ICON, recommendedFit,
-  PLACKET_ICON, POCKET_ICON, POCKET_SHALWAR_ICON, REGIONAL_ICON, PUKHTOON_SHALWAR_ICON,
-  PUNJABI_SHALWAR_ICON, MORI_ICON, WAIST_TYPE_ICON, DAMAN_ICON,
-  POCKET_POSITION_OPTS, POCKET_DEPTH_OPTS,
-} from '@/lib/garmentIcons';
-import {
-  SLEEVE_OPTS, CUFF_OPTS, COLLAR_OPTS, NECK_OPTS, LENGTH_OPTS, FIT_OPTS, PLACKET_OPTS, POCKET_OPTS,
-  POCKET_SHALWAR_OPTS, REGIONAL_OPTS, PUKHTOON_SHALWAR_OPTS, PUNJABI_SHALWAR_OPTS, MORI_OPTS,
-  WAIST_TYPE_OPTS, DAMAN_OPTS, FABRIC_OPTS,
-  BUTTON_STYLE_OPTS, BUTTON_COUNT_OPTS, COLOR_OPTS,
-} from '@/lib/styleOptions';
-import { bilingual } from '@/lib/styleOptionsUrdu';
+import { STYLE_FIELDS, STYLE_FIELD_OPTIONS } from '@/lib/styleFields';
 import type { Customer, OrderStatus, PaymentMethod } from '@/types';
 
 type PaymentStatus = 'none' | 'partial' | 'full';
@@ -95,36 +79,9 @@ export default function NewOrder() {
   }
 
   // ---- Style ----
-  const [region, setRegion] = useState<string>(REGIONAL_OPTS[0]);
-  const [collar, setCollar] = useState(COLLAR_OPTS[0]);
-  const [sleeve, setSleeve] = useState(SLEEVE_OPTS[0]);
-  const [cuff, setCuff] = useState(CUFF_OPTS[0]);
-  const [neck, setNeck] = useState(NECK_OPTS[0]);
-  const [fit, setFit] = useState(recommendedFit(REGIONAL_OPTS[0]));
-  const [fitTouched, setFitTouched] = useState(false);
-  const [length, setLength] = useState(LENGTH_OPTS[0]);
-  const [pukhtoonShalwar, setPukhtoonShalwar] = useState(PUKHTOON_SHALWAR_OPTS[0]);
-  const [punjabiShalwar, setPunjabiShalwar] = useState(PUNJABI_SHALWAR_OPTS[0]);
-  const [mori, setMori] = useState(MORI_OPTS[1]);
-  const [waistType, setWaistType] = useState(WAIST_TYPE_OPTS[0]);
-  const [placket, setPlacket] = useState(PLACKET_OPTS[0]);
-  const [pocket, setPocket] = useState(POCKET_OPTS[0]);
-  const [pocketShalwar, setPocketShalwar] = useState(POCKET_SHALWAR_OPTS[0]);
-  const [pocketPosition, setPocketPosition] = useState('');
-  const [pocketDepth, setPocketDepth] = useState('');
-  const [daman, setDaman] = useState(DAMAN_OPTS[0]);
-  const [fabric, setFabric] = useState(FABRIC_OPTS[0]);
-  const [buttonStyle, setButtonStyle] = useState(BUTTON_STYLE_OPTS[0]);
-  const [buttonCount, setButtonCount] = useState(BUTTON_COUNT_OPTS[0]);
-  const [color, setColor] = useState(COLOR_OPTS[0].hex);
-
-  function handleRegionChange(v: string) {
-    setRegion(v);
-    if (!fitTouched) setFit(recommendedFit(v));
-  }
-  function handleFitChange(v: string) {
-    setFit(v);
-    setFitTouched(true);
+  const [styleValues, setStyleValues] = useState<Record<string, string>>({});
+  function setStyleField(key: string, value: string) {
+    setStyleValues((s) => ({ ...s, [key]: value }));
   }
 
   // ---- Photos ----
@@ -163,23 +120,11 @@ export default function NewOrder() {
 
       await customersApi.upsertMeasurement(customerId, templateKey, fields, notes.trim() || null);
 
-      const style: Record<string, string> = {
-        collar, sleeve, cuff, neck, placket, pocket, fabric, buttonStyle, buttonCount, color,
-      };
-      if (pocketPosition) style.pocketPosition = pocketPosition;
-      if (pocketDepth) style.pocketDepth = pocketDepth;
-      if (isKameez) {
-        style.regionalStyle = region;
-        style.fit = fit;
-        style.length = length;
-        style.shalwarStyle = region === 'Pukhtoon' ? pukhtoonShalwar : punjabiShalwar;
-        style.pocketShalwar = pocketShalwar;
-        style.daman = daman;
-        if (region === 'Pukhtoon') {
-          style.mori = mori;
-          style.waistType = waistType;
-        }
-      }
+      const style: Record<string, string> = {};
+      STYLE_FIELDS.forEach((f) => {
+        const v = styleValues[f.key];
+        if (v) style[f.key] = v;
+      });
 
       const orderRes = await ordersApi.store({
         customer_id: customerId,
@@ -313,66 +258,26 @@ export default function NewOrder() {
 
       <div className="form-section">
         <div className="form-section-title"><span className="num">3</span>Style Customization</div>
-        <div className="grid-2" style={{ marginTop: 16, alignItems: 'start' }}>
-          <div>
-            <div className="field"><label>Collar</label><StyleOptionPicker options={COLLAR_OPTS} iconMap={COLLAR_ICON} value={collar} onChange={setCollar} /></div>
-            <div className="field" style={{ marginTop: 16 }}><label>Sleeve</label><StyleOptionPicker options={SLEEVE_OPTS} iconMap={SLEEVE_ICON} value={sleeve} onChange={setSleeve} /></div>
-            <div className="field" style={{ marginTop: 16 }}><label>Cuff</label><StyleOptionPicker options={CUFF_OPTS} iconMap={CUFF_ICON} value={cuff} onChange={setCuff} /></div>
-
-            {isKameez && (
-              <>
-                <div className="field" style={{ marginTop: 16 }}><label>Garment Style</label><StyleOptionPicker options={REGIONAL_OPTS} iconMap={REGIONAL_ICON} value={region} onChange={handleRegionChange} /></div>
-                <div className="field" style={{ marginTop: 16 }}><label>Fit</label><StyleOptionPicker options={FIT_OPTS} iconMap={FIT_ICON} value={fit} onChange={handleFitChange} /></div>
-                <div className="field" style={{ marginTop: 16 }}><label>Length</label><StyleOptionPicker options={LENGTH_OPTS} iconMap={LENGTH_ICON} value={length} onChange={setLength} /></div>
-                {region === 'Pukhtoon' ? (
-                  <div className="field" style={{ marginTop: 16 }}><label>Shalwar Style (Pukhtoon)</label><StyleOptionPicker options={PUKHTOON_SHALWAR_OPTS} iconMap={PUKHTOON_SHALWAR_ICON} value={pukhtoonShalwar} onChange={setPukhtoonShalwar} /></div>
-                ) : (
-                  <div className="field" style={{ marginTop: 16 }}><label>Shalwar Style (Punjabi)</label><StyleOptionPicker options={PUNJABI_SHALWAR_OPTS} iconMap={PUNJABI_SHALWAR_ICON} value={punjabiShalwar} onChange={setPunjabiShalwar} /></div>
-                )}
-                {region === 'Pukhtoon' && (
-                  <div className="field" style={{ marginTop: 16 }}><label>Mori / Pauncha (Bottom Opening)</label><StyleOptionPicker options={MORI_OPTS} iconMap={MORI_ICON} value={mori} onChange={setMori} /></div>
-                )}
-                <div className="field" style={{ marginTop: 16 }}><label>Daman / Hem Style</label><StyleOptionPicker options={DAMAN_OPTS} iconMap={DAMAN_ICON} value={daman} onChange={setDaman} /></div>
-              </>
-            )}
-
-            <div className="field" style={{ marginTop: 16 }}>
-              <label>Fabric Color</label>
-              <ColorPicker value={color} onChange={setColor} />
-            </div>
-
-            <details className="adv-toggle">
-              <summary>More Style Options</summary>
-              <div className="adv-toggle-body">
-                <div className="field"><label>Neck</label><StyleOptionPicker options={NECK_OPTS} iconMap={NECK_ICON} value={neck} onChange={setNeck} /></div>
-                <div className="field" style={{ marginTop: 16 }}><label>Front Style</label><StyleOptionPicker options={PLACKET_OPTS} iconMap={PLACKET_ICON} value={placket} onChange={setPlacket} /></div>
-                <div className="field" style={{ marginTop: 16 }}><label>Qameez Pocket</label><StyleOptionPicker options={POCKET_OPTS} iconMap={POCKET_ICON} value={pocket} onChange={setPocket} /></div>
-                {isKameez && (
-                  <>
-                    <div className="field" style={{ marginTop: 16 }}><label>Shalwar Pocket</label><StyleOptionPicker options={POCKET_SHALWAR_OPTS} iconMap={POCKET_SHALWAR_ICON} value={pocketShalwar} onChange={setPocketShalwar} /></div>
-                    {region === 'Pukhtoon' && (
-                      <div className="field" style={{ marginTop: 16 }}><label>Waist Type (Pukhtoon)</label><StyleOptionPicker options={WAIST_TYPE_OPTS} iconMap={WAIST_TYPE_ICON} value={waistType} onChange={setWaistType} /></div>
-                    )}
-                  </>
-                )}
-                <div className="form-grid cols-2" style={{ marginTop: 16 }}>
-                  <div className="field"><label>Pocket Position</label><StyleChipPicker options={POCKET_POSITION_OPTS} value={pocketPosition} onChange={setPocketPosition} /></div>
-                  <div className="field"><label>Pocket Depth</label><StyleChipPicker options={POCKET_DEPTH_OPTS} value={pocketDepth} onChange={setPocketDepth} /></div>
+        {isKameez ? (
+          <div className="form-grid cols-2" style={{ marginTop: 16 }}>
+            {STYLE_FIELDS.map((f) => {
+              const options = STYLE_FIELD_OPTIONS[f.key] || [];
+              return (
+                <div className="field" key={f.key}>
+                  <label>{f.label}</label>
+                  <select value={styleValues[f.key] || ''} onChange={(e) => setStyleField(f.key, e.target.value)}>
+                    <option value="">Select…</option>
+                    {options.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
                 </div>
-                <div className="form-grid cols-2" style={{ marginTop: 16 }}>
-                  <div className="field"><label>Fabric</label><select value={fabric} onChange={(e) => setFabric(e.target.value)}>{FABRIC_OPTS.map((o) => <option key={o} value={o}>{bilingual(o)}</option>)}</select></div>
-                  <div className="field"><label>Button Style</label><select value={buttonStyle} onChange={(e) => setButtonStyle(e.target.value)}>{BUTTON_STYLE_OPTS.map((o) => <option key={o} value={o}>{bilingual(o)}</option>)}</select></div>
-                  <div className="field"><label>Button Count</label><select value={buttonCount} onChange={(e) => setButtonCount(e.target.value)}>{BUTTON_COUNT_OPTS.map((o) => <option key={o} value={o}>{bilingual(o)}</option>)}</select></div>
-                </div>
-              </div>
-            </details>
+              );
+            })}
           </div>
-          <div className="panel" style={{ background: 'var(--surface-2)', position: 'sticky', top: 90 }}>
-            <div className="preview-panel">
-              <GarmentPreview templateKey={templateKey} templateLabel={template?.label || templateKey} color={color} />
-            </div>
-          </div>
-        </div>
+        ) : (
+          <p style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 10 }}>
+            Style customization options are defined for Shalwar Qameez orders.
+          </p>
+        )}
       </div>
 
       <div className="form-section">

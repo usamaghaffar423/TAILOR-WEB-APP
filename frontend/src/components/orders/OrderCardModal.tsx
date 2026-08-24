@@ -9,13 +9,9 @@ import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
 import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { formatDate, formatCurrency } from '@/lib/format';
-import { colorName, getOrderShalwarStyle, sendOrderWhatsApp } from '@/lib/orderCard';
-import {
-  REGIONAL_ICON, FIT_ICON, LENGTH_ICON, COLLAR_ICON, NECK_ICON, SLEEVE_ICON,
-  CUFF_ICON, PLACKET_ICON, POCKET_ICON, POCKET_SHALWAR_ICON, MORI_ICON, WAIST_TYPE_ICON, DAMAN_ICON,
-} from '@/lib/garmentIcons';
+import { sendOrderWhatsApp } from '@/lib/orderCard';
+import { STYLE_FIELDS } from '@/lib/styleFields';
 import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 
 interface OrderCardModalProps {
@@ -51,37 +47,11 @@ export function OrderCardModal({ orderId, onClose, startInEdit }: OrderCardModal
   const paid = order?.payments?.reduce((sum, p) => sum + Number(p.amount), 0) ?? Number(order?.paid_amount ?? 0);
   const pending = order ? Math.max(0, Number(order.total_amount) - paid) : 0;
   const style = order?.style || {};
-  const shalwarStyle = order ? getOrderShalwarStyle(style) : null;
 
-  const styleRows: Array<[string, string, Record<string, ReactNode>]> = order
-    ? [
-        ['Region', style.regionalStyle, REGIONAL_ICON],
-        ['Fit', style.fit, FIT_ICON],
-        ['Length', style.length, LENGTH_ICON],
-        ['Collar', style.collar, COLLAR_ICON],
-        ['Neck', style.neck, NECK_ICON],
-        ['Sleeve', style.sleeve, SLEEVE_ICON],
-        ['Cuff', style.cuff, CUFF_ICON],
-        ['Front Style', style.placket, PLACKET_ICON],
-        ['Qameez Pocket', style.pocket, POCKET_ICON],
-        ['Shalwar Pocket', style.pocketShalwar, POCKET_SHALWAR_ICON],
-        ['Mori / Pauncha', style.mori, MORI_ICON],
-        ['Waist', style.waistType, WAIST_TYPE_ICON],
-        ['Daman', style.daman, DAMAN_ICON],
-      ].filter((row): row is [string, string, Record<string, ReactNode>] => Boolean(row[1]))
-    : [];
-  if (shalwarStyle) {
-    styleRows.splice(4, 0, ['Shalwar', shalwarStyle.label, { [shalwarStyle.label]: shalwarStyle.icon }]);
-  }
-
-  const textOnlyRows: Array<[string, string]> = order
-    ? ([
-        ['Pocket Position', style.pocketPosition],
-        ['Pocket Depth', style.pocketDepth],
-        ['Fabric', style.fabric],
-        ['Buttons', style.buttonStyle],
-        ['Button Count', style.buttonCount],
-      ] as Array<[string, string | undefined]>).filter((row): row is [string, string] => Boolean(row[1]))
+  const styleRows: Array<[string, string]> = order
+    ? STYLE_FIELDS
+        .filter((f) => style[f.key])
+        .map((f) => [f.label, style[f.key] as string])
     : [];
 
   function refresh() {
@@ -156,31 +126,10 @@ export function OrderCardModal({ orderId, onClose, startInEdit }: OrderCardModal
               <div className="oc-notes">Measurement template not found.</div>
             )}
 
-            {(styleRows.length > 0 || style.color) && (
-              <>
-                <div className="oc-section-title" style={{ marginTop: 18 }}>Style Customization</div>
-                <div className="oc-style-grid">
-                  {styleRows.map(([cat, val, iconMap]) => (
-                    <div key={cat} className="oc-style-item">
-                      <div className="oc-style-cat">{cat}</div>
-                      {iconMap[val] || null}
-                      <span>{val}</span>
-                    </div>
-                  ))}
-                  {style.color && (
-                    <div className="oc-style-item">
-                      <div className="oc-style-cat">Color</div>
-                      <div className="color-dot" style={{ background: style.color, width: 34, height: 34, cursor: 'default' }} />
-                      <span>{colorName(style.color)}</span>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {textOnlyRows.length > 0 && (
+            {styleRows.length > 0 && (
               <div className="oc-block" style={{ marginTop: 14 }}>
-                {textOnlyRows.map(([label, val]) => (
+                <div className="oc-section-title">Style Customization</div>
+                {styleRows.map(([label, val]) => (
                   <div key={label} className="oc-kv"><span>{label}</span><b>{val}</b></div>
                 ))}
               </div>
