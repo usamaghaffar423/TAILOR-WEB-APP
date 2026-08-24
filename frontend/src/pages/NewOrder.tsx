@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { StitchDivider } from '@/components/ui/StitchDivider';
 import { Button } from '@/components/ui/Button';
+import { Dropdown } from '@/components/ui/Dropdown';
 import { MeasurementFieldsForm } from '@/components/measurements/MeasurementFieldsForm';
 import { customersApi } from '@/api/customers';
 import { karigarsApi } from '@/api/karigars';
@@ -241,9 +242,14 @@ export default function NewOrder() {
         <div className="form-grid cols-2">
           <div className="field span-2">
             <label>Garment Template</label>
-            <select value={templateKey} onChange={(e) => handleTemplateChange(e.target.value)}>
-              {templatesRes?.data.map((t) => <option key={t.template_key} value={t.template_key}>{t.label}</option>)}
-            </select>
+            <Dropdown
+              value={template?.label || ''}
+              onChange={(label) => {
+                const t = templatesRes?.data.find((x) => x.label === label);
+                if (t) handleTemplateChange(t.template_key);
+              }}
+              options={templatesRes?.data.map((t) => t.label) || []}
+            />
           </div>
         </div>
         {template && (
@@ -263,7 +269,7 @@ export default function NewOrder() {
             {STYLE_FIELDS.map((f) => {
               const options = STYLE_FIELD_OPTIONS[f.key] || [];
               return (
-                <div className="field" key={f.key}>
+                <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
                   <label>{f.label}</label>
                   {f.freeText ? (
                     <input
@@ -272,10 +278,11 @@ export default function NewOrder() {
                       onChange={(e) => setStyleField(f.key, e.target.value)}
                     />
                   ) : (
-                    <select value={styleValues[f.key] || ''} onChange={(e) => setStyleField(f.key, e.target.value)}>
-                      <option value="">Select…</option>
-                      {options.map((o) => <option key={o} value={o}>{o}</option>)}
-                    </select>
+                    <Dropdown
+                      value={styleValues[f.key] || ''}
+                      onChange={(v) => setStyleField(f.key, v)}
+                      options={options}
+                    />
                   )}
                 </div>
               );
