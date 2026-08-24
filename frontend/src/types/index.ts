@@ -28,6 +28,8 @@ export interface Customer {
   phone: string;
   address: string | null;
   created_at: string;
+  total_orders?: number;
+  last_order_date?: string | null;
 }
 
 export interface MeasurementTemplateField {

@@ -44,7 +44,9 @@ export default function Customers() {
           <EmptyState title="No customers found" subtitle="Try a different search, or add a new customer." />
         ) : (
           <div className="card-grid">
-            {customers.map((c) => <CustomerCard key={c.id} customer={c} />)}
+            {customers.map((c) => (
+              <CustomerCard key={c.id} customer={c} totalOrders={c.total_orders} lastOrderDate={c.last_order_date} />
+            ))}
           </div>
         )
       )}

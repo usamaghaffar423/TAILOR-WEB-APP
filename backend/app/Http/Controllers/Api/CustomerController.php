@@ -28,7 +28,9 @@ class CustomerController extends Controller
             $q = $request->query('q');
 
             $customers = Cache::remember(CacheKeys::customers($q), CacheKeys::CUSTOMERS_TTL, function () use ($q) {
-                $query = Customer::query();
+                $query = Customer::query()
+                    ->selectRaw('customers.*, (select count(*) from orders where orders.customer_id = customers.id) as total_orders')
+                    ->selectRaw('(select max(orders.created_at) from orders where orders.customer_id = customers.id) as last_order_date');
 
                 if ($q) {
                     $query->where(function ($sub) use ($q) {
@@ -52,6 +54,23 @@ class CustomerController extends Controller
     public function store(StoreCustomerRequest $request): JsonResponse
     {
         try {
+            // A repeat customer submitted through a flow that skipped the
+            // "existing customer" search (e.g. typed straight into the New
+            // Order form) must still land on their one record, not fork a
+            // duplicate — phone number is the reliable identity key here.
+            $existing = Customer::query()->where('phone', trim($request->input('phone')))->first();
+
+            if ($existing) {
+                $existing->update([
+                    'name' => $request->input('name'),
+                    'address' => $request->input('address'),
+                ]);
+
+                $this->cacheBuster->bustCustomers();
+
+                return response()->json(['data' => $existing, 'message' => 'Linked to existing customer record.']);
+            }
+
             $customer = Customer::query()->create([
                 'customer_id' => $this->nextCustomerId(),
                 'name' => $request->input('name'),
