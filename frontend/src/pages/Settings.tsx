@@ -90,9 +90,14 @@ export default function Settings() {
   }, [tplKey, templatesRes]);
 
   const saveTemplateMutation = useMutation({
-    mutationFn: () => {
-      const tpl = templatesRes!.data.find((t) => t.template_key === tplKey)!;
-      return settingsApi.updateTemplate(tplKey, { label: tpl.label, fields: tplFields });
+    mutationFn: async () => {
+      // Re-fetch immediately before saving — templatesRes can be stale if
+      // this page (or another tab/admin) changed the template since it was
+      // first loaded here, and tplFields was seeded from that snapshot.
+      // Saving a stale label would silently overwrite a newer one.
+      const fresh = await settingsApi.getTemplates();
+      const label = fresh.data.find((t) => t.template_key === tplKey)?.label ?? templatesRes!.data.find((t) => t.template_key === tplKey)!.label;
+      return settingsApi.updateTemplate(tplKey, { label, fields: tplFields });
     },
     onSuccess: () => {
       toast.success('Template updated');

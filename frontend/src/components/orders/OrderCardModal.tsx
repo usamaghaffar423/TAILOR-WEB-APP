@@ -10,7 +10,7 @@ import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { formatDate, formatCurrency } from '@/lib/format';
 import { sendOrderWhatsApp } from '@/lib/orderCard';
-import { STYLE_FIELDS } from '@/lib/styleFields';
+import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
 import { useEffect, useState } from 'react';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 
@@ -49,9 +49,10 @@ export function OrderCardModal({ orderId, onClose, startInEdit }: OrderCardModal
   const style = order?.style || {};
 
   const styleRows: Array<[string, string]> = order
-    ? STYLE_FIELDS
-        .filter((f) => style[f.key])
-        .map((f) => [f.label, style[f.key] as string])
+    ? [
+        ...STYLE_FIELDS.filter((f) => style[f.key]).map((f): [string, string] => [f.label, style[f.key] as string]),
+        ...parseCustomStyleFields(style.custom_fields).map((f): [string, string] => [f.label, f.value]),
+      ]
     : [];
 
   function refresh() {

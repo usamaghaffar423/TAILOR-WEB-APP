@@ -45,3 +45,21 @@ export const STYLE_FIELD_OPTIONS: Partial<Record<keyof OrderStyle, string[]>> = 
   down_shoulder: ['Normal Down', 'Full Down', 'Seda'],
   design: ['Yes', 'No'],
 };
+
+export interface CustomStyleField {
+  label: string;
+  value: string;
+}
+
+// order.style.custom_fields is a JSON-encoded CustomStyleField[] — parse
+// defensively since it's free-form data, not schema-validated on the backend.
+export function parseCustomStyleFields(raw: string | undefined): CustomStyleField[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((f): f is CustomStyleField => f && typeof f.label === 'string' && typeof f.value === 'string');
+  } catch {
+    return [];
+  }
+}

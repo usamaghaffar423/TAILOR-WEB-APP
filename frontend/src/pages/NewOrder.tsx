@@ -93,6 +93,26 @@ export default function NewOrder() {
     setStyleValues((s) => ({ ...s, [key]: value }));
   }
 
+  // Per-order custom style fields — not saved to the shared field list, so
+  // adding one here can never affect (or drop) fields on other orders.
+  const [customStyleFields, setCustomStyleFields] = useState<{ label: string; value: string }[]>([]);
+  const [addingCustomStyleField, setAddingCustomStyleField] = useState(false);
+  const [newCustomStyleFieldLabel, setNewCustomStyleFieldLabel] = useState('');
+
+  function addCustomStyleField() {
+    const label = newCustomStyleFieldLabel.trim();
+    if (!label) return;
+    setCustomStyleFields((f) => [...f, { label, value: '' }]);
+    setNewCustomStyleFieldLabel('');
+    setAddingCustomStyleField(false);
+  }
+  function updateCustomStyleField(idx: number, value: string) {
+    setCustomStyleFields((f) => f.map((cf, i) => (i === idx ? { ...cf, value } : cf)));
+  }
+  function removeCustomStyleField(idx: number) {
+    setCustomStyleFields((f) => f.filter((_, i) => i !== idx));
+  }
+
   // ---- Photos ----
   const [photos, setPhotos] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
@@ -134,6 +154,10 @@ export default function NewOrder() {
         const v = styleValues[f.key];
         if (v) style[f.key] = v;
       });
+      const filledCustomFields = customStyleFields.filter((f) => f.value.trim());
+      if (filledCustomFields.length > 0) {
+        style.custom_fields = JSON.stringify(filledCustomFields);
+      }
 
       const orderRes = await ordersApi.store({
         customer_id: customerId,
@@ -267,6 +291,7 @@ export default function NewOrder() {
       <div className="form-section">
         <div className="form-section-title"><span className="num">3</span>Style Customization</div>
         {isKameez ? (
+          <>
           <div className="form-grid cols-2" style={{ marginTop: 16 }}>
             {STYLE_FIELDS.map((f) => {
               const options = STYLE_FIELD_OPTIONS[f.key] || [];
@@ -290,6 +315,40 @@ export default function NewOrder() {
               );
             })}
           </div>
+
+          {customStyleFields.length > 0 && (
+            <div className="form-grid cols-2" style={{ marginTop: 14 }}>
+              {customStyleFields.map((cf, idx) => (
+                <div className="field freetext" key={idx}>
+                  <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{cf.label}</span>
+                    <button type="button" className="row-icon-btn" title="Remove field" onClick={() => removeCustomStyleField(idx)}>&times;</button>
+                  </label>
+                  <input type="text" value={cf.value} onChange={(e) => updateCustomStyleField(idx, e.target.value)} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{ marginTop: 14 }}>
+            {addingCustomStyleField ? (
+              <form onSubmit={(e) => { e.preventDefault(); addCustomStyleField(); }} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input
+                  type="text"
+                  value={newCustomStyleFieldLabel}
+                  onChange={(e) => setNewCustomStyleFieldLabel(e.target.value)}
+                  placeholder="Field name, e.g. Special Request"
+                  autoFocus
+                  style={{ flex: 1, maxWidth: 260 }}
+                />
+                <button type="submit" className="row-icon-btn" title="Add field" disabled={!newCustomStyleFieldLabel.trim()}>+</button>
+                <button type="button" className="row-icon-btn" title="Cancel" onClick={() => { setAddingCustomStyleField(false); setNewCustomStyleFieldLabel(''); }}>&times;</button>
+              </form>
+            ) : (
+              <Button type="button" variant="outline" sm onClick={() => setAddingCustomStyleField(true)}>+ Add Custom Field</Button>
+            )}
+          </div>
+          </>
         ) : (
           <p style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 10 }}>
             Style customization options are defined for Shalwar Qameez orders.

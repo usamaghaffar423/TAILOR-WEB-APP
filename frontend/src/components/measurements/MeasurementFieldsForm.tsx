@@ -30,13 +30,20 @@ export function MeasurementFieldsForm({ template, fields, onFieldChange }: Measu
   const [newFieldLabel, setNewFieldLabel] = useState('');
 
   const addFieldMutation = useMutation({
-    mutationFn: (label: string) => {
-      const existingKeys = new Set(template.fields.map((f) => f.key));
+    mutationFn: async (label: string) => {
+      // template.fields can be stale if this page has been open for a
+      // while (React Query cache, or another tab/admin changed the
+      // template since) — fetch the current server copy right before
+      // writing so the save can't silently drop fields that exist on the
+      // server but not in this stale snapshot.
+      const fresh = await settingsApi.getTemplates();
+      const baseFields = fresh.data.find((t) => t.template_key === template.template_key)?.fields ?? template.fields;
+      const existingKeys = new Set(baseFields.map((f) => f.key));
       const key = slugify(label, existingKeys);
-      const lastFieldGroup = template.fields[template.fields.length - 1]?.group;
+      const lastFieldGroup = baseFields[baseFields.length - 1]?.group;
       return settingsApi.updateTemplate(template.template_key, {
         label: template.label,
-        fields: [...template.fields, { key, label: label.trim(), ...(lastFieldGroup ? { group: lastFieldGroup } : {}) }],
+        fields: [...baseFields, { key, label: label.trim(), ...(lastFieldGroup ? { group: lastFieldGroup } : {}) }],
       });
     },
     onSuccess: () => {

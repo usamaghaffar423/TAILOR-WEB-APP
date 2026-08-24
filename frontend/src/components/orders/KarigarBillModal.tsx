@@ -6,7 +6,7 @@ import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { formatDate } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
-import { STYLE_FIELDS } from '@/lib/styleFields';
+import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
 import type { Order } from '@/types';
 
 interface KarigarBillModalProps {
@@ -18,9 +18,10 @@ interface KarigarBillModalProps {
 // has a value for are shown.
 function buildUrduStyleRows(order: Order) {
   const style = order.style || {};
-  return STYLE_FIELDS
-    .filter((f) => style[f.key])
-    .map((f): [string, string] => [f.labelUrdu, style[f.key] as string]);
+  return [
+    ...STYLE_FIELDS.filter((f) => style[f.key]).map((f): [string, string] => [f.labelUrdu, style[f.key] as string]),
+    ...parseCustomStyleFields(style.custom_fields).map((f): [string, string] => [f.label, f.value]),
+  ];
 }
 
 function displayValue(val: string | string[] | undefined): string {

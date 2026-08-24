@@ -83,6 +83,10 @@ export interface OrderStyle {
   sada_asteen?: string;
   down_shoulder?: string;
   design?: string;
+  // One-off fields added per-order via "+ Add Custom Field" — JSON-encoded
+  // Array<{ label: string; value: string }>, since the fixed keys above
+  // can't cover a field nobody anticipated ahead of time.
+  custom_fields?: string;
 }
 
 export interface MeasurementSnapshot {
