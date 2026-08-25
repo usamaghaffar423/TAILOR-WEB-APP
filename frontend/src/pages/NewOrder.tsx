@@ -322,7 +322,7 @@ export default function NewOrder() {
                 <div className="field freetext" key={idx}>
                   <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{cf.label}</span>
-                    <button type="button" className="row-icon-btn" title="Remove field" onClick={() => removeCustomStyleField(idx)}>&times;</button>
+                    <button type="button" className="row-icon-btn" title="Remove field" onClick={() => removeCustomStyleField(idx)}>&minus;</button>
                   </label>
                   <input type="text" value={cf.value} onChange={(e) => updateCustomStyleField(idx, e.target.value)} />
                 </div>

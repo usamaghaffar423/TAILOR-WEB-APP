@@ -60,6 +60,29 @@ export function MeasurementFieldsForm({ template, fields, onFieldChange }: Measu
     addFieldMutation.mutate(label);
   }
 
+  const removeFieldMutation = useMutation({
+    mutationFn: async (key: string) => {
+      // Same stale-guard as addFieldMutation — re-fetch immediately before
+      // writing so this can't accidentally resurrect a field someone else
+      // already removed, or drop one added elsewhere since this page loaded.
+      const fresh = await settingsApi.getTemplates();
+      const baseFields = fresh.data.find((t) => t.template_key === template.template_key)?.fields ?? template.fields;
+      return settingsApi.updateTemplate(template.template_key, {
+        label: template.label,
+        fields: baseFields.filter((f) => f.key !== key),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['templates'] });
+    },
+  });
+
+  function handleRemoveField(key: string, label: string) {
+    if (window.confirm(`Remove "${label}" from this garment's field list? This applies to every future order using this template.`)) {
+      removeFieldMutation.mutate(key);
+    }
+  }
+
   function fieldInput(key: string, label: string) {
     const raw = fields[key];
     const values = Array.isArray(raw) ? raw : [raw ?? ''];
@@ -80,7 +103,18 @@ export function MeasurementFieldsForm({ template, fields, onFieldChange }: Measu
 
     return (
       <div className="field">
-        <label>{label}</label>
+        <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{label}</span>
+          <button
+            type="button"
+            className="row-icon-btn"
+            title={`Remove ${label}`}
+            onClick={() => handleRemoveField(key, label)}
+            disabled={removeFieldMutation.isPending}
+          >
+            &minus;
+          </button>
+        </label>
         {list.map((val, idx) => (
           <div key={idx} style={{ display: 'flex', gap: 6, marginBottom: idx < list.length - 1 ? 6 : 0 }}>
             <input
