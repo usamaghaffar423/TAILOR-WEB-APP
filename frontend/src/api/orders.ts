@@ -24,7 +24,9 @@ export interface CreateOrderPayload {
 export interface UpdateOrderPayload {
   karigar_id?: number;
   deadline?: string;
+  status?: OrderStatus;
   total_amount?: number;
+  style?: OrderStyle;
 }
 
 function buildQuery(filters: OrderFilters): string {

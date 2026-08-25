@@ -18,6 +18,7 @@ class UpdateOrderRequest extends FormRequest
             'deadline' => ['required', 'date'],
             'status' => ['required', 'in:progress,ready,delivered'],
             'total_amount' => ['required', 'numeric', 'min:0'],
+            'style' => ['sometimes', 'array'],
         ];
     }
 }

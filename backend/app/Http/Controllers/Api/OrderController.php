@@ -214,6 +214,9 @@ class OrderController extends Controller
             $order->delivered_date = $status === 'delivered'
                 ? ($order->delivered_date ?? Carbon::today()->toDateString())
                 : null;
+            if ($request->has('style')) {
+                $order->style = $request->input('style');
+            }
             $order->save();
 
             $this->cacheBuster->bustOrders();
