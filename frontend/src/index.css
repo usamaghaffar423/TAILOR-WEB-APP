@@ -129,6 +129,18 @@ nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shr
   font-size:11px; color:#55555C; line-height:1.6;
 }
 .sidebar-foot b{color:#8B8B93;}
+.powered-by{
+  display:flex; align-items:center; gap:7px; margin-top:12px; padding:7px 10px;
+  border-radius:20px; background:var(--red-pale); border:1px solid transparent;
+  color:var(--text-faint); font-size:10.5px; font-weight:600; text-decoration:none;
+  transition:background .15s, border-color .15s, color .15s; width:fit-content;
+}
+.powered-by:hover{background:transparent; border-color:var(--red); color:var(--red-bright);}
+.powered-by-mark{
+  width:16px; height:16px; border-radius:5px; background:var(--red); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:8.5px; font-weight:800;
+  flex-shrink:0; font-family:'Bebas Neue',sans-serif; letter-spacing:0.02em;
+}
 
 .sidebar-overlay{display:none;}
 

@@ -215,6 +215,10 @@ export function Sidebar({ open, onOverlayClick }: SidebarProps) {
           <b>Order Studio</b>
           <br />
           Top Man Tailor
+          <a href="https://digitalhujra.com" target="_blank" rel="noopener noreferrer" className="powered-by">
+            <span className="powered-by-mark">DH</span>
+            Powered by DigitalHujra
+          </a>
         </div>
       </aside>
       <div className={`sidebar-overlay${open ? ' open' : ''}`} onClick={onOverlayClick} />
