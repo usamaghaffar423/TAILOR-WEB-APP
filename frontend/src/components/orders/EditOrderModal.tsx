@@ -7,7 +7,7 @@ import { Dropdown } from '@/components/ui/Dropdown';
 import { DateInput } from '@/components/ui/DateInput';
 import { ordersApi } from '@/api/orders';
 import { karigarsApi } from '@/api/karigars';
-import { toDateInputValue } from '@/lib/format';
+import { toDateInputValue, formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
 import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, parseCustomStyleFields } from '@/lib/styleFields';
 import type { Order, OrderStatus } from '@/types';
@@ -23,7 +23,22 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
   const [karigarId, setKarigarId] = useState(order.karigar_id);
   const [deadline, setDeadline] = useState(toDateInputValue(order.deadline));
   const [status, setStatus] = useState<OrderStatus>(order.status);
-  const [total, setTotal] = useState(String(order.total_amount));
+
+  const [items, setItems] = useState<{ label: string; amount: string }[]>(() =>
+    order.items && order.items.length > 0
+      ? order.items.map((it) => ({ label: it.label, amount: String(it.amount) }))
+      : [{ label: 'Stitching Charges', amount: String(order.total_amount) }]
+  );
+  function updateItem(idx: number, patch: Partial<{ label: string; amount: string }>) {
+    setItems((its) => its.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
+  }
+  function addItem() {
+    setItems((its) => [...its, { label: '', amount: '' }]);
+  }
+  function removeItem(idx: number) {
+    setItems((its) => its.filter((_, i) => i !== idx));
+  }
+  const totalNum = items.reduce((sum, it) => sum + (parseFloat(it.amount) || 0), 0);
 
   const isKameez = order.measurement_snapshot.template_key.startsWith('shalwar-kameez');
   const [styleValues, setStyleValues] = useState<Record<string, string>>(() => {
@@ -70,11 +85,16 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
         style.custom_fields = JSON.stringify(filledCustomFields);
       }
 
+      const orderItems = items
+        .filter((it) => it.label.trim() && parseFloat(it.amount) > 0)
+        .map((it) => ({ label: it.label.trim(), amount: parseFloat(it.amount) }));
+
       await ordersApi.update(order.id, {
         karigar_id: karigarId,
         deadline,
         status,
-        total_amount: parseFloat(total),
+        total_amount: totalNum,
+        items: orderItems,
         style,
       });
     },
@@ -86,9 +106,13 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
   });
 
   function handleSave() {
-    const totalNum = parseFloat(total);
+    const incompleteItem = items.find((it) => (it.label.trim() && !(parseFloat(it.amount) > 0)) || (!it.label.trim() && it.amount.trim()));
+    if (incompleteItem) {
+      toast.error('Every item needs both a name and an amount');
+      return;
+    }
     if (!totalNum || totalNum <= 0) {
-      toast.error('Enter a valid total order amount');
+      toast.error('Add at least one item with an amount');
       return;
     }
     if (!deadline) {
@@ -128,9 +152,40 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
           <label>Order Status</label>
           <Dropdown value={status} onChange={(v) => setStatus(v as OrderStatus)} options={ORDER_STATUS_OPTIONS} />
         </div>
+        <div className="field span-2">
+          <label>Items</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+            {items.map((it, idx) => (
+              <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="e.g. Stitching Charges, Fabric / Kapra"
+                  value={it.label}
+                  onChange={(e) => updateItem(idx, { label: e.target.value })}
+                  style={{ flex: 2 }}
+                />
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="Amount (Rs)"
+                  className="mono"
+                  value={it.amount}
+                  onChange={(e) => updateItem(idx, { amount: e.target.value })}
+                  style={{ flex: 1 }}
+                />
+                {items.length > 1 && (
+                  <button type="button" className="row-icon-btn" title="Remove item" onClick={() => removeItem(idx)}>&minus;</button>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <Button type="button" variant="outline" sm onClick={addItem}>+ Add Item</Button>
+          </div>
+        </div>
         <div className="field">
-          <label>Total Order Amount (Rs)</label>
-          <input type="number" min={0} value={total} onChange={(e) => setTotal(e.target.value)} />
+          <label>Order Total (Rs)</label>
+          <input type="text" className="mono" value={totalNum ? formatCurrency(totalNum) : ''} disabled />
         </div>
       </div>
 

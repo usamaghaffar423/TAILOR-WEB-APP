@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import type { Order, OrderListItem, OrderStatus, OrderStyle } from '@/types';
+import type { Order, OrderListItem, OrderStatus, OrderStyle, OrderItem } from '@/types';
 
 export interface OrderFilters {
   status?: OrderStatus;
@@ -13,6 +13,7 @@ export interface CreateOrderPayload {
   customer_id: number;
   template_key: string;
   style: OrderStyle;
+  items?: OrderItem[];
   karigar_id: number;
   deadline: string;
   status?: OrderStatus;
@@ -27,6 +28,7 @@ export interface UpdateOrderPayload {
   status?: OrderStatus;
   total_amount?: number;
   style?: OrderStyle;
+  items?: OrderItem[];
 }
 
 function buildQuery(filters: OrderFilters): string {

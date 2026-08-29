@@ -96,6 +96,11 @@ export interface MeasurementSnapshot {
   notes: string | null;
 }
 
+export interface OrderItem {
+  label: string;
+  amount: number;
+}
+
 export interface OrderPhoto {
   id: number;
   order_id: number;
@@ -117,6 +122,7 @@ export interface Order {
   order_no: string; // ORD-0001
   customer_id: number;
   style: OrderStyle;
+  items: OrderItem[] | null;
   measurement_snapshot: MeasurementSnapshot;
   karigar_id: number;
   assigned_date: string;

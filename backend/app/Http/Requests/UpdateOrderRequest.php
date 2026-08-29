@@ -19,6 +19,9 @@ class UpdateOrderRequest extends FormRequest
             'status' => ['required', 'in:progress,ready,delivered'],
             'total_amount' => ['required', 'numeric', 'min:0'],
             'style' => ['sometimes', 'array'],
+            'items' => ['sometimes', 'array'],
+            'items.*.label' => ['required_with:items', 'string'],
+            'items.*.amount' => ['required_with:items', 'numeric', 'min:0'],
         ];
     }
 }

@@ -115,6 +115,9 @@ export function OrderCardModal({ orderId, onClose, startInEdit }: OrderCardModal
               <div className="oc-block">
                 <div className="oc-section-title">Assignment</div>
                 <div className="oc-kv"><span>Karigar</span><b>{order.karigar?.name || '—'}</b></div>
+                {order.items && order.items.length > 0 && order.items.map((it, idx) => (
+                  <div key={idx} className="oc-kv"><span>{it.label}</span><b className="mono">{formatCurrency(it.amount)}</b></div>
+                ))}
                 <div className="oc-kv"><span>Total</span><b className="mono">{formatCurrency(order.total_amount)}</b></div>
                 <div className="oc-kv"><span>Paid</span><b className="mono">{formatCurrency(paid)}</b></div>
                 <div className="oc-kv"><span>Balance</span><b className={`mono ${pending > 0 ? 'balance-pending' : 'balance-paid'}`}>{pending > 0 ? formatCurrency(pending) : 'Paid'}</b></div>

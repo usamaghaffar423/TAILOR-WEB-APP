@@ -12,6 +12,7 @@ class Order extends Model
         'order_no',
         'customer_id',
         'style',
+        'items',
         'measurement_snapshot',
         'karigar_id',
         'assigned_date',
@@ -23,6 +24,7 @@ class Order extends Model
 
     protected $casts = [
         'style' => 'array',
+        'items' => 'array',
         'measurement_snapshot' => 'array',
         'assigned_date' => 'date',
         'deadline' => 'date',

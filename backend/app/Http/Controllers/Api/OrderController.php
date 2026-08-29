@@ -113,6 +113,7 @@ class OrderController extends Controller
                 'order_no' => $this->nextOrderNo(),
                 'customer_id' => $request->input('customer_id'),
                 'style' => $request->input('style'),
+                'items' => $request->input('items'),
                 'measurement_snapshot' => [
                     'template_key' => $templateKey,
                     'template_label' => $template->label ?? $templateKey,
@@ -216,6 +217,9 @@ class OrderController extends Controller
                 : null;
             if ($request->has('style')) {
                 $order->style = $request->input('style');
+            }
+            if ($request->has('items')) {
+                $order->items = $request->input('items');
             }
             $order->save();
 

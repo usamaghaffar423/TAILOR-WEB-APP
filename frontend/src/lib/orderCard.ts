@@ -48,6 +48,11 @@ export function buildOrderWhatsAppText(
   if (audience === 'karigar') {
     lines.push('Assigned by: Top Man Tailor (shop owner)');
   } else {
+    if (order.items && order.items.length > 0) {
+      lines.push('ITEMS');
+      order.items.forEach((it) => lines.push(`${it.label}: ${formatCurrency(it.amount)}`));
+      lines.push('');
+    }
     lines.push(`Total: ${formatCurrency(total)} | Paid: ${formatCurrency(paid)} | Balance: ${pending > 0 ? formatCurrency(pending) : 'Paid in full'}`);
     lines.push('');
     lines.push('— Top Man Tailor');
