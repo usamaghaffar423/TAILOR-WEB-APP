@@ -5,6 +5,7 @@ import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { formatDate, formatCurrency } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
+import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
 import type { PaymentMethod } from '@/types';
 
 const METHOD_LABEL: Record<PaymentMethod, string> = {
@@ -61,6 +62,14 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
   const total = order ? Number(order.total_amount) : 0;
   const pending = Math.max(0, total - paid);
 
+  const style = order?.style || {};
+  const styleRows: Array<[string, string]> = order
+    ? [
+        ...STYLE_FIELDS.filter((f) => style[f.key]).map((f): [string, string] => [f.label, style[f.key] as string]),
+        ...parseCustomStyleFields(style.custom_fields).map((f): [string, string] => [f.label, f.value]),
+      ]
+    : [];
+
   return (
     <Dialog
       open={orderId !== null}
@@ -113,6 +122,16 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
           <div style={row}><span>Order Date</span><span>{formatDate(order.created_at)}</span></div>
           <div style={row}><span>Deadline</span><span>{formatDate(order.deadline)}</span></div>
           <div style={row}><span>Garment</span><span>{template?.label || order.measurement_snapshot.template_label || '—'}</span></div>
+
+          {styleRows.length > 0 && (
+            <>
+              <hr style={divider} />
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#777', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Order Details</div>
+              {styleRows.map(([label, value]) => (
+                <div key={label} style={row}><span>{label}</span><span>{value}</span></div>
+              ))}
+            </>
+          )}
 
           <hr style={divider} />
 
