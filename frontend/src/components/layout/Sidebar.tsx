@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth';
 import { useAuthedImage } from '@/lib/useAuthedImage';
+import { settingsApi } from '@/api/settings';
 
 interface NavItem {
   to: string;
@@ -121,7 +123,13 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open, onOverlayClick }: SidebarProps) {
-  const shop = useAuthStore((s) => s.shop);
+  const authShop = useAuthStore((s) => s.shop);
+  // authStore.shop is only ever set at login, so it goes stale the moment a
+  // logo/name/etc. is changed in Settings mid-session — prefer the live,
+  // React-Query-cached copy (which Settings' mutations correctly invalidate)
+  // and fall back to the login snapshot only until that first fetch lands.
+  const { data: settingsRes } = useQuery({ queryKey: ['settings'], queryFn: () => settingsApi.show() });
+  const shop = settingsRes?.data ?? authShop;
   const logoUrl = useAuthedImage(shop?.logo_path);
   const shopName = shop?.name || 'Top Man Tailor';
   const mark = shopName.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();

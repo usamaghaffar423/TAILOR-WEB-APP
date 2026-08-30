@@ -19,17 +19,10 @@ export const settingsApi = {
 
   uploadLogo: (file: File) => {
     const formData = new FormData();
-    formData.append('logo', file);
+    // Backend validates/reads this under "file" (UploadLogoRequest), not
+    // "logo" — sending it as "logo" made every upload fail validation.
+    formData.append('file', file);
     return apiFetch<{ data: ShopSettings }>('/settings/logo', {
-      method: 'POST',
-      body: formData,
-    });
-  },
-
-  uploadBanner: (file: File) => {
-    const formData = new FormData();
-    formData.append('banner', file);
-    return apiFetch<{ data: ShopSettings }>('/settings/banner', {
       method: 'POST',
       body: formData,
     });

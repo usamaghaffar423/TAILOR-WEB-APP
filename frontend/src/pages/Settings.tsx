@@ -32,9 +32,7 @@ export default function Settings() {
   }, [shop]);
 
   const logoUrl = useAuthedImage(shop?.logo_path);
-  const bannerUrl = useAuthedImage(shop?.banner_path);
   const logoInputRef = useRef<HTMLInputElement>(null);
-  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   function refreshShop() {
     queryClient.invalidateQueries({ queryKey: ['settings'] });
@@ -53,15 +51,6 @@ export default function Settings() {
     mutationFn: (file: File) => settingsApi.uploadLogo(file),
     onSuccess: () => {
       toast.success('Logo updated');
-      refreshShop();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const bannerMutation = useMutation({
-    mutationFn: (file: File) => settingsApi.uploadBanner(file),
-    onSuccess: () => {
-      toast.success('Banner updated');
       refreshShop();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -172,27 +161,6 @@ export default function Settings() {
                 }}
               />
             </div>
-          </div>
-        </div>
-
-        <div className="field" style={{ marginTop: 18 }}>
-          <label>Banner</label>
-          <div className="banner-upload-preview">
-            {bannerUrl ? <img src={bannerUrl} alt="Shop banner" /> : 'No banner uploaded'}
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <Button variant="outline" sm onClick={() => bannerInputRef.current?.click()}>Change Banner</Button>
-            <input
-              ref={bannerInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) bannerMutation.mutate(file);
-                e.target.value = '';
-              }}
-            />
           </div>
         </div>
 

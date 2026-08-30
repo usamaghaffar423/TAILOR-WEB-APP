@@ -482,7 +482,7 @@ table.data-table tbody tr.clickable:hover{background:var(--surface-2);}
 .entity-stat .v{font-family:'Bebas Neue',sans-serif; font-size:19px; line-height:1;}
 .entity-stat .l{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.04em; margin-top:3px;}
 
-/* ---------- Shop logo / banner upload (Settings) ---------- */
+/* ---------- Shop logo upload (Settings) ---------- */
 .logo-upload{display:flex; align-items:center; gap:14px; margin-top:6px;}
 .logo-upload-preview{
   width:64px; height:64px; border-radius:14px; background:var(--red-pale); color:var(--red-bright);
@@ -491,13 +491,6 @@ table.data-table tbody tr.clickable:hover{background:var(--surface-2);}
 }
 .logo-upload-preview img{width:100%; height:100%; object-fit:cover; display:block;}
 .logo-upload-actions{display:flex; flex-direction:column; gap:8px;}
-.banner-upload-preview{
-  width:100%; aspect-ratio:4/1; border-radius:12px; background:var(--surface-2); border:1.5px dashed var(--border-strong);
-  display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:12px; overflow:hidden; margin-top:6px;
-}
-.banner-upload-preview img{width:100%; height:100%; object-fit:cover; display:block;}
-.print-banner{display:none;}
-.print-banner img{width:100%; max-height:120px; object-fit:cover; border-radius:10px; display:block; margin-bottom:16px;}
 
 /* ---------- Modal ---------- */
 .modal-overlay{
@@ -600,7 +593,6 @@ table.data-table tbody tr.clickable:hover{background:var(--surface-2);}
     padding: 0; margin: 0; background: #fff; color: #111;
   }
   .sidebar, .topbar, .hero-actions, .no-print { display: none !important; }
-  .print-banner { display: block !important; }
   .print-area .stitch { background-image: repeating-linear-gradient(90deg, #E51A2E 0 10px, transparent 10px 18px); }
   .print-sheet { border: none !important; box-shadow: none !important; padding: 0 !important; }
   .adv-toggle { border: none !important; padding-top: 6px !important; }
