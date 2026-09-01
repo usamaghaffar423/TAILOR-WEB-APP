@@ -63,26 +63,25 @@ class BackfillSales extends Command
             foreach ($orders as $order) {
                 $this->backfillOrder($order);
             }
-            foreach ($retailSales as $retailSale) {
-                $this->backfillRetailSale($retailSale);
-            }
 
-            // Single atomic pass, run only after every legacy order's sales
-            // row exists — matches each payment to its new sale via
-            // legacy_order_id (a stable join key), rather than reassigning
-            // payments.sale_id one order at a time. Doing it one-at-a-time
-            // risks a collision: new sales.id values and old orders.id
-            // values are separate sequences that can numerically overlap
-            // mid-run, so a later per-order UPDATE...WHERE sale_id=<old id>
-            // could accidentally also match a payment an earlier step had
-            // already moved to that same numeric value. This UPDATE...JOIN
-            // reads and writes every row's correct mapping in one pass, so
-            // that ambiguity can't happen.
+            // Remap every order-derived payment to its real new sale.id
+            // BEFORE inserting a single retail sale. This must run before
+            // any retail sale exists: a retail sale's own new sales.id is
+            // just as capable of numerically colliding with some other
+            // order's legacy_order_id as two orders' ids are with each
+            // other — this reordering removes that class of collision
+            // entirely, rather than just narrowing the odds of it, by
+            // guaranteeing no retail-derived payments.sale_id values exist
+            // yet for this JOIN to ever accidentally match against.
             DB::statement('
                 UPDATE payments p
                 JOIN sales s ON s.legacy_order_id = p.sale_id
                 SET p.sale_id = s.id
             ');
+
+            foreach ($retailSales as $retailSale) {
+                $this->backfillRetailSale($retailSale);
+            }
         });
 
         $this->info('Backfill complete.');
