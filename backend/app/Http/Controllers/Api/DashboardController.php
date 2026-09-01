@@ -105,7 +105,10 @@ class DashboardController extends Controller
     {
         $rows = Order::query()
             ->where('orders.status', '!=', 'delivered')
-            ->leftJoin('payments', 'payments.order_id', '=', 'orders.id')
+            // Bridged through each order's mirrored sales row — see
+            // OrderController::store()/update()/destroy().
+            ->leftJoin('sales', 'sales.legacy_order_id', '=', 'orders.id')
+            ->leftJoin('payments', 'payments.sale_id', '=', 'sales.id')
             ->groupBy('orders.id', 'orders.total_amount')
             ->get([
                 'orders.id',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePaymentRequest;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Sale;
 use App\Services\Cache\CacheBuster;
 use App\Services\Cache\CacheKeys;
 use Illuminate\Http\JsonResponse;
@@ -32,8 +33,14 @@ class PaymentController extends Controller
             ];
 
             $payments = Cache::remember(CacheKeys::payments($filters), CacheKeys::PAYMENTS_TTL, function () use ($filters) {
+                // payments now hangs off sales, not orders directly — bridge
+                // through each order's mirrored sales row (see
+                // OrderController::store()/update()/destroy() and
+                // Order::payments()) so every payment recorded against the
+                // still-live legacy Order Studio flow keeps resolving here.
                 $query = DB::table('payments')
-                    ->join('orders', 'orders.id', '=', 'payments.order_id')
+                    ->join('sales', 'sales.id', '=', 'payments.sale_id')
+                    ->join('orders', 'orders.id', '=', 'sales.legacy_order_id')
                     ->join('customers', 'customers.id', '=', 'orders.customer_id');
 
                 if ($filters['method']) {
@@ -82,16 +89,31 @@ class PaymentController extends Controller
     public function store(StorePaymentRequest $request): JsonResponse
     {
         try {
+            $order = Order::query()->find($request->input('order_id'));
+
+            // Every order (backfilled or created via the still-live legacy
+            // flow) has exactly one mirrored sales row to bridge through —
+            // see OrderController::store(). If one is somehow missing,
+            // create it now rather than failing the payment outright.
+            $sale = Sale::query()->firstOrCreate(
+                ['legacy_order_id' => $order->id],
+                [
+                    'customer_id' => $order->customer_id,
+                    'subtotal' => $order->total_amount,
+                    'total' => $order->total_amount,
+                    'status' => 'in_progress',
+                ]
+            );
+
             $payment = Payment::query()->create([
-                'order_id' => $request->input('order_id'),
+                'sale_id' => $sale->id,
                 'amount' => $request->input('amount'),
                 'method' => $request->input('method'),
                 'date' => $request->input('date'),
                 'note' => $request->input('note'),
             ]);
 
-            $order = Order::query()->find($request->input('order_id'));
-            $paidAmount = Payment::query()->where('order_id', $order->id)->sum('amount');
+            $paidAmount = Payment::query()->where('sale_id', $sale->id)->sum('amount');
 
             $this->cacheBuster->bustPayments();
 
@@ -128,7 +150,8 @@ class PaymentController extends Controller
 
                 $rows = Order::query()
                     ->where('orders.status', '!=', 'delivered')
-                    ->leftJoin('payments', 'payments.order_id', '=', 'orders.id')
+                    ->leftJoin('sales', 'sales.legacy_order_id', '=', 'orders.id')
+                    ->leftJoin('payments', 'payments.sale_id', '=', 'sales.id')
                     ->groupBy('orders.id', 'orders.total_amount')
                     ->get([
                         'orders.id',
@@ -164,7 +187,8 @@ class PaymentController extends Controller
                 $rows = DB::table('orders')
                     ->join('customers', 'customers.id', '=', 'orders.customer_id')
                     ->join('karigars', 'karigars.id', '=', 'orders.karigar_id')
-                    ->leftJoin('payments', 'payments.order_id', '=', 'orders.id')
+                    ->leftJoin('sales', 'sales.legacy_order_id', '=', 'orders.id')
+                    ->leftJoin('payments', 'payments.sale_id', '=', 'sales.id')
                     ->groupBy(
                         'orders.id', 'orders.order_no', 'orders.status', 'orders.deadline',
                         'orders.total_amount', 'customers.name', 'karigars.name'

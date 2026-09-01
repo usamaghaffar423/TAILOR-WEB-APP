@@ -102,7 +102,10 @@ class CustomerController extends Controller
 
                 $orders = DB::table('orders')
                     ->join('karigars', 'karigars.id', '=', 'orders.karigar_id')
-                    ->leftJoin('payments', 'payments.order_id', '=', 'orders.id')
+                    // Bridged through each order's mirrored sales row — see
+                    // OrderController::store()/update()/destroy().
+                    ->leftJoin('sales', 'sales.legacy_order_id', '=', 'orders.id')
+                    ->leftJoin('payments', 'payments.sale_id', '=', 'sales.id')
                     ->where('orders.customer_id', $id)
                     ->groupBy(
                         'orders.id', 'orders.order_no', 'orders.status', 'orders.deadline',

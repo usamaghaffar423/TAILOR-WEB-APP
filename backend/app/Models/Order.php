@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Order extends Model
 {
@@ -47,8 +48,23 @@ class Order extends Model
         return $this->hasMany(OrderPhoto::class);
     }
 
-    public function payments(): HasMany
+    /**
+     * payments.order_id was renamed to sale_id and repointed at the new
+     * sales table (see the Sale/Bill unification migration) — a payment
+     * for this order now lives one hop further out, bridged through
+     * sales.legacy_order_id. Every order (old and new, until Order Studio
+     * is cut over) has exactly one mirrored sales row for this bridge to
+     * resolve through — see OrderController::store()/update()/destroy().
+     */
+    public function payments(): HasManyThrough
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasManyThrough(
+            Payment::class,
+            Sale::class,
+            'legacy_order_id', // FK on sales referencing orders.id
+            'sale_id',         // FK on payments referencing sales.id
+            'id',              // local key on orders
+            'id'               // local key on sales
+        );
     }
 }

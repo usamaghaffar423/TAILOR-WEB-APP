@@ -10,6 +10,7 @@ use App\Models\Measurement;
 use App\Models\MeasurementTemplate;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Sale;
 use App\Services\Cache\CacheBuster;
 use App\Services\Cache\CacheKeys;
 use Illuminate\Http\JsonResponse;
@@ -40,7 +41,11 @@ class OrderController extends Controller
                 $query = DB::table('orders')
                     ->join('customers', 'customers.id', '=', 'orders.customer_id')
                     ->join('karigars', 'karigars.id', '=', 'orders.karigar_id')
-                    ->leftJoin('payments', 'payments.order_id', '=', 'orders.id');
+                    // payments now hangs off sales, bridged via each order's
+                    // mirrored sales row (sales.legacy_order_id) — see
+                    // Order::payments() and store()/update()/destroy() below.
+                    ->leftJoin('sales', 'sales.legacy_order_id', '=', 'orders.id')
+                    ->leftJoin('payments', 'payments.sale_id', '=', 'sales.id');
 
                 if ($filters['status']) {
                     $query->where('orders.status', $filters['status']);
@@ -127,10 +132,21 @@ class OrderController extends Controller
                 'total_amount' => $request->input('total_amount'),
             ]);
 
+            // Mirror row so payments (which now hang off sales, not orders
+            // directly — see Order::payments()) have somewhere to bridge
+            // through for orders created via this still-live legacy flow.
+            $sale = Sale::create([
+                'legacy_order_id' => $order->id,
+                'customer_id' => $order->customer_id,
+                'subtotal' => $order->total_amount,
+                'total' => $order->total_amount,
+                'status' => $this->mapOrderStatusToSaleStatus($order->status),
+            ]);
+
             $advanceAmount = $request->input('advance_amount');
             if ($advanceAmount && (float) $advanceAmount > 0) {
                 Payment::query()->create([
-                    'order_id' => $order->id,
+                    'sale_id' => $sale->id,
                     'amount' => $advanceAmount,
                     'method' => $request->input('advance_method'),
                     'date' => $request->input('advance_date', Carbon::today()->toDateString()),
@@ -187,6 +203,8 @@ class OrderController extends Controller
             $order->delivered_date = $status === 'delivered' ? Carbon::today()->toDateString() : null;
             $order->save();
 
+            Sale::where('legacy_order_id', $order->id)->update(['status' => $this->mapOrderStatusToSaleStatus($status)]);
+
             $this->cacheBuster->bustOrders();
 
             return response()->json(['data' => $order, 'message' => 'Status updated successfully.']);
@@ -223,6 +241,13 @@ class OrderController extends Controller
             }
             $order->save();
 
+            Sale::where('legacy_order_id', $order->id)->update([
+                'customer_id' => $order->customer_id,
+                'subtotal' => $order->total_amount,
+                'total' => $order->total_amount,
+                'status' => $this->mapOrderStatusToSaleStatus($order->status),
+            ]);
+
             $this->cacheBuster->bustOrders();
 
             return response()->json(['data' => $order, 'message' => 'Updated successfully.']);
@@ -242,6 +267,11 @@ class OrderController extends Controller
                 return response()->json(['message' => 'Not found.'], 404);
             }
 
+            // Cascades to the mirror sale's payments too (sales.legacy_order_id
+            // -> sale_items/payments all cascadeOnDelete from sales.id),
+            // matching the exact cascade the original payments.order_id FK
+            // gave orders before the Sale/Bill unification migration.
+            Sale::where('legacy_order_id', $order->id)->delete();
             $order->delete();
 
             $this->cacheBuster->bustOrders();
@@ -252,6 +282,16 @@ class OrderController extends Controller
 
             return response()->json(['message' => 'Server error.'], 500);
         }
+    }
+
+    private function mapOrderStatusToSaleStatus(string $status): string
+    {
+        return match ($status) {
+            'progress' => 'in_progress',
+            'ready' => 'ready',
+            'delivered' => 'completed',
+            default => 'in_progress',
+        };
     }
 
     private function nextOrderNo(): string
