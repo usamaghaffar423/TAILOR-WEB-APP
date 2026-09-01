@@ -38,6 +38,8 @@ class CacheBuster
         $this->bump(CacheKeys::RESOURCE_KARIGARS);
         // Cached order listings/detail embed karigars.name via JOIN/relation.
         $this->bustOrders();
+        // Same reason, now also true of cached sales listings/detail.
+        $this->bustSales();
     }
 
     public function bustPayments(): void
@@ -46,6 +48,8 @@ class CacheBuster
         // Cached order listings embed a paid_amount SUM, and cached order
         // show() eager-loads the payments relation directly.
         $this->bustOrders();
+        // Same reason, now also true of cached sales listings/detail.
+        $this->bustSales();
     }
 
     public function bustSettings(): void
@@ -82,6 +86,17 @@ class CacheBuster
     public function bustRetailDashboard(): void
     {
         $this->bump(CacheKeys::RESOURCE_RETAIL_DASHBOARD);
+    }
+
+    /**
+     * Unified sales (Sale/Bill migration). A unified sale can carry a
+     * retail line (stock-backed) and/or a stitched line (karigar/deadline),
+     * so its own writes ripple the same way orders/retail sales always did.
+     */
+    public function bustSales(): void
+    {
+        $this->bump(CacheKeys::RESOURCE_SALES);
+        $this->bustDashboard();
     }
 
     /**

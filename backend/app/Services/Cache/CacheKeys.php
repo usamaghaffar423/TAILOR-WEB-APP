@@ -28,6 +28,7 @@ class CacheKeys
     public const RETAIL_INVENTORY_TTL = 120;      // 2 minutes
     public const RETAIL_SALES_TTL = 180;          // 3 minutes
     public const RETAIL_DASHBOARD_TTL = 300;      // 5 minutes
+    public const SALES_TTL = 180;                 // 3 minutes — matches ORDERS_TTL, same resource shape
 
     // ---- Resource names — the versioning bucket + key prefix for each ----
     public const RESOURCE_DASHBOARD = 'dashboard';
@@ -41,6 +42,7 @@ class CacheKeys
     public const RESOURCE_RETAIL_INVENTORY = 'retail_inventory';
     public const RESOURCE_RETAIL_SALES = 'retail_sales';
     public const RESOURCE_RETAIL_DASHBOARD = 'retail_dashboard';
+    public const RESOURCE_SALES = 'sales';
 
     public static function version(string $resource): int
     {
@@ -167,5 +169,16 @@ class CacheKeys
     public static function retailDashboard(): string
     {
         return self::build(self::RESOURCE_RETAIL_DASHBOARD);
+    }
+
+    // ---- Unified sales (Sale/Bill migration) ----
+    public static function sales(array $filters): string
+    {
+        return self::build(self::RESOURCE_SALES, 'index:'.md5(json_encode($filters)));
+    }
+
+    public static function saleShow(int $id): string
+    {
+        return self::build(self::RESOURCE_SALES, "show:{$id}");
     }
 }

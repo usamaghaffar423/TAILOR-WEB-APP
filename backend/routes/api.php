@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\KarigarController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UploadController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,15 @@ Route::middleware('api.auth')->group(function () {
     Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
     Route::put('/orders/{id}', [OrderController::class, 'update']);
     Route::delete('/orders/{id}', [OrderController::class, 'destroy']);
+
+    // Sales (unified Sale/Bill migration — new, additive; orders/ above stays
+    // fully intact and unused for now, archived once this is cut over).
+    Route::get('/sales', [SaleController::class, 'index']);
+    Route::post('/sales', [SaleController::class, 'store']);
+    Route::get('/sales/{id}', [SaleController::class, 'show']);
+    Route::put('/sales/{id}', [SaleController::class, 'update']);
+    Route::delete('/sales/{id}', [SaleController::class, 'destroy']);
+    Route::patch('/sales/items/{itemId}/status', [SaleController::class, 'updateItemStatus']);
 
     // Payments
     Route::get('/payments', [PaymentController::class, 'index']);
