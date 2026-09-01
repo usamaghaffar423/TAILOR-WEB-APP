@@ -10,7 +10,7 @@ class Payment extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'order_id',
+        'sale_id',
         'amount',
         'method',
         'date',
@@ -22,8 +22,8 @@ class Payment extends Model
         'amount' => 'decimal:2',
     ];
 
-    public function order(): BelongsTo
+    public function sale(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Sale::class);
     }
 }
