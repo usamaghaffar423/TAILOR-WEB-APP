@@ -18,6 +18,9 @@ const Karigars    = lazy(() => import('@/pages/Karigars'));
 const KarigarDetail = lazy(() => import('@/pages/KarigarDetail'));
 const Payments    = lazy(() => import('@/pages/Payments'));
 const Settings    = lazy(() => import('@/pages/Settings'));
+// Sale/Bill unification migration — new unified cart, not yet cut over to
+// replace orders/new or retail/pos. Temporary test-only path until verified.
+const NewSalePage = lazy(() => import('@/features/sales/pages/NewSalePage'));
 
 // Theme initialisation — runs before first render
 const savedTheme = localStorage.getItem('tmt_theme') as 'dark' | 'light' | null;
@@ -92,6 +95,7 @@ const router = createBrowserRouter([
           { path: 'payments',             element: <Suspense fallback={null}><Payments /></Suspense> },
           { path: 'settings',             element: <Suspense fallback={null}><Settings /></Suspense> },
           ...retailRoutes,
+          { path: 'sales/new',            element: <Suspense fallback={null}><NewSalePage /></Suspense> },
           { path: '*',                    element: <Navigate to="/" replace /> },
         ],
       },

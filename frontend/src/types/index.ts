@@ -1,5 +1,5 @@
 export type OrderStatus = 'progress' | 'ready' | 'delivered';
-export type PaymentMethod = 'cash' | 'easypaisa' | 'jazzcash' | 'bank';
+export type PaymentMethod = 'cash' | 'easypaisa' | 'jazzcash' | 'bank' | 'card';
 export type ThemeDefault = 'dark' | 'light';
 
 export interface Admin {
@@ -110,7 +110,7 @@ export interface OrderPhoto {
 
 export interface Payment {
   id: number;
-  order_id: number;
+  sale_id: number; // was order_id — see the Sale/Bill unification migration
   amount: string; // decimal comes as string from Laravel/MySQL
   method: PaymentMethod;
   date: string;
