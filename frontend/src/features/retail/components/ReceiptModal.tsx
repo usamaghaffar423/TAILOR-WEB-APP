@@ -6,26 +6,17 @@ import { formatCurrency, formatDate } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 import { METHOD_LABEL } from '../lib/paymentMethod';
 import type { RetailSale } from '../types';
-
-const divider: React.CSSProperties = {
-  border: 'none',
-  borderTop: '1px dashed #999',
-  margin: '14px 0',
-};
-
-const row: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: 10,
-  fontSize: 13,
-  padding: '3px 0',
-};
+import './ReceiptModal.css';
 
 interface ReceiptModalProps {
   sale: RetailSale | null;
   onClose: () => void;
 }
 
+// The receipt prints on the shop's 80mm thermal printer. All layout/sizing
+// lives in ReceiptModal.css, scoped to `.receipt-print`; see that file for
+// the OS-side paper-size prerequisite. `.customer-bill-print-area` is kept
+// only so the app's existing print rules strip the surrounding modal chrome.
 export function ReceiptModal({ sale, onClose }: ReceiptModalProps) {
   const { data: shopRes } = useQuery({
     queryKey: ['settings'],
@@ -51,66 +42,59 @@ export function ReceiptModal({ sale, onClose }: ReceiptModalProps) {
       }
     >
       {sale && (
-        <div
-          className="customer-bill-print-area"
-          style={{
-            background: '#fff',
-            color: '#111',
-            width: 380,
-            maxWidth: '100%',
-            margin: '0 auto',
-            padding: '24px 22px',
-            fontSize: 13,
-            lineHeight: 1.5,
-          }}
-        >
-          <div style={{ textAlign: 'center' }}>
+        <div className="receipt-print customer-bill-print-area">
+          <div className="r-head">
             {logoUrl ? (
-              <img src={logoUrl} alt="Shop logo" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, margin: '0 auto 10px' }} />
+              <img src={logoUrl} alt="Shop logo" className="logo" />
             ) : (
-              <div style={{ width: 64, height: 64, borderRadius: 8, background: '#eee', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 20, color: '#888' }}>
+              <div className="logo-fallback">
                 {(shop?.name || 'TM').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
               </div>
             )}
-            <div style={{ fontSize: 19, fontWeight: 700 }}>{shop?.name || 'Top Man Tailor'}</div>
-            {shop?.address && <div style={{ fontSize: 11.5, color: '#555', marginTop: 3 }}>{shop.address}</div>}
-            {shop?.phone && <div style={{ fontSize: 11.5, color: '#555' }}>{shop.phone}</div>}
+            <div className="shop-name">{shop?.name || 'Top Man Tailor'}</div>
+            {shop?.address && <div className="shop-meta">{shop.address}</div>}
+            {shop?.phone && <div className="shop-meta">{shop.phone}</div>}
           </div>
 
-          <hr style={divider} />
+          <hr className="divider" />
 
-          <div style={row}><span>Sale #</span><b>{sale.id}</b></div>
-          <div style={row}><span>Date</span><span>{formatDate(sale.sale_date)}</span></div>
-          {sale.customer_name && <div style={row}><span>Customer</span><span>{sale.customer_name}</span></div>}
-          {sale.customer_phone && <div style={row}><span>Phone</span><span>{sale.customer_phone}</span></div>}
+          <div className="row"><span>Sale #</span><b>{sale.id}</b></div>
+          <div className="row"><span>Date</span><span>{formatDate(sale.sale_date)}</span></div>
+          {sale.customer_name && <div className="row"><span>Customer</span><span>{sale.customer_name}</span></div>}
+          {sale.customer_phone && <div className="row"><span>Phone</span><span>{sale.customer_phone}</span></div>}
 
-          <hr style={divider} />
+          <hr className="divider" />
 
           {sale.items.map((item) => (
-            <div key={item.id} style={row}>
-              <span>
-                {item.variant.product.name}
-                {(item.variant.size || item.variant.color) && (
-                  <span style={{ color: '#777' }}> ({[item.variant.size, item.variant.color].filter(Boolean).join(' / ')})</span>
-                )}
-                {' '}× {item.quantity}
-              </span>
-              <span>{formatCurrency(item.subtotal)}</span>
+            <div key={item.id} className="item">
+              <div className="item-line">
+                <span className="item-name">
+                  {item.variant.product.name}
+                  {(item.variant.size || item.variant.color) && (
+                    <span className="muted"> ({[item.variant.size, item.variant.color].filter(Boolean).join(' / ')})</span>
+                  )}
+                  {' '}× {item.quantity}
+                </span>
+                <span className="item-price">{formatCurrency(item.subtotal)}</span>
+              </div>
+              {/*
+                Optional stitched-item detail (measurements / karigar / deadline)
+                goes here as <div className="item-detail">…</div> once this modal
+                shares the unified Sale receipt. Pure retail sales have none.
+              */}
             </div>
           ))}
 
-          <hr style={{ ...divider, borderTop: '1px solid #111', margin: '8px 0' }} />
-          <div style={{ ...row, fontSize: 15, fontWeight: 700 }}>
+          <hr className="divider strong" />
+          <div className="row total-row">
             <span>Total</span>
             <span>{formatCurrency(sale.total_amount)}</span>
           </div>
-          <div style={row}><span>Payment</span><span>{METHOD_LABEL[sale.payment_method]}</span></div>
+          <div className="row"><span>Payment</span><span>{METHOD_LABEL[sale.payment_method]}</span></div>
 
-          <hr style={divider} />
+          <hr className="divider" />
 
-          <div style={{ textAlign: 'center', fontSize: 12, color: '#555' }}>
-            Thank you for shopping with us.
-          </div>
+          <div className="footer">Thank you for shopping with us.</div>
         </div>
       )}
     </Dialog>

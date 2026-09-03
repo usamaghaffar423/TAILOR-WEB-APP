@@ -1,0 +1,237 @@
+/*
+ * Print/receipt stylesheet for the retail POS "Sale Receipt" (ReceiptModal).
+ *
+ * Every rule here is scoped to `.receipt-print` (the wrapper this one modal
+ * renders) so it never touches any other screen, nor the app's other
+ * printable documents (customer bill, karigar bill, measurement sheet).
+ *
+ * TARGET HARDWARE: 80mm thermal receipt printer branded "iTech" — a generic
+ * ESC/POS-class unit (USB, auto-cutter). Roll is 80mm wide, ~72mm printable.
+ *
+ * OS PREREQUISITE (configured in Windows, not in code): the printer must be
+ * installed with an 80mm roll paper size selected in its driver properties,
+ * AND that same 80mm / roll paper size must be picked in the browser's print
+ * dialog when printing this receipt. The `@page` rule below asks for it, but
+ * if the driver doesn't expose a roll size the browser falls back to the
+ * dialog's paper size — the receipt still renders at the fixed 72mm content
+ * width (so nothing is cut off horizontally), just centred on a larger sheet.
+ *
+ * Named page (`page: thermal`) keeps the 80mm page size local to this
+ * receipt: printing a measurement sheet or another bill in the same session
+ * still uses the app's default page setup.
+ */
+
+/* ---------------------------------------------------------------------------
+ * On-screen (modal preview) — mirrors the look this modal already had.
+ * ------------------------------------------------------------------------- */
+.receipt-print {
+  page: thermal; /* only consulted when printing; harmless on screen */
+  background: #fff;
+  color: #111;
+  width: 380px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 24px 22px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.receipt-print .r-head {
+  text-align: center;
+}
+
+.receipt-print .logo,
+.receipt-print .logo-fallback {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 10px;
+  border-radius: 8px;
+  display: block;
+}
+
+.receipt-print .logo {
+  object-fit: cover;
+}
+
+.receipt-print .logo-fallback {
+  background: #eee;
+  color: #888;
+  font-weight: 700;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.receipt-print .shop-name {
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.receipt-print .shop-meta {
+  font-size: 11.5px;
+  color: #555;
+}
+
+.receipt-print .r-head .shop-meta:first-of-type {
+  margin-top: 3px;
+}
+
+.receipt-print .divider {
+  border: none;
+  border-top: 1px dashed #999;
+  margin: 14px 0;
+}
+
+.receipt-print .divider.strong {
+  border-top: 1px solid #111;
+  margin: 8px 0;
+}
+
+/* Label / value line (Sale #, Date, Total, Payment, …) */
+.receipt-print .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.receipt-print .total-row {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/*
+ * Item line: the name cell flexes and wraps freely; the price sits in its
+ * own fixed, right-aligned, non-shrinking cell so a long product/variant
+ * name spilling onto a second line never drags the amount out of column.
+ */
+.receipt-print .item-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 3px 0;
+}
+
+.receipt-print .item-name {
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.receipt-print .item-price {
+  flex: none;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.receipt-print .muted {
+  color: #777;
+}
+
+/*
+ * Optional per-item detail block — a few indented lines for
+ * measurement / karigar / deadline when a stitched item carries them.
+ * ReceiptModal (pure retail) never renders this today, but the unified
+ * Sale receipt will, and the layout is already sized for it: keep this
+ * hook so adopting the shared bill later needs no CSS change here.
+ */
+.receipt-print .item-detail {
+  margin: 2px 0 4px 8px;
+  padding-left: 8px;
+  border-left: 2px solid #ddd;
+  font-size: 11px;
+  color: #555;
+}
+
+.receipt-print .footer {
+  text-align: center;
+  font-size: 12px;
+  color: #555;
+}
+
+/* ---------------------------------------------------------------------------
+ * Thermal print — 80mm roll, ~72mm printable.
+ * ------------------------------------------------------------------------- */
+@page thermal {
+  size: 80mm auto;
+  margin: 0;
+}
+
+@media print {
+  .receipt-print {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 72mm;
+    max-width: 72mm;
+    margin: 0 auto;
+    padding: 2mm 3mm;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #000;
+    background: #fff;
+  }
+
+  /* Thermal heads render photos as mud — force a small high-contrast mark. */
+  .receipt-print .logo,
+  .receipt-print .logo-fallback {
+    width: auto;
+    max-width: 28mm;
+    height: auto;
+    margin: 0 auto 2mm;
+    border-radius: 0;
+    filter: grayscale(1) contrast(1.4);
+  }
+
+  .receipt-print .logo-fallback {
+    background: transparent;
+    color: #000;
+    font-size: 14px;
+  }
+
+  .receipt-print .shop-name {
+    font-size: 12px;
+  }
+
+  .receipt-print .shop-meta {
+    color: #000;
+    font-size: 10px;
+  }
+
+  /* Dashed rules read like a real receipt and print clean on a thermal head. */
+  .receipt-print .divider,
+  .receipt-print .divider.strong {
+    border-top: 1px dashed #000;
+    margin: 2mm 0;
+  }
+
+  .receipt-print .row,
+  .receipt-print .item-line {
+    padding: 1px 0;
+    gap: 4px;
+  }
+
+  .receipt-print .muted {
+    color: #000;
+  }
+
+  .receipt-print .total-row {
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .receipt-print .item-detail {
+    color: #000;
+    border-left-color: #000;
+    font-size: 10px;
+  }
+
+  .receipt-print .footer {
+    color: #000;
+    font-size: 10px;
+    margin-top: 3mm;
+  }
+}
