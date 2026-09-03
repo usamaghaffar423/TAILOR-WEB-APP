@@ -1,31 +1,39 @@
 /*
  * Print/receipt stylesheet for the retail POS "Sale Receipt" (ReceiptModal).
  *
- * Every rule here is scoped to `.receipt-print` (the wrapper this one modal
- * renders) so it never touches any other screen, nor the app's other
- * printable documents (customer bill, karigar bill, measurement sheet).
+ * Every non-@page rule is scoped to `.receipt-print` (the wrapper this one
+ * modal renders) so it never touches any other screen.
  *
  * TARGET HARDWARE: 80mm thermal receipt printer branded "iTech" — a generic
  * ESC/POS-class unit (USB, auto-cutter). Roll is 80mm wide, ~72mm printable.
  *
- * OS PREREQUISITE (configured in Windows, not in code): the printer must be
- * installed with an 80mm roll paper size selected in its driver properties,
- * AND that same 80mm / roll paper size must be picked in the browser's print
- * dialog when printing this receipt. The `@page` rule below asks for it, but
- * if the driver doesn't expose a roll size the browser falls back to the
- * dialog's paper size — the receipt still renders at the fixed 72mm content
- * width (so nothing is cut off horizontally), just centred on a larger sheet.
+ * ── "It prints one big, mostly-blank page" ────────────────────────────────
+ * That is almost always the PRINTER DRIVER's paper size, not this CSS.
+ * `@page { size: 80mm auto }` sets the width; the *height* still comes from
+ * the paper size selected in the driver / browser dialog. If that paper is
+ * A4, Letter, or a long fixed roll (e.g. 80x3276mm), every receipt feeds a
+ * full sheet of that length.
+ *   Fix on the machine (once):
+ *     Control Panel > Devices and Printers > (the printer) >
+ *       Printing preferences > Paper size:
+ *         pick a roll / "Receipt" / continuous option, OR create a custom
+ *         size 80mm wide x ~150mm tall. Enable "Cut paper after print".
+ *     In Chrome's print dialog: Paper = that 80mm size, Margins = None,
+ *       Scale = 100 / Default, "Headers and footers" = off.
  *
- * Named page (`page: thermal`) keeps the 80mm page size local to this
- * receipt: printing a measurement sheet or another bill in the same session
- * still uses the app's default page setup.
+ * ── @page is document-global ─────────────────────────────────────────────
+ * CSS can't scope @page to a route. This file only loads on the POS route,
+ * so once the cashier has opened the POS page every print job in that tab
+ * uses 80mm. That's the intended setup: the shop has one printer and it is
+ * the 80mm thermal unit. If A4 output is ever needed again, gate the @page
+ * rule behind a <body> class toggled by the route.
  */
 
 /* ---------------------------------------------------------------------------
  * On-screen (modal preview) — mirrors the look this modal already had.
  * ------------------------------------------------------------------------- */
 .receipt-print {
-  page: thermal; /* only consulted when printing; harmless on screen */
+  box-sizing: border-box;
   background: #fff;
   color: #111;
   width: 380px;
@@ -134,8 +142,7 @@
  * Optional per-item detail block — a few indented lines for
  * measurement / karigar / deadline when a stitched item carries them.
  * ReceiptModal (pure retail) never renders this today, but the unified
- * Sale receipt will, and the layout is already sized for it: keep this
- * hook so adopting the shared bill later needs no CSS change here.
+ * Sale receipt will, and the layout is already sized for it.
  */
 .receipt-print .item-detail {
   margin: 2px 0 4px 8px;
@@ -152,27 +159,62 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Thermal print — 80mm roll, ~72mm printable.
+ * Thermal print — 80mm roll, ~72mm printable text width.
  * ------------------------------------------------------------------------- */
-@page thermal {
+@page {
   size: 80mm auto;
   margin: 0;
 }
 
 @media print {
+  /*
+   * Isolate the receipt so the page is exactly as tall as it is.
+   * The app's global print CSS only sets `visibility: hidden` on the rest of
+   * the page — those boxes still occupy layout height, which on a thermal
+   * roll feeds blank paper (or spills onto extra pages). Collapse everything
+   * that is not on the receipt's ancestor path, and drop the min-height:100vh
+   * the app shell puts on #root.
+   */
+  html:has(.receipt-print),
+  body:has(.receipt-print),
+  #root:has(.receipt-print) {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  body:has(.receipt-print)
+    *:not(:has(.receipt-print)):not(.receipt-print):not(.receipt-print *) {
+    display: none !important;
+  }
+
+  .modal-overlay:has(.receipt-print),
+  .modal-box:has(.receipt-print),
+  .modal-body:has(.receipt-print) {
+    display: block !important;
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
   .receipt-print {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 72mm;
-    max-width: 72mm;
-    margin: 0 auto;
-    padding: 2mm 3mm;
+    position: static !important; /* app global print CSS forces absolute */
+    width: 80mm;
+    max-width: 80mm;
+    margin: 0;
+    padding: 2mm 4mm; /* text column ≈ 72mm; padding also covers the head's dead zone */
     font-family: 'Courier New', Consolas, monospace;
     font-size: 11px;
     line-height: 1.4;
     color: #000;
     background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   /* Thermal heads render photos as mud — force a small high-contrast mark. */
