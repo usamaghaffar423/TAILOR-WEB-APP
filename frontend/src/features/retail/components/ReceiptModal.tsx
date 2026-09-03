@@ -6,17 +6,16 @@ import { formatCurrency, formatDate } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 import { METHOD_LABEL } from '../lib/paymentMethod';
 import type { RetailSale } from '../types';
-import './ReceiptModal.css';
+import '@/billPrint.css';
 
 interface ReceiptModalProps {
   sale: RetailSale | null;
   onClose: () => void;
 }
 
-// The receipt prints on the shop's 80mm thermal printer. All layout/sizing
-// lives in ReceiptModal.css, scoped to `.receipt-print`; see that file for
-// the OS-side paper-size prerequisite. `.customer-bill-print-area` is kept
-// only so the app's existing print rules strip the surrounding modal chrome.
+// Prints on the shop's 80mm thermal printer. Layout/sizing lives in
+// src/billPrint.css (shared by every bill in the app), scoped to
+// `.bill-print`; see that file for the OS-side paper-size prerequisite.
 export function ReceiptModal({ sale, onClose }: ReceiptModalProps) {
   const { data: shopRes } = useQuery({
     queryKey: ['settings'],
@@ -42,59 +41,59 @@ export function ReceiptModal({ sale, onClose }: ReceiptModalProps) {
       }
     >
       {sale && (
-        <div className="receipt-print customer-bill-print-area">
-          <div className="r-head">
+        <div className="bill-print">
+          <div className="bill-head">
             {logoUrl ? (
-              <img src={logoUrl} alt="Shop logo" className="logo" />
+              <img src={logoUrl} alt="Shop logo" className="bill-logo" />
             ) : (
-              <div className="logo-fallback">
+              <div className="bill-logo-fallback">
                 {(shop?.name || 'TM').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
               </div>
             )}
-            <div className="shop-name">{shop?.name || 'Top Man Tailor'}</div>
-            {shop?.address && <div className="shop-meta">{shop.address}</div>}
-            {shop?.phone && <div className="shop-meta">{shop.phone}</div>}
+            <div className="bill-shop">{shop?.name || 'Top Man Tailor'}</div>
+            {shop?.address && <div className="bill-shop-meta">{shop.address}</div>}
+            {shop?.phone && <div className="bill-shop-meta">{shop.phone}</div>}
           </div>
 
-          <hr className="divider" />
+          <hr className="bill-divider" />
 
-          <div className="row"><span>Sale #</span><b>{sale.id}</b></div>
-          <div className="row"><span>Date</span><span>{formatDate(sale.sale_date)}</span></div>
-          {sale.customer_name && <div className="row"><span>Customer</span><span>{sale.customer_name}</span></div>}
-          {sale.customer_phone && <div className="row"><span>Phone</span><span>{sale.customer_phone}</span></div>}
+          <div className="bill-row"><span>Sale #</span><b>{sale.id}</b></div>
+          <div className="bill-row"><span>Date</span><span>{formatDate(sale.sale_date)}</span></div>
+          {sale.customer_name && <div className="bill-row"><span>Customer</span><span>{sale.customer_name}</span></div>}
+          {sale.customer_phone && <div className="bill-row"><span>Phone</span><span>{sale.customer_phone}</span></div>}
 
-          <hr className="divider" />
+          <hr className="bill-divider" />
 
           {sale.items.map((item) => (
-            <div key={item.id} className="item">
-              <div className="item-line">
-                <span className="item-name">
+            <div key={item.id} className="bill-item">
+              <div className="bill-row">
+                <span>
                   {item.variant.product.name}
                   {(item.variant.size || item.variant.color) && (
-                    <span className="muted"> ({[item.variant.size, item.variant.color].filter(Boolean).join(' / ')})</span>
+                    <span> ({[item.variant.size, item.variant.color].filter(Boolean).join(' / ')})</span>
                   )}
                   {' '}× {item.quantity}
                 </span>
-                <span className="item-price">{formatCurrency(item.subtotal)}</span>
+                <span>{formatCurrency(item.subtotal)}</span>
               </div>
               {/*
-                Optional stitched-item detail (measurements / karigar / deadline)
-                goes here as <div className="item-detail">…</div> once this modal
-                shares the unified Sale receipt. Pure retail sales have none.
+                A stitched item's measurement / karigar / deadline lines go
+                here as <div className="bill-item-detail">…</div> once this
+                modal shares the unified Sale receipt. Pure retail has none.
               */}
             </div>
           ))}
 
-          <hr className="divider strong" />
-          <div className="row total-row">
+          <hr className="bill-divider bill-divider--strong" />
+          <div className="bill-row bill-total">
             <span>Total</span>
             <span>{formatCurrency(sale.total_amount)}</span>
           </div>
-          <div className="row"><span>Payment</span><span>{METHOD_LABEL[sale.payment_method]}</span></div>
+          <div className="bill-row"><span>Payment</span><span>{METHOD_LABEL[sale.payment_method]}</span></div>
 
-          <hr className="divider" />
+          <hr className="bill-divider" />
 
-          <div className="footer">Thank you for shopping with us.</div>
+          <div className="bill-footer">Thank you for shopping with us.</div>
         </div>
       )}
     </Dialog>

@@ -600,24 +600,9 @@ table.data-table tbody tr.clickable:hover{background:var(--surface-2);}
   @page { margin: 16mm; }
 }
 
-/* ---------- Bill print areas (Customer Bill / Karigar Bill) ----------
-   Both bills already sit inside Dialog's .print-area wrapper, so the print
-   rules above already isolate whichever one is open. These dedicated
-   classes are additive, per spec, and give each bill its own scoped hook.
-
-   Both bills share the same narrow, receipt-style shape (like a retail till
-   receipt) — they stay narrow both on screen and when printed, not expand
-   to fill the page. */
-.karigar-bill-print-area {
-  font-family: 'Noto Nastaliq Urdu', 'Inter', sans-serif;
-}
-@media print {
-  .customer-bill-print-area { display: block !important; }
-  .karigar-bill-print-area { display: block !important; }
-  .modal-box:has(.karigar-bill-print-area),
-  .modal-box:has(.customer-bill-print-area) {
-    box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
-  }
-}
+/* ---------- Bills / receipts ----------
+   Every printable bill in the app (POS Sale Receipt, unified Sale Receipt,
+   Customer Bill, Karigar Bill) renders a `.bill-print` wrapper and is styled
+   for the shop's 80mm thermal printer in src/billPrint.css — imported by
+   each bill component, not global, so the customer profile sheet and order
+   card keep the default page size. */

@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
 import type { Order } from '@/types';
+import '@/billPrint.css';
 
 interface KarigarBillModalProps {
   orderId: number | null;
@@ -28,29 +29,6 @@ function displayValue(val: string | string[] | undefined): string {
   if (Array.isArray(val)) return val.length > 0 ? val.join(' / ') : '—';
   return val || '—';
 }
-
-const divider: React.CSSProperties = {
-  border: 'none',
-  borderTop: '1px dashed #999',
-  margin: '14px 0',
-};
-
-const row: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: 10,
-  fontSize: 13,
-  padding: '3px 0',
-};
-
-const sectionLabel: React.CSSProperties = {
-  fontSize: 11,
-  fontWeight: 700,
-  color: '#777',
-  textTransform: 'uppercase',
-  letterSpacing: 0.5,
-  marginBottom: 6,
-};
 
 export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
   const { data: orderRes, isLoading, error } = useQuery({
@@ -98,71 +76,54 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
       {isLoading && <p style={{ color: 'var(--text-faint)' }}>لوڈ ہو رہا ہے…</p>}
       {error && <p style={{ color: 'var(--red-bright)' }}>آرڈر لوڈ نہیں ہو سکا۔</p>}
       {order && (
-        <div
-          className="karigar-bill-print-area"
-          dir="rtl"
-          style={{
-            background: '#fff',
-            color: '#111',
-            width: 380,
-            maxWidth: '100%',
-            margin: '0 auto',
-            padding: '24px 22px',
-            fontSize: 13,
-            lineHeight: 1.5,
-          }}
-        >
+        <div className="bill-print bill-print--urdu" dir="rtl">
           {/* Header — logo front and center */}
-          <div style={{ textAlign: 'center' }}>
+          <div className="bill-head">
             {logoUrl ? (
-              <img src={logoUrl} alt="Shop logo" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, margin: '0 auto 10px' }} />
+              <img src={logoUrl} alt="Shop logo" className="bill-logo" />
             ) : (
-              <div style={{ width: 64, height: 64, borderRadius: 8, background: '#eee', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 20, color: '#888' }}>
+              <div className="bill-logo-fallback">
                 {(shop?.name || 'TM').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
               </div>
             )}
-            <div style={{ fontSize: 19, fontWeight: 700 }}>{shop?.name || 'Top Man Tailor'}</div>
-            <div style={{ fontSize: 11.5, color: '#555', marginTop: 3 }}>ورک آرڈر — کاریگر کاپی</div>
+            <div className="bill-shop">{shop?.name || 'Top Man Tailor'}</div>
+            <div className="bill-shop-meta">ورک آرڈر — کاریگر کاپی</div>
           </div>
 
-          <hr style={divider} />
+          <hr className="bill-divider" />
 
           {/* Order reference */}
-          <div style={row}><span>آرڈر نمبر</span><b><bdi>{order.order_no}</bdi></b></div>
-          <div style={row}><span>تاریخ</span><bdi>{formatDate(order.created_at)}</bdi></div>
-          <div style={row}><span>آخری تاریخ</span><b><bdi>{formatDate(order.deadline)}</bdi></b></div>
-          <div style={row}><span>لباس کی قسم</span><b><bdi>{template?.label || order.measurement_snapshot.template_label || '—'}</bdi></b></div>
+          <div className="bill-row"><span>آرڈر نمبر</span><b><bdi>{order.order_no}</bdi></b></div>
+          <div className="bill-row"><span>تاریخ</span><bdi>{formatDate(order.created_at)}</bdi></div>
+          <div className="bill-row"><span>آخری تاریخ</span><b><bdi>{formatDate(order.deadline)}</bdi></b></div>
+          <div className="bill-row"><span>لباس کی قسم</span><b><bdi>{template?.label || order.measurement_snapshot.template_label || '—'}</bdi></b></div>
 
-          <hr style={divider} />
+          <hr className="bill-divider" />
 
           {/* Customer details */}
-          <div style={sectionLabel}>گاہک کی تفصیلات</div>
-          <div style={row}><span>نام</span><b><bdi>{order.customer?.name || '—'}</bdi></b></div>
-          <div style={row}><span>فون</span><bdi>{order.customer?.phone || '—'}</bdi></div>
+          <div className="bill-section">گاہک کی تفصیلات</div>
+          <div className="bill-row"><span>نام</span><b><bdi>{order.customer?.name || '—'}</bdi></b></div>
+          <div className="bill-row"><span>فون</span><bdi>{order.customer?.phone || '—'}</bdi></div>
 
-          <hr style={divider} />
+          <hr className="bill-divider" />
 
           {/* Karigar assignment */}
-          <div style={sectionLabel}>کاریگر کی تفصیلات</div>
-          <div style={row}><span>کاریگر</span><b><bdi>{order.karigar?.name || '—'}</bdi></b></div>
-          <div style={row}><span>تفویض کردہ تاریخ</span><bdi>{formatDate(order.assigned_date)}</bdi></div>
+          <div className="bill-section">کاریگر کی تفصیلات</div>
+          <div className="bill-row"><span>کاریگر</span><b><bdi>{order.karigar?.name || '—'}</bdi></b></div>
+          <div className="bill-row"><span>تفویض کردہ تاریخ</span><bdi>{formatDate(order.assigned_date)}</bdi></div>
 
           {template && (
             <>
-              <hr style={divider} />
-              <div style={sectionLabel}>پیمائش</div>
+              <hr className="bill-divider" />
+              <div className="bill-section">پیمائش</div>
               {template.fields.map((f) => {
                 const g = f.group || 'پیمائش';
                 const heading = showGroups && g !== lastGroup;
                 if (heading) lastGroup = g;
                 return (
                   <Fragment key={f.key}>
-                    {heading && (
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#999', marginTop: lastGroup !== groups[0] ? 10 : 2, marginBottom: 2 }}>
-                        {g}
-                      </div>
-                    )}
-                    <div style={row}>
+                    {heading && <div className="bill-group-heading">{g}</div>}
+                    <div className="bill-row">
                       <span>{f.label}</span>
                       <b><bdi>{displayValue(order.measurement_snapshot.fields?.[f.key])}</bdi></b>
                     </div>
@@ -170,7 +131,7 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
                 );
               })}
               {order.measurement_snapshot.notes && (
-                <div style={{ marginTop: 8, fontSize: 12, background: '#f7f7f7', padding: '7px 10px', borderRadius: 4 }}>
+                <div className="bill-note">
                   نوٹس: <bdi>{order.measurement_snapshot.notes}</bdi>
                 </div>
               )}
@@ -179,10 +140,10 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
 
           {urduStyleRows.length > 0 && (
             <>
-              <hr style={divider} />
-              <div style={sectionLabel}>اسٹائل کی تفصیلات</div>
+              <hr className="bill-divider" />
+              <div className="bill-section">اسٹائل کی تفصیلات</div>
               {urduStyleRows.map(([label, value]) => (
-                <div key={label} style={row}>
+                <div key={label} className="bill-row">
                   <span>{label}</span>
                   <b><bdi>{value}</bdi></b>
                 </div>
@@ -190,11 +151,9 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
             </>
           )}
 
-          <hr style={divider} />
+          <hr className="bill-divider" />
 
-          <div style={{ marginTop: 30, fontSize: 13, borderTop: '1px solid #111', paddingTop: 10, width: '100%', textAlign: 'center' }}>
-            دستخط کاریگر: _______________
-          </div>
+          <div className="bill-sign">دستخط کاریگر: _______________</div>
         </div>
       )}
     </Dialog>

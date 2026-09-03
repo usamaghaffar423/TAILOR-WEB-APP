@@ -1,0 +1,334 @@
+/*
+ * Shared stylesheet for every printable bill in the app:
+ *   - retail POS Sale Receipt   (features/retail/components/ReceiptModal)
+ *   - unified Sale Receipt      (features/sales/components/SaleReceiptModal)
+ *   - Customer Bill (tailoring)  (components/orders/CustomerBillModal)
+ *   - Karigar Bill / work order  (components/orders/KarigarBillModal)
+ *
+ * All four render a `.bill-print` wrapper. On screen it keeps the narrow
+ * receipt card look those modals already had; when printed it reflows to
+ * the shop's single 80mm thermal printer (80mm roll, ~72mm printable).
+ *
+ * ── Why prints still come out as one long, mostly-blank page ──────────────
+ * That is the PRINTER DRIVER's paper size, not this CSS. `@page` sets the
+ * width; the height comes from the paper size chosen in the driver / print
+ * dialog. If that is A4, Letter, or a fixed 80x297mm, the printer feeds a
+ * whole sheet every time.
+ *   Set it once:  Control Panel > Devices and Printers > (the POS-80
+ *   printer) > Printing preferences > Paper size:
+ *     pick a "Receipt" / roll / continuous size, OR create a custom size
+ *     80mm wide x ~150mm tall. Turn on "Cut paper after print".
+ *   Then in Chrome's print dialog: Paper = that 80mm size, Margins = None,
+ *   Scale = 100 / Default, Headers and footers = off.
+ *
+ * The `@page bill` rule is a NAMED page tied to `.bill-print` only, so the
+ * customer profile sheet and order card (which are not bills) keep printing
+ * on the app's default page size.
+ */
+
+/* ==========================================================================
+ * On-screen (modal preview) — matches the previous inline-styled look.
+ * ====================================================================== */
+.bill-print {
+  box-sizing: border-box;
+  background: #fff;
+  color: #111;
+  width: 380px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 24px 22px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Karigar copy — Urdu / RTL, keeps its Nastaliq face (monospace can't set it) */
+.bill-print--urdu {
+  font-family: 'Noto Nastaliq Urdu', 'Inter', sans-serif;
+}
+
+.bill-print .bill-head {
+  text-align: center;
+}
+
+.bill-print .bill-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.bill-print .bill-logo-fallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: #eee;
+  color: #888;
+  margin: 0 auto 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.bill-print .bill-shop {
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.bill-print .bill-shop-meta {
+  font-size: 11.5px;
+  color: #555;
+}
+
+.bill-print .bill-head .bill-shop-meta:first-of-type {
+  margin-top: 3px;
+}
+
+.bill-print .bill-divider {
+  border: none;
+  border-top: 1px dashed #999;
+  margin: 14px 0;
+}
+
+.bill-print .bill-divider--strong {
+  border-top: 1px solid #111;
+  margin: 8px 0;
+}
+
+/*
+ * Key / value line. The first child (label or item name) flexes and wraps;
+ * the last child (value or price) sits in its own right-aligned column so a
+ * long name spilling to a second line never drags the amount out of line.
+ */
+.bill-print .bill-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  padding: 3px 0;
+}
+
+.bill-print .bill-row > :first-child {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.bill-print .bill-row > :last-child {
+  flex: none;
+  text-align: right;
+}
+
+.bill-print .bill-total {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.bill-print .bill-section {
+  font-size: 11px;
+  font-weight: 700;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.bill-print .bill-group-heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: #999;
+  margin: 10px 0 2px;
+}
+
+.bill-print .bill-item + .bill-item {
+  margin-top: 2px;
+}
+
+/*
+ * Optional per-item detail — indented measurement / karigar / deadline
+ * lines under a stitched item. Rendered only when the item carries them.
+ */
+.bill-print .bill-item-detail {
+  margin: 4px 0 6px 8px;
+  padding: 6px 10px;
+  background: #f7f7f7;
+  border-radius: 6px;
+  font-size: 11.5px;
+}
+
+.bill-print .bill-note {
+  margin-top: 8px;
+  font-size: 12px;
+  background: #f7f7f7;
+  padding: 7px 10px;
+  border-radius: 4px;
+}
+
+.bill-print .bill-text {
+  white-space: pre-wrap;
+}
+
+.bill-print .bill-footer {
+  text-align: center;
+  font-size: 12px;
+  color: #555;
+}
+
+.bill-print .bill-sign {
+  margin-top: 30px;
+  font-size: 13px;
+  border-top: 1px solid #111;
+  padding-top: 10px;
+  text-align: center;
+}
+
+/* ==========================================================================
+ * Thermal print — 80mm roll, ~72mm printable text column.
+ * ====================================================================== */
+@page bill {
+  size: 80mm auto;
+  margin: 0;
+}
+
+@media print {
+  /*
+   * Make the printed page exactly as tall as the bill. The app's global
+   * print CSS only sets `visibility: hidden` on the rest of the page — those
+   * boxes still take up layout height, which on a thermal roll feeds blank
+   * paper (or spills to extra pages). Collapse everything that is not on the
+   * bill's ancestor path and drop the shell's min-height: 100vh.
+   */
+  html:has(.bill-print),
+  body:has(.bill-print),
+  #root:has(.bill-print) {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  body:has(.bill-print)
+    *:not(:has(.bill-print)):not(.bill-print):not(.bill-print *) {
+    display: none !important;
+  }
+
+  .modal-overlay:has(.bill-print),
+  .modal-box:has(.bill-print),
+  .modal-body:has(.bill-print) {
+    display: block !important;
+    position: static !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .bill-print {
+    page: bill;
+    position: static !important; /* app global print CSS forces absolute */
+    width: 80mm;
+    max-width: 80mm;
+    margin: 0;
+    padding: 2mm 4mm; /* text column ≈ 72mm; also covers the head's dead zone */
+    font-size: 10px;
+    line-height: 1.35;
+    color: #000;
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Latin bills print in monospace like a real till receipt. */
+  .bill-print:not(.bill-print--urdu) {
+    font-family: 'Courier New', Consolas, monospace;
+  }
+
+  /* Thermal heads render photos as mud — force a small high-contrast mark. */
+  .bill-print .bill-logo,
+  .bill-print .bill-logo-fallback {
+    width: auto;
+    height: auto;
+    max-width: 24mm;
+    max-height: 24mm;
+    margin: 0 auto 2mm;
+    border-radius: 0;
+    filter: grayscale(1) contrast(1.4);
+  }
+
+  .bill-print .bill-logo-fallback {
+    background: transparent;
+    color: #000;
+    border: 1px solid #000;
+    width: 16mm;
+    height: 16mm;
+    font-size: 12px;
+  }
+
+  .bill-print .bill-shop {
+    font-size: 12px;
+  }
+
+  .bill-print .bill-shop-meta {
+    color: #000;
+    font-size: 9px;
+  }
+
+  /* Dashed rules read like a real receipt and print clean on a thermal head. */
+  .bill-print .bill-divider,
+  .bill-print .bill-divider--strong {
+    border-top: 1px dashed #000;
+    margin: 1.5mm 0;
+  }
+
+  .bill-print .bill-row {
+    font-size: 10px;
+    padding: 0.4mm 0;
+    gap: 4px;
+  }
+
+  .bill-print .bill-total {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .bill-print .bill-section {
+    color: #000;
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+
+  .bill-print .bill-group-heading {
+    color: #000;
+  }
+
+  .bill-print .bill-item-detail {
+    background: transparent;
+    border: 1px dashed #000;
+    border-radius: 0;
+    font-size: 9px;
+  }
+
+  .bill-print .bill-note {
+    background: transparent;
+    border: 1px dashed #000;
+    font-size: 9px;
+  }
+
+  .bill-print .bill-footer {
+    color: #000;
+    font-size: 9px;
+    margin-top: 3mm;
+  }
+
+  .bill-print .bill-sign {
+    border-top: 1px dashed #000;
+    margin-top: 8mm;
+    font-size: 10px;
+  }
+}
