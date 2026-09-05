@@ -1,9 +1,11 @@
+import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { settingsApi } from '@/api/settings';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
+import { printBillElement } from '@/lib/printBill';
 import { METHOD_LABEL } from '../lib/paymentMethod';
 import type { RetailSale } from '../types';
 import '@/billPrint.css';
@@ -13,8 +15,9 @@ interface ReceiptModalProps {
   onClose: () => void;
 }
 
-// Prints on the shop's 80mm thermal printer. Layout/sizing lives in
-// src/billPrint.css (shared by every bill in the app), scoped to
+// Prints on the shop's 80mm thermal printer via printBillElement (an
+// isolated pop-up window — see src/lib/printBill.ts for why). Layout/sizing
+// lives in src/billPrint.css (shared by every bill in the app), scoped to
 // `.bill-print`; see that file for the OS-side paper-size prerequisite.
 export function ReceiptModal({ sale, onClose }: ReceiptModalProps) {
   const { data: shopRes } = useQuery({
@@ -24,6 +27,7 @@ export function ReceiptModal({ sale, onClose }: ReceiptModalProps) {
   });
   const shop = shopRes?.data;
   const logoUrl = useAuthedImage(shop?.logo_path);
+  const billRef = useRef<HTMLDivElement>(null);
 
   return (
     <Dialog
@@ -34,14 +38,14 @@ export function ReceiptModal({ sale, onClose }: ReceiptModalProps) {
       footer={
         sale ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, width: '100%' }}>
-            <Button variant="outline" sm onClick={() => window.print()}>Print</Button>
+            <Button variant="outline" sm onClick={() => printBillElement(billRef.current)}>Print</Button>
             <Button sm onClick={onClose}>Done</Button>
           </div>
         ) : null
       }
     >
       {sale && (
-        <div className="bill-print">
+        <div className="bill-print" ref={billRef}>
           <div className="bill-head">
             {logoUrl ? (
               <img src={logoUrl} alt="Shop logo" className="bill-logo" />

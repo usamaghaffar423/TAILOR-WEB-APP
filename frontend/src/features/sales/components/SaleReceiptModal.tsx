@@ -1,9 +1,11 @@
+import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { settingsApi } from '@/api/settings';
 import { formatDate, formatCurrency } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
+import { printBillElement } from '@/lib/printBill';
 import type { PaymentMethod } from '@/types';
 import type { Sale } from '../types';
 import '@/billPrint.css';
@@ -38,6 +40,7 @@ export function SaleReceiptModal({ sale, onClose }: SaleReceiptModalProps) {
   });
   const shop = shopRes?.data;
   const logoUrl = useAuthedImage(shop?.logo_path);
+  const billRef = useRef<HTMLDivElement>(null);
 
   if (!sale) return null;
 
@@ -55,12 +58,12 @@ export function SaleReceiptModal({ sale, onClose }: SaleReceiptModalProps) {
       bodyId="saleReceiptBody"
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, width: '100%' }}>
-          <Button variant="outline" sm onClick={() => window.print()}>Print</Button>
+          <Button variant="outline" sm onClick={() => printBillElement(billRef.current)}>Print</Button>
           <Button sm onClick={onClose}>Done</Button>
         </div>
       }
     >
-      <div className="bill-print">
+      <div className="bill-print" ref={billRef}>
         {/* Header — logo front and center */}
         <div className="bill-head">
           {logoUrl ? (

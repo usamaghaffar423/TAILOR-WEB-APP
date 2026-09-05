@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
@@ -6,6 +6,7 @@ import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { formatDate } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
+import { printBillElement } from '@/lib/printBill';
 import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
 import type { Order } from '@/types';
 import '@/billPrint.css';
@@ -48,6 +49,7 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
   });
   const shop = shopRes?.data;
   const logoUrl = useAuthedImage(shop?.logo_path);
+  const billRef = useRef<HTMLDivElement>(null);
 
   if (orderId === null) return null;
   const order = orderRes?.data;
@@ -67,7 +69,7 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
       footer={
         !isLoading && order ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, width: '100%' }}>
-            <Button variant="outline" sm onClick={() => window.print()}>Print</Button>
+            <Button variant="outline" sm onClick={() => printBillElement(billRef.current)}>Print</Button>
             <Button sm onClick={onClose}>Close</Button>
           </div>
         ) : null
@@ -76,7 +78,7 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
       {isLoading && <p style={{ color: 'var(--text-faint)' }}>لوڈ ہو رہا ہے…</p>}
       {error && <p style={{ color: 'var(--red-bright)' }}>آرڈر لوڈ نہیں ہو سکا۔</p>}
       {order && (
-        <div className="bill-print bill-print--urdu" dir="rtl">
+        <div className="bill-print bill-print--urdu" dir="rtl" ref={billRef}>
           {/* Header — logo front and center */}
           <div className="bill-head">
             {logoUrl ? (

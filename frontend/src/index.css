@@ -602,7 +602,9 @@ table.data-table tbody tr.clickable:hover{background:var(--surface-2);}
 
 /* ---------- Bills / receipts ----------
    Every printable bill in the app (POS Sale Receipt, unified Sale Receipt,
-   Customer Bill, Karigar Bill) renders a `.bill-print` wrapper and is styled
-   for the shop's 80mm thermal printer in src/billPrint.css — imported by
-   each bill component, not global, so the customer profile sheet and order
-   card keep the default page size. */
+   Customer Bill, Karigar Bill) renders a `.bill-print` wrapper, styled for
+   the shop's 80mm thermal printer in src/billPrint.css. Their Print buttons
+   don't use window.print() / the .print-area rules above at all — they go
+   through src/lib/printBill.ts, which prints from an isolated pop-up window
+   containing only the bill, so the app shell above never enters the print
+   document in the first place. */

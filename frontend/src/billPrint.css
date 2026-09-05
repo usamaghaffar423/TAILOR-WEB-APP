@@ -9,7 +9,17 @@
  * receipt card look those modals already had; when printed it reflows to
  * the shop's single 80mm thermal printer (80mm roll, ~72mm printable).
  *
- * ── Why prints still come out as one long, mostly-blank page ──────────────
+ * Printing itself goes through src/lib/printBill.ts, which opens the bill
+ * in an isolated pop-up window (this stylesheet inlined, nothing else in
+ * the document) rather than calling window.print() on the app itself. An
+ * earlier version tried to hide the dashboard/sidebar with
+ * `visibility: hidden` and isolate via `:has()` — hidden elements still
+ * occupy layout height, and `@page { size: 80mm auto }` measures the
+ * *whole* document, so that page height included all the invisible chrome
+ * and fed it through as a blank leading page on the roll. A document that
+ * only ever contains the bill has nothing to inflate the height with.
+ *
+ * ── Why a print can still come out as one long, mostly-blank page ─────────
  * That is the PRINTER DRIVER's paper size, not this CSS. `@page` sets the
  * width; the height comes from the paper size chosen in the driver / print
  * dialog. If that is A4, Letter, or a fixed 80x297mm, the printer feeds a
@@ -20,10 +30,6 @@
  *     80mm wide x ~150mm tall. Turn on "Cut paper after print".
  *   Then in Chrome's print dialog: Paper = that 80mm size, Margins = None,
  *   Scale = 100 / Default, Headers and footers = off.
- *
- * The `@page bill` rule is a NAMED page tied to `.bill-print` only, so the
- * customer profile sheet and order card (which are not bills) keep printing
- * on the app's default page size.
  */
 
 /* ==========================================================================
@@ -187,51 +193,23 @@
 
 /* ==========================================================================
  * Thermal print — 80mm roll, ~72mm printable text column.
+ *
+ * No hide-the-rest-of-the-page rules here: the pop-up window this stylesheet
+ * is inlined into (src/lib/printBill.ts) contains nothing but the bill, so
+ * there's nothing else to hide or isolate.
  * ====================================================================== */
-@page bill {
+@page {
   size: 80mm auto;
   margin: 0;
 }
 
 @media print {
-  /*
-   * Make the printed page exactly as tall as the bill. The app's global
-   * print CSS only sets `visibility: hidden` on the rest of the page — those
-   * boxes still take up layout height, which on a thermal roll feeds blank
-   * paper (or spills to extra pages). Collapse everything that is not on the
-   * bill's ancestor path and drop the shell's min-height: 100vh.
-   */
-  html:has(.bill-print),
-  body:has(.bill-print),
-  #root:has(.bill-print) {
-    min-height: 0 !important;
-    height: auto !important;
-  }
-
-  body:has(.bill-print)
-    *:not(:has(.bill-print)):not(.bill-print):not(.bill-print *) {
-    display: none !important;
-  }
-
-  .modal-overlay:has(.bill-print),
-  .modal-box:has(.bill-print),
-  .modal-body:has(.bill-print) {
-    display: block !important;
-    position: static !important;
-    max-width: none !important;
-    max-height: none !important;
-    overflow: visible !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
+  body {
+    margin: 0;
+    padding: 0;
   }
 
   .bill-print {
-    page: bill;
-    position: static !important; /* app global print CSS forces absolute */
     width: 80mm;
     max-width: 80mm;
     margin: 0;

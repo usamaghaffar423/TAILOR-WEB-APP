@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
@@ -5,6 +6,7 @@ import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { formatDate, formatCurrency } from '@/lib/format';
 import { useAuthedImage } from '@/lib/useAuthedImage';
+import { printBillElement } from '@/lib/printBill';
 import type { PaymentMethod } from '@/types';
 import '@/billPrint.css';
 
@@ -39,6 +41,7 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
   });
   const shop = shopRes?.data;
   const logoUrl = useAuthedImage(shop?.logo_path);
+  const billRef = useRef<HTMLDivElement>(null);
 
   if (orderId === null) return null;
   const order = orderRes?.data;
@@ -59,7 +62,7 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
       footer={
         !isLoading && order ? (
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, width: '100%' }}>
-            <Button variant="outline" sm onClick={() => window.print()}>Print</Button>
+            <Button variant="outline" sm onClick={() => printBillElement(billRef.current)}>Print</Button>
             <Button sm onClick={onClose}>Close</Button>
           </div>
         ) : null
@@ -68,7 +71,7 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
       {isLoading && <p style={{ color: 'var(--text-faint)' }}>Loading bill…</p>}
       {error && <p style={{ color: 'var(--red-bright)' }}>Failed to load order.</p>}
       {order && (
-        <div className="bill-print">
+        <div className="bill-print" ref={billRef}>
           {/* Header — logo front and center */}
           <div className="bill-head">
             {logoUrl ? (
