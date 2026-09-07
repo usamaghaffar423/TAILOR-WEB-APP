@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { MeasurementBlock } from '@/components/measurements/MeasurementBlock';
-import { MeasurementFieldsForm } from '@/components/measurements/MeasurementFieldsForm';
 import { OrderCardModal } from '@/components/orders/OrderCardModal';
 import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
@@ -35,9 +34,6 @@ export default function CustomerDetail() {
   const [editName, setEditName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editAddress, setEditAddress] = useState('');
-  const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
-  const [editFields, setEditFields] = useState<Record<string, string | string[]>>({});
-  const [editNotes, setEditNotes] = useState('');
   const [cardOrderId, setCardOrderId] = useState<number | null>(null);
   const [cardStartInEdit, setCardStartInEdit] = useState(false);
   const [payOrderId, setPayOrderId] = useState<number | null>(null);
@@ -53,16 +49,6 @@ export default function CustomerDetail() {
     onSuccess: () => {
       toast.success('Customer profile updated');
       setContactEditing(false);
-      refresh();
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const measurementMutation = useMutation({
-    mutationFn: () => customersApi.upsertMeasurement(customerId, editingTemplate as string, editFields, editNotes.trim() || null),
-    onSuccess: () => {
-      toast.success('Measurements updated');
-      setEditingTemplate(null);
       refresh();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -113,12 +99,6 @@ export default function CustomerDetail() {
     setEditPhone(customer.phone);
     setEditAddress(customer.address || '');
     setContactEditing(true);
-  }
-
-  function startEditMeasurement(templateKey: string, fields: Record<string, string | string[]>, notes: string | null) {
-    setEditingTemplate(templateKey);
-    setEditFields(fields);
-    setEditNotes(notes || '');
   }
 
   function handleWhatsAppSummary() {
@@ -189,35 +169,17 @@ export default function CustomerDetail() {
                 measurements.map((m) => {
                   const tpl = templatesRes?.data.find((t) => t.template_key === m.template_key);
                   if (!tpl) return null;
-                  const isEditing = editingTemplate === m.template_key;
                   return (
                     <div key={m.template_key} style={{ marginBottom: 18 }}>
-                      {isEditing ? (
-                        <>
-                          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>{tpl.label}</div>
-                          <MeasurementFieldsForm template={tpl} fields={editFields} onFieldChange={(key, value) => setEditFields((f) => ({ ...f, [key]: value }))} />
-                          <div className="field" style={{ marginTop: 12 }}>
-                            <label>Notes</label>
-                            <textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} />
-                          </div>
-                          <div className="hero-actions no-print" style={{ justifyContent: 'flex-end', marginTop: 12 }}>
-                            <Button variant="outline" sm onClick={() => setEditingTemplate(null)}>Cancel</Button>
-                            <Button sm onClick={() => measurementMutation.mutate()} disabled={measurementMutation.isPending}>Save Measurements</Button>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                            <div style={{ fontSize: 11, color: 'var(--text-faint)' }}>Last updated {formatDate(m.updated_at)}</div>
-                            <button className="row-icon-btn no-print" title={`Edit ${tpl.label} measurements`} onClick={() => startEditMeasurement(m.template_key, m.fields, m.notes)}>{EDIT_ICON}</button>
-                          </div>
-                          <MeasurementBlock template={tpl} fields={m.fields} notes={m.notes} />
-                        </>
-                      )}
+                      <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>Last updated {formatDate(m.updated_at)}</div>
+                      <MeasurementBlock template={tpl} fields={m.fields} notes={m.notes} />
                     </div>
                   );
                 })
               )}
+              <div className="hint no-print" style={{ marginTop: 4 }}>
+                To correct measurements, notes or style, open the order and use <b>Edit Order</b> — the change flows back here.
+              </div>
             </div>
           </div>
 

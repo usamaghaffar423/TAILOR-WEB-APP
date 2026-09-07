@@ -283,15 +283,17 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
             />
           </div>
         )}
-        <div className="field span-2" style={{ marginTop: 12 }}>
-          <label>Notes</label>
-          <textarea
-            className="notes-big"
-            placeholder="Fit preferences, special instructions — anything the karigar or customer bill should carry…"
-            value={measurementNotes}
-            onChange={(e) => setMeasurementNotes(e.target.value)}
-          />
-        </div>
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <div className="oc-section-title">Notes</div>
+        <textarea
+          className="notes-big"
+          style={{ marginTop: 12 }}
+          placeholder="Fit preferences, special instructions — anything the karigar or customer bill should carry…"
+          value={measurementNotes}
+          onChange={(e) => setMeasurementNotes(e.target.value)}
+        />
       </div>
 
       {isKameez && (

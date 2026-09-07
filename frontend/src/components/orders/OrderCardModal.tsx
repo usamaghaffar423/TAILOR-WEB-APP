@@ -81,14 +81,14 @@ export function OrderCardModal({ orderId, onClose, startInEdit }: OrderCardModal
           !isLoading && order ? (
             <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, width: '100%' }}>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <Button variant="outline" sm onClick={() => setEditOpen(true)}>Edit Order</Button>
+                <Button sm onClick={() => setEditOpen(true)}>Edit Order</Button>
                 <Button variant="outline" sm onClick={() => setPayOpen(true)}>Add Payment</Button>
                 <Button variant="outline" sm onClick={() => handleWhatsApp('karigar')}>WhatsApp Karigar</Button>
                 <Button variant="outline" sm onClick={() => handleWhatsApp('customer')}>WhatsApp Customer</Button>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <Button variant="outline" sm onClick={() => window.print()}>Print</Button>
-                <Button sm onClick={onClose}>Close</Button>
+                <Button variant="outline" sm onClick={onClose}>Close</Button>
               </div>
             </div>
           ) : null
@@ -125,10 +125,15 @@ export function OrderCardModal({ orderId, onClose, startInEdit }: OrderCardModal
             </div>
 
             {template ? (
-              <MeasurementBlock template={template} fields={order.measurement_snapshot.fields} notes={order.measurement_snapshot.notes} />
+              <MeasurementBlock template={template} fields={order.measurement_snapshot.fields} />
             ) : (
               <div className="oc-notes">Measurement template not found.</div>
             )}
+
+            <div className="oc-block" style={{ marginTop: 14 }}>
+              <div className="oc-section-title">Notes</div>
+              <div className="oc-notes" style={{ whiteSpace: 'pre-wrap' }}>{order.measurement_snapshot.notes || '—'}</div>
+            </div>
 
             {styleRows.length > 0 && (
               <div className="oc-block" style={{ marginTop: 14 }}>
