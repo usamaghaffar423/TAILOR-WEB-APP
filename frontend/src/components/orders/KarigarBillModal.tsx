@@ -31,6 +31,11 @@ function displayValue(val: string | string[] | undefined): string {
   return val || '—';
 }
 
+function ReferencePhoto({ path }: { path: string }) {
+  const url = useAuthedImage(path);
+  return url ? <img src={url} alt="حوالہ" /> : null;
+}
+
 export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
   const { data: orderRes, isLoading, error } = useQuery({
     queryKey: ['orders', orderId],
@@ -132,11 +137,6 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
                   </Fragment>
                 );
               })}
-              {order.measurement_snapshot.notes && (
-                <div className="bill-note">
-                  نوٹس: <bdi>{order.measurement_snapshot.notes}</bdi>
-                </div>
-              )}
             </>
           )}
 
@@ -150,6 +150,23 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
                   <b><bdi>{value}</bdi></b>
                 </div>
               ))}
+            </>
+          )}
+
+          {/* Notes — always shown so the karigar never misses an instruction */}
+          <hr className="bill-divider" />
+          <div className="bill-section">نوٹس / خاص ہدایات</div>
+          <div className="bill-text"><bdi>{order.measurement_snapshot.notes?.trim() || '—'}</bdi></div>
+
+          {(order.photos?.length ?? 0) > 0 && (
+            <>
+              <hr className="bill-divider" />
+              <div className="bill-section">حوالہ تصاویر</div>
+              <div className="bill-photos">
+                {order.photos!.map((p) => (
+                  <ReferencePhoto key={p.id} path={p.file_path} />
+                ))}
+              </div>
             </>
           )}
 

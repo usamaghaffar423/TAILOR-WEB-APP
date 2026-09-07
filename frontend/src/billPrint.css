@@ -177,6 +177,19 @@
   white-space: pre-wrap;
 }
 
+.bill-print .bill-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.bill-print .bill-photos img {
+  width: 34mm;
+  height: auto;
+  border: 1px solid #999;
+}
+
 .bill-print .bill-footer {
   text-align: center;
   font-size: 12px;
@@ -296,6 +309,12 @@
     background: transparent;
     border: 1px dashed #000;
     font-size: 9px;
+  }
+
+  .bill-print .bill-photos img {
+    width: 32mm;
+    border-color: #000;
+    filter: grayscale(1) contrast(1.35);
   }
 
   .bill-print .bill-footer {
