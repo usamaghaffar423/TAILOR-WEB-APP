@@ -24,11 +24,15 @@ export interface CreateOrderPayload {
 
 export interface UpdateOrderPayload {
   karigar_id?: number;
+  assigned_date?: string;
   deadline?: string;
   status?: OrderStatus;
   total_amount?: number;
   style?: OrderStyle;
   items?: OrderItem[];
+  template_key?: string;
+  measurement_fields?: Record<string, string | string[]>;
+  measurement_notes?: string | null;
 }
 
 function buildQuery(filters: OrderFilters): string {

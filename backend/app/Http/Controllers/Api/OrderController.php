@@ -233,12 +233,46 @@ class OrderController extends Controller
             $order->delivered_date = $status === 'delivered'
                 ? ($order->delivered_date ?? Carbon::today()->toDateString())
                 : null;
+            if ($request->has('assigned_date')) {
+                $order->assigned_date = $request->input('assigned_date');
+            }
             if ($request->has('style')) {
                 $order->style = $request->input('style');
             }
             if ($request->has('items')) {
                 $order->items = $request->input('items');
             }
+
+            // Full correction of a mis-entered order: garment, measurements
+            // and notes. The snapshot is what the karigar bill prints, so it's
+            // authoritative here; we also push the correction back onto the
+            // customer's saved measurement profile so their record and the
+            // next order start from the fixed numbers.
+            $touchesMeasurement = $request->hasAny(['template_key', 'measurement_fields', 'measurement_notes']);
+            if ($touchesMeasurement) {
+                $snapshot = $order->measurement_snapshot ?? [];
+
+                if ($request->has('template_key')) {
+                    $templateKey = $request->input('template_key');
+                    $template = MeasurementTemplate::query()->where('template_key', $templateKey)->first();
+                    $snapshot['template_key'] = $templateKey;
+                    $snapshot['template_label'] = $template->label ?? $templateKey;
+                }
+                if ($request->has('measurement_fields')) {
+                    $snapshot['fields'] = $request->input('measurement_fields');
+                }
+                if ($request->has('measurement_notes')) {
+                    $snapshot['notes'] = $request->input('measurement_notes');
+                }
+
+                $order->measurement_snapshot = $snapshot;
+
+                Measurement::query()->updateOrCreate(
+                    ['customer_id' => $order->customer_id, 'template_key' => $snapshot['template_key']],
+                    ['fields' => $snapshot['fields'] ?? [], 'notes' => $snapshot['notes'] ?? null],
+                );
+            }
+
             $order->save();
 
             Sale::where('legacy_order_id', $order->id)->update([
@@ -249,6 +283,9 @@ class OrderController extends Controller
             ]);
 
             $this->cacheBuster->bustOrders();
+            if ($touchesMeasurement) {
+                $this->cacheBuster->bustCustomers();
+            }
 
             return response()->json(['data' => $order, 'message' => 'Updated successfully.']);
         } catch (Throwable $e) {

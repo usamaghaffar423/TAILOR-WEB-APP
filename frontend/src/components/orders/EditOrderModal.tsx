@@ -1,12 +1,17 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Dialog } from '@/components/ui/Dialog';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { DateInput } from '@/components/ui/DateInput';
+import { MeasurementFieldsForm } from '@/components/measurements/MeasurementFieldsForm';
 import { ordersApi } from '@/api/orders';
 import { karigarsApi } from '@/api/karigars';
+import { customersApi } from '@/api/customers';
+import { settingsApi } from '@/api/settings';
+import { uploadsApi } from '@/api/uploads';
+import { useAuthedImage } from '@/lib/useAuthedImage';
 import { toDateInputValue, formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
 import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, parseCustomStyleFields } from '@/lib/styleFields';
@@ -20,7 +25,10 @@ interface EditOrderModalProps {
 }
 
 export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModalProps) {
+  const queryClient = useQueryClient();
+
   const [karigarId, setKarigarId] = useState(order.karigar_id);
+  const [assignedDate, setAssignedDate] = useState(toDateInputValue(order.assigned_date));
   const [deadline, setDeadline] = useState(toDateInputValue(order.deadline));
   const [status, setStatus] = useState<OrderStatus>(order.status);
 
@@ -40,7 +48,40 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
   }
   const totalNum = items.reduce((sum, it) => sum + (parseFloat(it.amount) || 0), 0);
 
-  const isKameez = order.measurement_snapshot.template_key.startsWith('shalwar-kameez');
+  // ---- Measurements (garment + fields + notes) ----
+  const [templateKey, setTemplateKey] = useState(order.measurement_snapshot.template_key);
+  const [measurementFields, setMeasurementFields] = useState<Record<string, string | string[]>>(
+    () => order.measurement_snapshot.fields ?? {}
+  );
+  const [measurementNotes, setMeasurementNotes] = useState(order.measurement_snapshot.notes ?? '');
+
+  const { data: templatesRes } = useQuery({ queryKey: ['templates'], queryFn: () => settingsApi.getTemplates() });
+  const { data: customerMeasurementsRes } = useQuery({
+    queryKey: ['customers', order.customer_id, 'measurements'],
+    queryFn: () => customersApi.getMeasurements(order.customer_id),
+  });
+  const template = templatesRes?.data.find((t) => t.template_key === templateKey) || null;
+  const isKameez = templateKey.startsWith('shalwar-kameez');
+
+  function handleTemplateChange(key: string) {
+    setTemplateKey(key);
+    // Wrong garment picked at creation — start its fields from the customer's
+    // saved profile for that garment if we have one, else blank.
+    const saved = customerMeasurementsRes?.data.find((m) => m.template_key === key);
+    setMeasurementFields(saved?.fields ?? {});
+    setMeasurementNotes(saved?.notes ?? '');
+  }
+
+  const measurementChanged = useMemo(() => {
+    const snap = order.measurement_snapshot;
+    return (
+      templateKey !== snap.template_key ||
+      measurementNotes.trim() !== (snap.notes ?? '').trim() ||
+      JSON.stringify(measurementFields) !== JSON.stringify(snap.fields ?? {})
+    );
+  }, [order.measurement_snapshot, templateKey, measurementFields, measurementNotes]);
+
+  // ---- Style ----
   const [styleValues, setStyleValues] = useState<Record<string, string>>(() => {
     const init: Record<string, string> = {};
     STYLE_FIELDS.forEach((f) => {
@@ -71,6 +112,13 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
     setCustomStyleFields((f) => f.filter((_, i) => i !== idx));
   }
 
+  // ---- Photos ----
+  const [removedPhotoIds, setRemovedPhotoIds] = useState<number[]>([]);
+  const [newPhotos, setNewPhotos] = useState<File[]>([]);
+  const newPhotoUrls = useMemo(() => newPhotos.map((f) => URL.createObjectURL(f)), [newPhotos]);
+  useEffect(() => () => newPhotoUrls.forEach((u) => URL.revokeObjectURL(u)), [newPhotoUrls]);
+  const existingPhotos = (order.photos ?? []).filter((p) => !removedPhotoIds.includes(p.id));
+
   const { data: karigarsRes } = useQuery({ queryKey: ['karigars'], queryFn: () => karigarsApi.index() });
 
   const mutation = useMutation({
@@ -91,15 +139,32 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
 
       await ordersApi.update(order.id, {
         karigar_id: karigarId,
+        assigned_date: assignedDate,
         deadline,
         status,
         total_amount: totalNum,
         items: orderItems,
         style,
+        ...(measurementChanged
+          ? {
+              template_key: templateKey,
+              measurement_fields: measurementFields,
+              measurement_notes: measurementNotes.trim() || null,
+            }
+          : {}),
       });
+
+      for (const id of removedPhotoIds) {
+        await uploadsApi.destroy(id);
+      }
+      if (newPhotos.length > 0) {
+        await uploadsApi.store(order.id, newPhotos);
+      }
     },
     onSuccess: () => {
       toast.success('Order updated');
+      // Measurement edits sync back to the customer's saved profile.
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
       onSaved();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -113,6 +178,10 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
     }
     if (!totalNum || totalNum <= 0) {
       toast.error('Add at least one item with an amount');
+      return;
+    }
+    if (!assignedDate) {
+      toast.error('Please choose an assigned date');
       return;
     }
     if (!deadline) {
@@ -145,12 +214,16 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
           />
         </div>
         <div className="field">
-          <label>Deadline</label>
-          <DateInput value={deadline} onChange={setDeadline} />
-        </div>
-        <div className="field">
           <label>Order Status</label>
           <Dropdown value={status} onChange={(v) => setStatus(v as OrderStatus)} options={ORDER_STATUS_OPTIONS} />
+        </div>
+        <div className="field">
+          <label>Assigned Date</label>
+          <DateInput value={assignedDate} onChange={setAssignedDate} />
+        </div>
+        <div className="field">
+          <label>Deadline</label>
+          <DateInput value={deadline} onChange={setDeadline} />
         </div>
         <div className="field span-2">
           <label>Items</label>
@@ -186,6 +259,38 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
         <div className="field">
           <label>Order Total (Rs)</label>
           <input type="text" className="mono" value={totalNum ? formatCurrency(totalNum) : ''} disabled />
+        </div>
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <div className="oc-section-title">Measurements</div>
+        <div className="form-grid cols-2" style={{ marginTop: 12 }}>
+          <div className="field span-2">
+            <label>Garment Template</label>
+            <Dropdown
+              value={templateKey}
+              onChange={handleTemplateChange}
+              options={templatesRes?.data.map((t) => ({ value: t.template_key, label: t.label })) || []}
+            />
+          </div>
+        </div>
+        {template && (
+          <div style={{ marginTop: 14 }}>
+            <MeasurementFieldsForm
+              template={template}
+              fields={measurementFields}
+              onFieldChange={(key, value) => setMeasurementFields((f) => ({ ...f, [key]: value }))}
+            />
+          </div>
+        )}
+        <div className="field span-2" style={{ marginTop: 12 }}>
+          <label>Notes</label>
+          <textarea
+            className="notes-big"
+            placeholder="Fit preferences, special instructions — anything the karigar or customer bill should carry…"
+            value={measurementNotes}
+            onChange={(e) => setMeasurementNotes(e.target.value)}
+          />
         </div>
       </div>
 
@@ -251,7 +356,43 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
         </div>
       )}
 
-      <div className="hint" style={{ marginTop: 14 }}>Measurements and photos stay locked to what the karigar was given — start a new order if those need to change.</div>
+      <div style={{ marginTop: 20 }}>
+        <div className="oc-section-title">Reference Photos</div>
+        <div className="photo-thumbs" style={{ marginTop: 12 }}>
+          {existingPhotos.map((p) => (
+            <div key={p.id} className="photo-thumb">
+              <ExistingPhoto path={p.file_path} />
+              <button className="rm" type="button" title="Remove photo" onClick={() => setRemovedPhotoIds((ids) => [...ids, p.id])}>&times;</button>
+            </div>
+          ))}
+          {newPhotoUrls.map((url, i) => (
+            <div key={`new-${i}`} className="photo-thumb">
+              <img src={url} alt="" />
+              <button className="rm" type="button" title="Remove photo" onClick={() => setNewPhotos((p) => p.filter((_, idx) => idx !== i))}>&times;</button>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 10 }}>
+          <Button type="button" variant="outline" sm onClick={() => document.getElementById('editOrderPhotoInput')?.click()}>+ Add Photos</Button>
+          <input
+            id="editOrderPhotoInput"
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: 'none' }}
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []).filter((f) => f.type.startsWith('image/'));
+              setNewPhotos((p) => [...p, ...files]);
+              e.target.value = '';
+            }}
+          />
+        </div>
+      </div>
     </Dialog>
   );
+}
+
+function ExistingPhoto({ path }: { path: string }) {
+  const url = useAuthedImage(path);
+  return url ? <img src={url} alt="Reference" /> : null;
 }
