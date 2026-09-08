@@ -217,22 +217,36 @@
 }
 
 @media print {
+  html,
   body {
     margin: 0;
     padding: 0;
+    height: auto; /* no viewport-height box that rounds up to a 2nd page */
   }
 
   .bill-print {
     width: 80mm;
     max-width: 80mm;
     margin: 0;
-    padding: 2mm 4mm; /* text column ≈ 72mm; also covers the head's dead zone */
+    padding: 2mm 4mm 0; /* no bottom pad — trailing space can force a blank page */
     font-size: 10px;
     line-height: 1.35;
     color: #000;
     background: #fff;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    /* One continuous receipt: never let the browser split it across pages,
+       and never emit a following blank page. The page then ends exactly
+       where the content ends — with `@page { size: 80mm auto }` above, its
+       height IS the content height, provided the printer driver's paper is
+       a roll / continuous size (a fixed 80×297mm etc. still feeds a full
+       sheet — that part is an OS/driver setting, not something CSS reaches). */
+    break-inside: avoid;
+    break-after: avoid;
+  }
+
+  .bill-print > *:last-child {
+    margin-bottom: 0 !important;
   }
 
   /* Latin bills print in monospace like a real till receipt. */
