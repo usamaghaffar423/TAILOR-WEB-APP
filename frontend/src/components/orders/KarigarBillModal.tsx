@@ -138,10 +138,6 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
               </div>
             </>
           )}
-
-          <hr className="bill-divider" />
-
-          <div className="bill-sign">دستخط کاریگر: _______________</div>
         </div>
       )}
     </Dialog>

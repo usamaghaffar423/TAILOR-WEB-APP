@@ -196,14 +196,6 @@
   color: #555;
 }
 
-.bill-print .bill-sign {
-  margin-top: 30px;
-  font-size: 13px;
-  border-top: 1px solid #111;
-  padding-top: 10px;
-  text-align: center;
-}
-
 /* ==========================================================================
  * Thermal print — 80mm roll, ~72mm printable text column.
  *
@@ -335,11 +327,5 @@
     color: #000;
     font-size: 9px;
     margin-top: 3mm;
-  }
-
-  .bill-print .bill-sign {
-    border-top: 1px dashed #000;
-    margin-top: 8mm;
-    font-size: 10px;
   }
 }
