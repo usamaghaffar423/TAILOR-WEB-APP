@@ -47,13 +47,6 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
     queryFn: () => settingsApi.getTemplates(),
     staleTime: 5 * 60_000,
   });
-  const { data: shopRes } = useQuery({
-    queryKey: ['settings'],
-    queryFn: () => settingsApi.show(),
-    staleTime: 30 * 60_000,
-  });
-  const shop = shopRes?.data;
-  const logoUrl = useAuthedImage(shop?.logo_path);
   const billRef = useRef<HTMLDivElement>(null);
 
   if (orderId === null) return null;
@@ -84,33 +77,9 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
       {error && <p style={{ color: 'var(--red-bright)' }}>آرڈر لوڈ نہیں ہو سکا۔</p>}
       {order && (
         <div className="bill-print bill-print--urdu" dir="rtl" ref={billRef}>
-          {/* Header — logo front and center */}
-          <div className="bill-head">
-            {logoUrl ? (
-              <img src={logoUrl} alt="Shop logo" className="bill-logo" />
-            ) : (
-              <div className="bill-logo-fallback">
-                {(shop?.name || 'TM').split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()}
-              </div>
-            )}
-            <div className="bill-shop">{shop?.name || 'Top Man Tailor'}</div>
-            <div className="bill-shop-meta">ورک آرڈر — کاریگر کاپی</div>
-          </div>
-
-          <hr className="bill-divider" />
-
-          {/* Order reference */}
+          {/* Minimal work-order header — order no + customer only */}
           <div className="bill-row"><span>آرڈر نمبر</span><b><bdi>{order.order_no}</bdi></b></div>
-          <div className="bill-row"><span>تاریخ</span><bdi>{formatDate(order.created_at)}</bdi></div>
-          <div className="bill-row"><span>آخری تاریخ</span><b><bdi>{formatDate(order.deadline)}</bdi></b></div>
-          <div className="bill-row"><span>لباس کی قسم</span><b><bdi>{template?.label || order.measurement_snapshot.template_label || '—'}</bdi></b></div>
-
-          <hr className="bill-divider" />
-
-          {/* Customer details */}
-          <div className="bill-section">گاہک کی تفصیلات</div>
-          <div className="bill-row"><span>نام</span><b><bdi>{order.customer?.name || '—'}</bdi></b></div>
-          <div className="bill-row"><span>فون</span><bdi>{order.customer?.phone || '—'}</bdi></div>
+          <div className="bill-row"><span>گاہک</span><b><bdi>{order.customer?.name || '—'}</bdi></b></div>
 
           <hr className="bill-divider" />
 
