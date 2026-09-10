@@ -16,6 +16,7 @@ const METHOD_LABEL: Record<PaymentMethod, string> = {
   easypaisa: 'Easypaisa',
   jazzcash: 'JazzCash',
   bank: 'Bank',
+  card: 'Card',
 };
 
 export default function Payments() {
