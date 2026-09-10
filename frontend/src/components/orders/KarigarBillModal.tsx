@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/Button';
 import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { formatDate } from '@/lib/format';
-import { useAuthedImage } from '@/lib/useAuthedImage';
 import { printBillElement } from '@/lib/printBill';
 import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
 import type { Order } from '@/types';
@@ -29,11 +28,6 @@ function buildUrduStyleRows(order: Order) {
 function displayValue(val: string | string[] | undefined): string {
   if (Array.isArray(val)) return val.length > 0 ? val.join(' / ') : '—';
   return val || '—';
-}
-
-function ReferencePhoto({ path }: { path: string }) {
-  const url = useAuthedImage(path);
-  return url ? <img src={url} alt="حوالہ" /> : null;
 }
 
 export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
@@ -77,16 +71,10 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
       {error && <p style={{ color: 'var(--red-bright)' }}>آرڈر لوڈ نہیں ہو سکا۔</p>}
       {order && (
         <div className="bill-print bill-print--urdu" dir="rtl" ref={billRef}>
-          {/* Minimal work-order header — order no + customer only */}
+          {/* Minimal work-order header — order no + customer + deadline */}
           <div className="bill-row"><span>آرڈر نمبر</span><b><bdi>{order.order_no}</bdi></b></div>
           <div className="bill-row"><span>گاہک</span><b><bdi>{order.customer?.name || '—'}</bdi></b></div>
-
-          <hr className="bill-divider" />
-
-          {/* Karigar assignment */}
-          <div className="bill-section">کاریگر کی تفصیلات</div>
-          <div className="bill-row"><span>کاریگر</span><b><bdi>{order.karigar?.name || '—'}</bdi></b></div>
-          <div className="bill-row"><span>تفویض کردہ تاریخ</span><bdi>{formatDate(order.assigned_date)}</bdi></div>
+          <div className="bill-row"><span>ڈیڈ لائن</span><b><bdi>{formatDate(order.deadline)}</bdi></b></div>
 
           {template && (
             <>
@@ -119,23 +107,6 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
                   <b><bdi>{value}</bdi></b>
                 </div>
               ))}
-            </>
-          )}
-
-          {/* Notes — always shown so the karigar never misses an instruction */}
-          <hr className="bill-divider" />
-          <div className="bill-section">نوٹس / خاص ہدایات</div>
-          <div className="bill-text"><bdi>{order.measurement_snapshot.notes?.trim() || '—'}</bdi></div>
-
-          {(order.photos?.length ?? 0) > 0 && (
-            <>
-              <hr className="bill-divider" />
-              <div className="bill-section">حوالہ تصاویر</div>
-              <div className="bill-photos">
-                {order.photos!.map((p) => (
-                  <ReferencePhoto key={p.id} path={p.file_path} />
-                ))}
-              </div>
             </>
           )}
         </div>
