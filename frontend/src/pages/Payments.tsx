@@ -125,7 +125,7 @@ export default function Payments() {
       {tab === 'history' && (
         <>
           <div className="filter-bar">
-            <input type="text" placeholder="Search order # or customer..." value={q} onChange={(e) => setQ(e.target.value)} />
+            <input type="text" placeholder="Search order #, customer, or phone..." value={q} onChange={(e) => setQ(e.target.value)} />
             <Dropdown
               className="dropdown-filter"
               value={method}

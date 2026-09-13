@@ -61,7 +61,8 @@ class SaleController extends Controller
                     $query->where(function ($sub) use ($q) {
                         $sub->where('sales.sale_no', 'like', "%{$q}%")
                             ->orWhere('legacy_orders.order_no', 'like', "%{$q}%")
-                            ->orWhere('customers.name', 'like', "%{$q}%");
+                            ->orWhere('customers.name', 'like', "%{$q}%")
+                            ->orWhere('customers.phone', 'like', "%{$q}%");
                     });
                 }
                 if ($filters['from']) {

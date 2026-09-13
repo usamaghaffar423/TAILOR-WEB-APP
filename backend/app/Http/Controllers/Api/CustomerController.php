@@ -54,23 +54,9 @@ class CustomerController extends Controller
     public function store(StoreCustomerRequest $request): JsonResponse
     {
         try {
-            // A repeat customer submitted through a flow that skipped the
-            // "existing customer" search (e.g. typed straight into the New
-            // Order form) must still land on their one record, not fork a
-            // duplicate — phone number is the reliable identity key here.
-            $existing = Customer::query()->where('phone', trim($request->input('phone')))->first();
-
-            if ($existing) {
-                $existing->update([
-                    'name' => $request->input('name'),
-                    'address' => $request->input('address'),
-                ]);
-
-                $this->cacheBuster->bustCustomers();
-
-                return response()->json(['data' => $existing, 'message' => 'Linked to existing customer record.']);
-            }
-
+            // Always create a new customer record — multiple people (e.g.
+            // family members) may share the same phone number and each
+            // needs their own record with their own name/measurements.
             $customer = Customer::query()->create([
                 'customer_id' => $this->nextCustomerId(),
                 'name' => $request->input('name'),

@@ -59,7 +59,8 @@ class OrderController extends Controller
                     $q = $filters['q'];
                     $query->where(function ($sub) use ($q) {
                         $sub->where('orders.order_no', 'like', "%{$q}%")
-                            ->orWhere('customers.name', 'like', "%{$q}%");
+                            ->orWhere('customers.name', 'like', "%{$q}%")
+                            ->orWhere('customers.phone', 'like', "%{$q}%");
                     });
                 }
 

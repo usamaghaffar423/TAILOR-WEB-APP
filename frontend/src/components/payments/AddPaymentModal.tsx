@@ -102,7 +102,7 @@ export function AddPaymentModal({ orderId: presetOrderId, open, onClose, onSaved
           <label>Order</label>
           <input
             type="text"
-            placeholder="Search order # or customer..."
+            placeholder="Search order #, customer, or phone..."
             value={orderSearch}
             onChange={(e) => {
               setOrderSearch(e.target.value);
