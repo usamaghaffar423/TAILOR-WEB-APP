@@ -43,13 +43,16 @@
   max-width: 100%;
   margin: 0 auto;
   padding: 24px 22px;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
+  font-family: 'Roboto', 'Inter', sans-serif;
+  font-weight: 500;
 }
 
-/* Karigar copy — Urdu / RTL, keeps its Nastaliq face (monospace can't set it) */
+/* Karigar copy — Urdu / RTL, bold Nastaliq for clear readability */
 .bill-print--urdu {
   font-family: 'Noto Nastaliq Urdu', 'Inter', sans-serif;
+  font-weight: 700;
 }
 
 .bill-print .bill-head {
@@ -80,13 +83,14 @@
 }
 
 .bill-print .bill-shop {
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 700;
 }
 
 .bill-print .bill-shop-meta {
-  font-size: 11.5px;
+  font-size: 12px;
   color: #555;
+  font-weight: 500;
 }
 
 .bill-print .bill-head .bill-shop-meta:first-of-type {
@@ -113,7 +117,8 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   padding: 3px 0;
 }
 
@@ -129,12 +134,12 @@
 }
 
 .bill-print .bill-total {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
 }
 
 .bill-print .bill-section {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #777;
   text-transform: uppercase;
@@ -143,7 +148,7 @@
 }
 
 .bill-print .bill-group-heading {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #999;
   margin: 10px 0 2px;
@@ -162,12 +167,14 @@
   padding: 6px 10px;
   background: #f7f7f7;
   border-radius: 6px;
-  font-size: 11.5px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .bill-print .bill-note {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
   background: #f7f7f7;
   padding: 7px 10px;
   border-radius: 4px;
@@ -192,8 +199,9 @@
 
 .bill-print .bill-footer {
   text-align: center;
-  font-size: 12px;
+  font-size: 13px;
   color: #555;
+  font-weight: 600;
 }
 
 /* ==========================================================================
@@ -220,19 +228,13 @@
     width: 80mm;
     max-width: 80mm;
     margin: 0;
-    padding: 2mm 4mm 0; /* no bottom pad — trailing space can force a blank page */
-    font-size: 10px;
+    padding: 2mm 4mm 0;
+    font-size: 11px;
     line-height: 1.35;
     color: #000;
     background: #fff;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    /* One continuous receipt: never let the browser split it across pages,
-       and never emit a following blank page. The page then ends exactly
-       where the content ends — with `@page { size: 80mm auto }` above, its
-       height IS the content height, provided the printer driver's paper is
-       a roll / continuous size (a fixed 80×297mm etc. still feeds a full
-       sheet — that part is an OS/driver setting, not something CSS reaches). */
     break-inside: avoid;
     break-after: avoid;
   }
@@ -241,9 +243,10 @@
     margin-bottom: 0 !important;
   }
 
-  /* Latin bills print in monospace like a real till receipt. */
+  /* Latin bills print in Roboto — clear, bold, easy to read on thermal. */
   .bill-print:not(.bill-print--urdu) {
-    font-family: 'Courier New', Consolas, monospace;
+    font-family: 'Roboto', 'Inter', sans-serif;
+    font-weight: 500;
   }
 
   /* Thermal heads render photos as mud — force a small high-contrast mark. */
@@ -268,12 +271,13 @@
   }
 
   .bill-print .bill-shop {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .bill-print .bill-shop-meta {
     color: #000;
-    font-size: 9px;
+    font-size: 10px;
+    font-weight: 500;
   }
 
   /* Dashed rules read like a real receipt and print clean on a thermal head. */
@@ -284,19 +288,20 @@
   }
 
   .bill-print .bill-row {
-    font-size: 10px;
+    font-size: 11px;
+    font-weight: 600;
     padding: 0.4mm 0;
     gap: 4px;
   }
 
   .bill-print .bill-total {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
   }
 
   .bill-print .bill-section {
     color: #000;
-    font-size: 9px;
+    font-size: 10px;
     margin-bottom: 3px;
   }
 
@@ -308,13 +313,15 @@
     background: transparent;
     border: 1px dashed #000;
     border-radius: 0;
-    font-size: 9px;
+    font-size: 10px;
+    font-weight: 600;
   }
 
   .bill-print .bill-note {
     background: transparent;
     border: 1px dashed #000;
-    font-size: 9px;
+    font-size: 10px;
+    font-weight: 600;
   }
 
   .bill-print .bill-photos img {
@@ -325,7 +332,8 @@
 
   .bill-print .bill-footer {
     color: #000;
-    font-size: 9px;
+    font-size: 10px;
+    font-weight: 600;
     margin-top: 3mm;
   }
 }
