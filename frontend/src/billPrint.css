@@ -228,7 +228,7 @@
     width: 80mm;
     max-width: 80mm;
     margin: 0;
-    padding: 2mm 4mm 0;
+    padding: 3mm 5mm 4mm;
     font-size: 11px;
     line-height: 1.35;
     color: #000;
@@ -237,6 +237,7 @@
     print-color-adjust: exact;
     break-inside: avoid;
     break-after: avoid;
+    overflow: hidden;
   }
 
   .bill-print > *:last-child {
@@ -292,6 +293,7 @@
     font-weight: 600;
     padding: 0.4mm 0;
     gap: 4px;
+    overflow: hidden;
   }
 
   .bill-print .bill-total {
