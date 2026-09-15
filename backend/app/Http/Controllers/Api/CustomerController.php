@@ -96,7 +96,7 @@ class CustomerController extends Controller
                     ->groupBy(
                         'orders.id', 'orders.order_no', 'orders.status', 'orders.deadline',
                         'orders.assigned_date', 'orders.delivered_date', 'orders.total_amount',
-                        'karigars.name'
+                        'orders.style', 'karigars.name'
                     )
                     ->orderByDesc('orders.created_at')
                     ->get([
