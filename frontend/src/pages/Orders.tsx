@@ -11,6 +11,7 @@ import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
 import { Dropdown } from '@/components/ui/Dropdown';
+import { DateInput } from '@/components/ui/DateInput';
 import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
 import type { OrderStatus } from '@/types';
 
@@ -65,8 +66,8 @@ export default function Orders() {
           onChange={setKarigarId}
           options={[{ value: '', label: 'All Karigars' }, ...(karigarsRes?.data.map((k) => ({ value: String(k.id), label: k.name })) || [])]}
         />
-        <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-        <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+        <DateInput value={from} onChange={setFrom} />
+        <DateInput value={to} onChange={setTo} />
       </div>
 
       {isLoading && <p style={{ color: 'var(--text-faint)' }}>Loading orders…</p>}

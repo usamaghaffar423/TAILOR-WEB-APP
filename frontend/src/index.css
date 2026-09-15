@@ -364,6 +364,7 @@ nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shr
 .dropdown.dropdown-filter{width:auto;}
 .dropdown.dropdown-filter .dropdown-trigger{width:auto; min-width:150px; padding:9px 12px; font-size:12.5px;}
 .dropdown.dropdown-filter .dropdown-menu{left:0; right:auto; width:max-content; min-width:170px;}
+.filter-bar .date-input{width:auto; min-width:150px; padding:9px 12px; font-size:12.5px;}
 
 /* Inline colored pill usage (e.g. order status inside a table row) */
 .dropdown.dropdown-pill{width:auto;}

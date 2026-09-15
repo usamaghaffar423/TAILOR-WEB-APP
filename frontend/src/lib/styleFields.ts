@@ -38,7 +38,7 @@ export const STYLE_FIELD_OPTIONS: Partial<Record<keyof OrderStyle, string[]>> = 
   front_pocket: ['Yes', 'No'],
   side_pocket: ['2', '1'],
   style_daman: ['GOL', 'SADA', 'KURTA'],
-  chak_pati: ['KAJ', 'NO KAH'],
+  chak_pati: ['KAJ', 'NO KAJ'],
   salai_type: ['Single', 'Double Pair', 'Double Nazdak', 'Triple Salai', 'Double Tak', '4k'],
   dhaga: ['Sada', 'Chamaktar'],
   button: ['Sada', 'Ring Button', 'Steel Button'],

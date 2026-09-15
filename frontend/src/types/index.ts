@@ -183,6 +183,7 @@ export interface CustomerOrderItem {
   assigned_date: string;
   delivered_date: string | null;
   total_amount: string;
+  style: OrderStyle;
   karigar_name: string;
   paid_amount: string;
 }

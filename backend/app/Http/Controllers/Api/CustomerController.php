@@ -107,9 +107,14 @@ class CustomerController extends Controller
                         'orders.assigned_date',
                         'orders.delivered_date',
                         'orders.total_amount',
+                        'orders.style',
                         'karigars.name as karigar_name',
                         DB::raw('COALESCE(SUM(payments.amount), 0) as paid_amount'),
                     ]);
+
+                $orders->each(function ($o) {
+                    $o->style = is_string($o->style) ? json_decode($o->style, true) : $o->style;
+                });
 
                 return [
                     'customer' => $customer,

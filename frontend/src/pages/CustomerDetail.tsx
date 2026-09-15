@@ -15,6 +15,7 @@ import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
 import { EDIT_ICON, PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON, DELETE_ICON } from '@/lib/garmentIcons';
+import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
 import { formatCurrency, formatDate, formatDateShort } from '@/lib/format';
 
 export default function CustomerDetail() {
@@ -181,6 +182,26 @@ export default function CustomerDetail() {
                 To correct measurements, notes or style, open the order and use <b>Edit Order</b> — the change flows back here.
               </div>
             </div>
+
+            {(() => {
+              const latestOrder = orders.length > 0 ? orders[0] : null;
+              if (!latestOrder?.style) return null;
+              const style = latestOrder.style;
+              const styleRows: Array<[string, string]> = [
+                ...STYLE_FIELDS.filter((f) => style[f.key]).map((f): [string, string] => [f.label, style[f.key] as string]),
+                ...parseCustomStyleFields(style.custom_fields).map((f): [string, string] => [f.label, f.value]),
+              ];
+              if (styleRows.length === 0) return null;
+              return (
+                <div className="panel panel-spacer">
+                  <div className="panel-head"><h3>Style Customization</h3></div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', marginBottom: 6 }}>From order {latestOrder.order_no}</div>
+                  {styleRows.map(([label, val]) => (
+                    <div key={label} className="oc-kv"><span>{label}</span><b>{val}</b></div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           <div>
