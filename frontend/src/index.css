@@ -523,6 +523,27 @@ table.data-table tbody tr.clickable:hover{background:var(--surface-2);}
 .balance-pending{color:var(--red-bright); font-weight:700;}
 .balance-paid{color:var(--green);}
 
+/* ---------- Order group rows ---------- */
+.order-group-row{cursor:pointer; background:var(--surface);}
+.order-group-row:hover{background:var(--surface-2);}
+.order-group-child{background:var(--bg);}
+.order-group-child td{font-size:12.5px;}
+.group-toggle{display:flex; align-items:center; gap:8px;}
+.group-chevron{
+  width:16px; height:16px; stroke:var(--text-muted); fill:none;
+  transition:transform .2s ease; flex-shrink:0;
+}
+.group-chevron.open{transform:rotate(90deg);}
+.group-order-range{font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600;}
+.group-customer{display:flex; align-items:center; gap:10px;}
+.group-customer-name{font-weight:700; text-decoration:none; color:var(--text);}
+.group-customer-name:hover{color:var(--red-bright);}
+.group-count{
+  font-size:10.5px; font-weight:700; color:var(--red-bright);
+  background:var(--red-pale); padding:2px 8px; border-radius:10px;
+  white-space:nowrap;
+}
+
 /* ---------- Row action icon buttons ---------- */
 .row-icon-btn{
   width:30px; height:30px; border-radius:8px; border:1px solid var(--border); background:var(--surface-2);

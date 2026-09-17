@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ordersApi } from '@/api/orders';
@@ -6,6 +6,7 @@ import { karigarsApi } from '@/api/karigars';
 import { StitchDivider } from '@/components/ui/StitchDivider';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { OrderRow } from '@/components/orders/OrderRow';
+import { OrderGroupRow } from '@/components/orders/OrderGroupRow';
 import { OrderCardModal } from '@/components/orders/OrderCardModal';
 import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
@@ -13,7 +14,7 @@ import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { DateInput } from '@/components/ui/DateInput';
 import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
-import type { OrderStatus } from '@/types';
+import type { OrderStatus, OrderListItem } from '@/types';
 
 export default function Orders() {
   const [searchParams] = useSearchParams();
@@ -41,6 +42,19 @@ export default function Orders() {
   });
 
   const orders = data?.data || [];
+
+  const groups = useMemo(() => {
+    const map = new Map<number, { customerName: string; customerId: number; orders: OrderListItem[] }>();
+    for (const o of orders) {
+      const existing = map.get(o.customer_id);
+      if (existing) {
+        existing.orders.push(o);
+      } else {
+        map.set(o.customer_id, { customerName: o.customer_name, customerId: o.customer_id, orders: [o] });
+      }
+    }
+    return Array.from(map.values());
+  }, [orders]);
 
   return (
     <>
@@ -94,16 +108,29 @@ export default function Orders() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((o) => (
-                  <OrderRow
-                    key={o.id}
-                    order={o}
-                    onViewCard={setCardOrderId}
-                    onAddPayment={setPayOrderId}
-                    onCustomerBill={setCustomerBillOrderId}
-                    onKarigarBill={setKarigarBillOrderId}
-                  />
-                ))}
+                {groups.map((g) =>
+                  g.orders.length === 1 ? (
+                    <OrderRow
+                      key={g.orders[0].id}
+                      order={g.orders[0]}
+                      onViewCard={setCardOrderId}
+                      onAddPayment={setPayOrderId}
+                      onCustomerBill={setCustomerBillOrderId}
+                      onKarigarBill={setKarigarBillOrderId}
+                    />
+                  ) : (
+                    <OrderGroupRow
+                      key={g.customerId}
+                      customerName={g.customerName}
+                      customerId={g.customerId}
+                      orders={g.orders}
+                      onViewCard={setCardOrderId}
+                      onAddPayment={setPayOrderId}
+                      onCustomerBill={setCustomerBillOrderId}
+                      onKarigarBill={setKarigarBillOrderId}
+                    />
+                  )
+                )}
               </tbody>
             </table>
           </div>
