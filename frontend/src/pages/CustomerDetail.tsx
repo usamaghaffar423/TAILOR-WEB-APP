@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { customersApi } from '@/api/customers';
 import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
+import { Dialog } from '@/components/ui/Dialog';
 import { StitchDivider } from '@/components/ui/StitchDivider';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -40,6 +41,7 @@ export default function CustomerDetail() {
   const [payOrderId, setPayOrderId] = useState<number | null>(null);
   const [customerBillOrderId, setCustomerBillOrderId] = useState<number | null>(null);
   const [karigarBillOrderId, setKarigarBillOrderId] = useState<number | null>(null);
+  const [deleteOrderId, setDeleteOrderId] = useState<{ id: number; orderNo: string } | null>(null);
 
   function refresh() {
     queryClient.invalidateQueries({ queryKey: ['customers', customerId] });
@@ -83,9 +85,14 @@ export default function CustomerDetail() {
   });
 
   function handleDeleteOrder(orderId: number, orderNo: string) {
-    if (window.confirm(`Delete order ${orderNo}? This cannot be undone.`)) {
-      deleteOrderMutation.mutate(orderId);
-    }
+    setDeleteOrderId({ id: orderId, orderNo });
+  }
+
+  function confirmDeleteOrder() {
+    if (!deleteOrderId) return;
+    deleteOrderMutation.mutate(deleteOrderId.id, {
+      onSettled: () => setDeleteOrderId(null),
+    });
   }
 
   if (isLoading) return <p style={{ color: 'var(--text-faint)' }}>Loading customer…</p>;
@@ -262,6 +269,22 @@ export default function CustomerDetail() {
           }}
         />
       )}
+
+      <Dialog
+        open={deleteOrderId !== null}
+        onClose={() => setDeleteOrderId(null)}
+        title="Delete Order"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDeleteOrderId(null)}>Cancel</Button>
+            <Button variant="danger" onClick={confirmDeleteOrder} disabled={deleteOrderMutation.isPending}>
+              {deleteOrderMutation.isPending ? 'Deleting…' : 'Delete Order'}
+            </Button>
+          </>
+        }
+      >
+        <p>Are you sure you want to delete order <b>{deleteOrderId?.orderNo}</b>? This action cannot be undone.</p>
+      </Dialog>
     </>
   );
 }
