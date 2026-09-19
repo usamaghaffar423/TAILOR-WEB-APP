@@ -11,7 +11,7 @@ import { customersApi } from '@/api/customers';
 import { karigarsApi } from '@/api/karigars';
 import { settingsApi } from '@/api/settings';
 import { formatCurrency } from '@/lib/format';
-import { STYLE_FIELDS, STYLE_FIELD_OPTIONS } from '@/lib/styleFields';
+import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, supportsStyleCustomization } from '@/lib/styleFields';
 import { PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
 import { useRetailProducts } from '@/features/retail/hooks/useRetailProducts';
 import { salesApi } from '../api/sales';
@@ -491,7 +491,7 @@ export default function NewSalePage() {
                     <div className="field span-2"><label>Notes</label><textarea placeholder="Fit preferences, special instructions..." value={line.notes} onChange={(e) => updateLine(line.uid, { notes: e.target.value })} /></div>
                   </div>
 
-                  {line.templateKey.startsWith('shalwar-kameez') && (
+                  {supportsStyleCustomization(line.templateKey) && (
                     <div style={{ marginTop: 16 }}>
                       <div className="oc-section-title">Style Customization</div>
                       <div className="form-grid cols-2" style={{ marginTop: 12 }}>

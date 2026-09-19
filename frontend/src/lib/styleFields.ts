@@ -51,6 +51,11 @@ export interface CustomStyleField {
   value: string;
 }
 
+/** Returns true when the given garment template key supports style customization fields. */
+export function supportsStyleCustomization(templateKey: string): boolean {
+  return templateKey.startsWith('shalwar-kameez') || templateKey === 'waistcoat';
+}
+
 // order.style.custom_fields is a JSON-encoded CustomStyleField[] — parse
 // defensively since it's free-form data, not schema-validated on the backend.
 export function parseCustomStyleFields(raw: string | undefined): CustomStyleField[] {

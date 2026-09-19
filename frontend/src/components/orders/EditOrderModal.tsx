@@ -14,7 +14,7 @@ import { uploadsApi } from '@/api/uploads';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 import { toDateInputValue, formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
-import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, parseCustomStyleFields } from '@/lib/styleFields';
+import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, parseCustomStyleFields, supportsStyleCustomization } from '@/lib/styleFields';
 import type { Order, OrderStatus } from '@/types';
 
 interface EditOrderModalProps {
@@ -61,7 +61,7 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
     queryFn: () => customersApi.getMeasurements(order.customer_id),
   });
   const template = templatesRes?.data.find((t) => t.template_key === templateKey) || null;
-  const isKameez = templateKey.startsWith('shalwar-kameez');
+  const hasStyleFields = supportsStyleCustomization(templateKey);
 
   function handleTemplateChange(key: string) {
     setTemplateKey(key);
@@ -296,7 +296,7 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
         />
       </div>
 
-      {isKameez && (
+      {hasStyleFields && (
         <div style={{ marginTop: 20 }}>
           <div className="oc-section-title">Style Customization</div>
           <div className="form-grid cols-2" style={{ marginTop: 12 }}>

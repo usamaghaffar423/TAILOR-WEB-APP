@@ -13,7 +13,7 @@ import { settingsApi } from '@/api/settings';
 import { ordersApi } from '@/api/orders';
 import { uploadsApi } from '@/api/uploads';
 import { formatCurrency } from '@/lib/format';
-import { STYLE_FIELDS, STYLE_FIELD_OPTIONS } from '@/lib/styleFields';
+import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, supportsStyleCustomization } from '@/lib/styleFields';
 import { ORDER_STATUS_OPTIONS, PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
 import type { Customer, OrderStatus, PaymentMethod } from '@/types';
 
@@ -80,7 +80,7 @@ export default function NewOrder() {
     }
   }, [templatesRes, templateKey]);
   const template = templatesRes?.data.find((t) => t.template_key === templateKey) || null;
-  const isKameez = templateKey.startsWith('shalwar-kameez');
+  const hasStyleFields = supportsStyleCustomization(templateKey);
 
   function handleTemplateChange(key: string) {
     setTemplateKey(key);
@@ -311,7 +311,7 @@ export default function NewOrder() {
 
       <div className="form-section">
         <div className="form-section-title"><span className="num">3</span>Style Customization</div>
-        {isKameez ? (
+        {hasStyleFields ? (
           <>
           <div className="form-grid cols-2" style={{ marginTop: 16 }}>
             {STYLE_FIELDS.map((f) => {
@@ -372,7 +372,7 @@ export default function NewOrder() {
           </>
         ) : (
           <p style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 10 }}>
-            Style customization options are defined for Shalwar Qameez orders.
+            Style customization options are defined for Shalwar Qameez and Waistcoat orders.
           </p>
         )}
       </div>
