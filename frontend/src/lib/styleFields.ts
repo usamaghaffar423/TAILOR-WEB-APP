@@ -56,6 +56,11 @@ export function supportsStyleCustomization(templateKey: string): boolean {
   return templateKey.startsWith('shalwar-kameez') || templateKey === 'waistcoat';
 }
 
+/** Returns true when the template is waistcoat — waistcoat uses only custom key-value fields, not the fixed STYLE_FIELDS. */
+export function isWaistcoat(templateKey: string): boolean {
+  return templateKey === 'waistcoat';
+}
+
 // order.style.custom_fields is a JSON-encoded CustomStyleField[] — parse
 // defensively since it's free-form data, not schema-validated on the backend.
 export function parseCustomStyleFields(raw: string | undefined): CustomStyleField[] {

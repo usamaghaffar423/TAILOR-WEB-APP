@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 2,
+  "retrieval": {
+    "provider": "bounded-keyword-metadata-v2",
+    "defaultLimit": 5,
+    "maxEpisodes": 2,
+    "tokenBudget": 1400
+  },
+  "retention": {
+    "episodeIndexLimit": 250,
+    "durableEvidenceRequired": true
+  },
+  "ignore": [],
+  "rootMarkers": []
+}

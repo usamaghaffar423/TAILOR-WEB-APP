@@ -11,7 +11,7 @@ import { customersApi } from '@/api/customers';
 import { karigarsApi } from '@/api/karigars';
 import { settingsApi } from '@/api/settings';
 import { formatCurrency } from '@/lib/format';
-import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, supportsStyleCustomization } from '@/lib/styleFields';
+import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, supportsStyleCustomization, isWaistcoat } from '@/lib/styleFields';
 import { PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
 import { useRetailProducts } from '@/features/retail/hooks/useRetailProducts';
 import { salesApi } from '../api/sales';
@@ -494,29 +494,55 @@ export default function NewSalePage() {
                   {supportsStyleCustomization(line.templateKey) && (
                     <div style={{ marginTop: 16 }}>
                       <div className="oc-section-title">Style Customization</div>
-                      <div className="form-grid cols-2" style={{ marginTop: 12 }}>
-                        {STYLE_FIELDS.map((f) => {
-                          const options = STYLE_FIELD_OPTIONS[f.key] || [];
-                          return (
-                            <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
-                              <label>{f.label}</label>
-                              {f.freeText ? (
-                                <input
-                                  type="text"
-                                  value={line.styleValues[f.key] || ''}
-                                  onChange={(e) => updateLine(line.uid, { styleValues: { ...line.styleValues, [f.key]: e.target.value } })}
-                                />
-                              ) : (
-                                <Dropdown
-                                  value={line.styleValues[f.key] || ''}
-                                  onChange={(v) => updateLine(line.uid, { styleValues: { ...line.styleValues, [f.key]: v } })}
-                                  options={options}
-                                />
-                              )}
+                      {isWaistcoat(line.templateKey) ? (
+                        /* Waistcoat: only custom key-value fields, no fixed STYLE_FIELDS */
+                        <div style={{ marginTop: 12 }}>
+                          {line.customStyleFields.length > 0 && (
+                            <div className="form-grid cols-2">
+                              {line.customStyleFields.map((cf, idx) => (
+                                <div className="field freetext" key={idx}>
+                                  <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>{cf.label}</span>
+                                    <button type="button" className="row-icon-btn" title="Remove field" onClick={() => {
+                                      const newFields = line.customStyleFields.filter((_, i) => i !== idx);
+                                      updateLine(line.uid, { customStyleFields: newFields });
+                                    }}>&minus;</button>
+                                  </label>
+                                  <input type="text" value={cf.value} onChange={(e) => {
+                                    const newFields = line.customStyleFields.map((f, i) => i === idx ? { ...f, value: e.target.value } : f);
+                                    updateLine(line.uid, { customStyleFields: newFields });
+                                  }} />
+                                </div>
+                              ))}
                             </div>
-                          );
-                        })}
-                      </div>
+                          )}
+                        </div>
+                      ) : (
+                        /* Shalwar Qameez: fixed fields */
+                        <div className="form-grid cols-2" style={{ marginTop: 12 }}>
+                          {STYLE_FIELDS.map((f) => {
+                            const options = STYLE_FIELD_OPTIONS[f.key] || [];
+                            return (
+                              <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
+                                <label>{f.label}</label>
+                                {f.freeText ? (
+                                  <input
+                                    type="text"
+                                    value={line.styleValues[f.key] || ''}
+                                    onChange={(e) => updateLine(line.uid, { styleValues: { ...line.styleValues, [f.key]: e.target.value } })}
+                                  />
+                                ) : (
+                                  <Dropdown
+                                    value={line.styleValues[f.key] || ''}
+                                    onChange={(v) => updateLine(line.uid, { styleValues: { ...line.styleValues, [f.key]: v } })}
+                                    options={options}
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
 

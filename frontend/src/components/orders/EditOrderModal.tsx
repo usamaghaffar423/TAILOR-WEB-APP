@@ -14,7 +14,7 @@ import { uploadsApi } from '@/api/uploads';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 import { toDateInputValue, formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
-import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, parseCustomStyleFields, supportsStyleCustomization } from '@/lib/styleFields';
+import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, parseCustomStyleFields, supportsStyleCustomization, isWaistcoat } from '@/lib/styleFields';
 import type { Order, OrderStatus } from '@/types';
 
 interface EditOrderModalProps {
@@ -299,62 +299,103 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
       {hasStyleFields && (
         <div style={{ marginTop: 20 }}>
           <div className="oc-section-title">Style Customization</div>
-          <div className="form-grid cols-2" style={{ marginTop: 12 }}>
-            {STYLE_FIELDS.map((f) => {
-              const options = STYLE_FIELD_OPTIONS[f.key] || [];
-              return (
-                <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
-                  <label>{f.label}</label>
-                  {f.freeText ? (
+          {isWaistcoat(templateKey) ? (
+            /* Waistcoat: only custom key-value fields, no fixed STYLE_FIELDS */
+            <div style={{ marginTop: 12 }}>
+              {customStyleFields.length > 0 && (
+                <div className="form-grid cols-2">
+                  {customStyleFields.map((cf, idx) => (
+                    <div className="field freetext" key={idx}>
+                      <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>{cf.label}</span>
+                        <button type="button" className="row-icon-btn" title="Remove field" onClick={() => removeCustomStyleField(idx)}>&minus;</button>
+                      </label>
+                      <input type="text" value={cf.value} onChange={(e) => updateCustomStyleField(idx, e.target.value)} />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ marginTop: 14 }}>
+                {addingCustomStyleField ? (
+                  <form onSubmit={(e) => { e.preventDefault(); addCustomStyleField(); }} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                     <input
                       type="text"
-                      value={styleValues[f.key] || ''}
-                      onChange={(e) => setStyleField(f.key, e.target.value)}
+                      value={newCustomStyleFieldLabel}
+                      onChange={(e) => setNewCustomStyleFieldLabel(e.target.value)}
+                      placeholder="Field name, e.g. Length, Buttons"
+                      autoFocus
+                      style={{ flex: 1, maxWidth: 260 }}
                     />
-                  ) : (
-                    <Dropdown
-                      value={styleValues[f.key] || ''}
-                      onChange={(v) => setStyleField(f.key, v)}
-                      options={options}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {customStyleFields.length > 0 && (
-            <div className="form-grid cols-2" style={{ marginTop: 14 }}>
-              {customStyleFields.map((cf, idx) => (
-                <div className="field freetext" key={idx}>
-                  <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>{cf.label}</span>
-                    <button type="button" className="row-icon-btn" title="Remove field" onClick={() => removeCustomStyleField(idx)}>&minus;</button>
-                  </label>
-                  <input type="text" value={cf.value} onChange={(e) => updateCustomStyleField(idx, e.target.value)} />
-                </div>
-              ))}
+                    <button type="submit" className="row-icon-btn" title="Add field" disabled={!newCustomStyleFieldLabel.trim()}>+</button>
+                    <button type="button" className="row-icon-btn" title="Cancel" onClick={() => { setAddingCustomStyleField(false); setNewCustomStyleFieldLabel(''); }}>&times;</button>
+                  </form>
+                ) : (
+                  <Button type="button" variant="outline" sm onClick={() => setAddingCustomStyleField(true)}>+ Add Custom Field</Button>
+                )}
+              </div>
             </div>
-          )}
+          ) : (
+            /* Shalwar Qameez: fixed fields + custom fields */
+            <>
+            <div className="form-grid cols-2" style={{ marginTop: 12 }}>
+              {STYLE_FIELDS.map((f) => {
+                const options = STYLE_FIELD_OPTIONS[f.key] || [];
+                return (
+                  <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
+                    <label>{f.label}</label>
+                    {f.freeText ? (
+                      <input
+                        type="text"
+                        value={styleValues[f.key] || ''}
+                        onChange={(e) => setStyleField(f.key, e.target.value)}
+                      />
+                    ) : (
+                      <Dropdown
+                        value={styleValues[f.key] || ''}
+                        onChange={(v) => setStyleField(f.key, v)}
+                        options={options}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
 
-          <div style={{ marginTop: 14 }}>
-            {addingCustomStyleField ? (
-              <form onSubmit={(e) => { e.preventDefault(); addCustomStyleField(); }} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <input
-                  type="text"
-                  value={newCustomStyleFieldLabel}
-                  onChange={(e) => setNewCustomStyleFieldLabel(e.target.value)}
-                  placeholder="Field name, e.g. Special Request"
-                  autoFocus
-                  style={{ flex: 1, maxWidth: 260 }}
-                />
-                <button type="submit" className="row-icon-btn" title="Add field" disabled={!newCustomStyleFieldLabel.trim()}>+</button>
-                <button type="button" className="row-icon-btn" title="Cancel" onClick={() => { setAddingCustomStyleField(false); setNewCustomStyleFieldLabel(''); }}>&times;</button>
-              </form>
-            ) : (
-              <Button type="button" variant="outline" sm onClick={() => setAddingCustomStyleField(true)}>+ Add Custom Field</Button>
+            {customStyleFields.length > 0 && (
+              <div className="form-grid cols-2" style={{ marginTop: 14 }}>
+                {customStyleFields.map((cf, idx) => (
+                  <div className="field freetext" key={idx}>
+                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{cf.label}</span>
+                      <button type="button" className="row-icon-btn" title="Remove field" onClick={() => removeCustomStyleField(idx)}>&minus;</button>
+                    </label>
+                    <input type="text" value={cf.value} onChange={(e) => updateCustomStyleField(idx, e.target.value)} />
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
+
+            <div style={{ marginTop: 14 }}>
+              {addingCustomStyleField ? (
+                <form onSubmit={(e) => { e.preventDefault(); addCustomStyleField(); }} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    value={newCustomStyleFieldLabel}
+                    onChange={(e) => setNewCustomStyleFieldLabel(e.target.value)}
+                    placeholder="Field name, e.g. Special Request"
+                    autoFocus
+                    style={{ flex: 1, maxWidth: 260 }}
+                  />
+                  <button type="submit" className="row-icon-btn" title="Add field" disabled={!newCustomStyleFieldLabel.trim()}>+</button>
+                  <button type="button" className="row-icon-btn" title="Cancel" onClick={() => { setAddingCustomStyleField(false); setNewCustomStyleFieldLabel(''); }}>&times;</button>
+                </form>
+              ) : (
+                <Button type="button" variant="outline" sm onClick={() => setAddingCustomStyleField(true)}>+ Add Custom Field</Button>
+              )}
+            </div>
+            </>
+          )}
         </div>
       )}
 

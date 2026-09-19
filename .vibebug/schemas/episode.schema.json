@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VibeBug episode metadata",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "type",
+    "status",
+    "summary"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "id": {
+      "type": "string"
+    },
+    "type": {
+      "const": "episode"
+    },
+    "status": {
+      "enum": [
+        "generated",
+        "candidate",
+        "verified",
+        "conflicting",
+        "stale",
+        "deprecated",
+        "rejected"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "priority": {
+      "enum": [
+        "critical",
+        "high",
+        "normal",
+        "low"
+      ]
+    },
+    "token_estimate": {
+      "type": "integer"
+    },
+    "issueId": {
+      "type": "string"
+    }
+  }
+}

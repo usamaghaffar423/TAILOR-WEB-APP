@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-19T11:41:00.117Z",
+  "retrieval": "bounded-keyword-metadata-v2",
+  "entryCount": 9,
+  "archivedEpisodeCount": 0,
+  "entries": [
+    {
+      "id": "iss-1062",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1062.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/lib/styleFields.ts"
+      ],
+      "keywords": [
+        "frontend",
+        "src",
+        "lib",
+        "styleFields"
+      ],
+      "summary": "Fixed typo: changed 'NO KAH' to 'NO KAJ' in chak_pati dropdown options",
+      "valid_from_commit": "e315028b3a2d499f96ac5047642a8b78a7f338a6",
+      "evidence_count": 2,
+      "token_estimate": 42,
+      "updated_at": "2026-09-15T08:06:47.415Z"
+    },
+    {
+      "id": "iss-1063",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1063.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "backend/app/Http/Controllers/Api/CustomerController.php",
+        "frontend/src/types/index.ts",
+        "frontend/src/pages/CustomerDetail.tsx"
+      ],
+      "keywords": [
+        "backend",
+        "app",
+        "Http",
+        "Controllers",
+        "Api",
+        "CustomerController",
+        "php",
+        "frontend",
+        "src",
+        "types",
+        "index",
+        "frontend",
+        "src",
+        "pages",
+        "CustomerDetail",
+        "tsx"
+      ],
+      "summary": "Added style customization display to Customer Detail page. Backend: added orders.style to CustomerController::show() query with json_decode. Frontend: updated CustomerOrderItem type with style field, added Style Customization panel showing latest order's style data using STYLE_FIELDS and parseCustom",
+      "valid_from_commit": "e315028b3a2d499f96ac5047642a8b78a7f338a6",
+      "evidence_count": 4,
+      "token_estimate": 106,
+      "updated_at": "2026-09-15T08:12:17.863Z"
+    },
+    {
+      "id": "iss-1064",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1064.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "backend/app/Http/Controllers/Api/OrderController.php"
+      ],
+      "keywords": [
+        "backend",
+        "app",
+        "Http",
+        "Controllers",
+        "Api",
+        "OrderController",
+        "php"
+      ],
+      "summary": "Added customer_id to order search query in OrderController::index(). Backend already supported search by order_no, customer name, and phone number. Now also searches by customer_id (e.g. TMT-046). Added customers.customer_id LIKE filter to the existing WHERE clause.",
+      "valid_from_commit": "e315028b3a2d499f96ac5047642a8b78a7f338a6",
+      "evidence_count": 2,
+      "token_estimate": 76,
+      "updated_at": "2026-09-15T08:15:54.425Z"
+    },
+    {
+      "id": "iss-1065",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1065.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/pages/CustomerDetail.tsx",
+        "backend/app/Http/Controllers/Api/CustomerController.php"
+      ],
+      "keywords": [
+        "frontend",
+        "src",
+        "pages",
+        "CustomerDetail",
+        "tsx",
+        "backend",
+        "app",
+        "Http",
+        "Controllers",
+        "Api",
+        "CustomerController",
+        "php"
+      ],
+      "summary": "Style customization code is already present in CustomerDetail.tsx (lines 186-204) and backend CustomerController.php returns orders.style with json_decode. The code was pushed in commit 9e356ad and TypeScript/build both pass. The issue is likely that Vercel deployment hasn't completed yet or there i",
+      "valid_from_commit": "9e356adff11e4b3e1ffa7ff1739390ce39b17460",
+      "evidence_count": 4,
+      "token_estimate": 88,
+      "updated_at": "2026-09-15T09:13:21.058Z"
+    },
+    {
+      "id": "iss-1066",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1066.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "backend/app/Http/Controllers/Api/CustomerController.php"
+      ],
+      "keywords": [
+        "backend",
+        "app",
+        "Http",
+        "Controllers",
+        "Api",
+        "CustomerController",
+        "php"
+      ],
+      "summary": "Added orders.style to the groupBy clause in CustomerController::show() query. MySQL with ONLY_FULL_GROUP_BY mode drops non-aggregated columns not in GROUP BY, causing style data to be null even when present in the database.",
+      "valid_from_commit": "9e356adff11e4b3e1ffa7ff1739390ce39b17460",
+      "evidence_count": 2,
+      "token_estimate": 58,
+      "updated_at": "2026-09-15T09:38:35.822Z"
+    },
+    {
+      "id": "project-architecture",
+      "type": "project",
+      "status": "generated",
+      "priority": "normal",
+      "file": "project/architecture.md",
+      "modules": [],
+      "entities": [],
+      "paths": [],
+      "keywords": [],
+      "summary": "Generated package and source-area map.",
+      "valid_from_commit": "",
+      "evidence_count": 0,
+      "token_estimate": 19,
+      "updated_at": ""
+    },
+    {
+      "id": "project-conventions",
+      "type": "project",
+      "status": "generated",
+      "priority": "normal",
+      "file": "project/conventions.md",
+      "modules": [],
+      "entities": [],
+      "paths": [],
+      "keywords": [],
+      "summary": "Repository conventions verified or proposed during issue work.",
+      "valid_from_commit": "",
+      "evidence_count": 0,
+      "token_estimate": 35,
+      "updated_at": ""
+    },
+    {
+      "id": "project-overview",
+      "type": "project",
+      "status": "generated",
+      "priority": "normal",
+      "file": "project/overview.md",
+      "modules": [],
+      "entities": [],
+      "paths": [],
+      "keywords": [],
+      "summary": "Generated project identity, languages, and frameworks.",
+      "valid_from_commit": "",
+      "evidence_count": 0,
+      "token_estimate": 36,
+      "updated_at": ""
+    },
+    {
+      "id": "project-testing",
+      "type": "project",
+      "status": "generated",
+      "priority": "normal",
+      "file": "project/testing.md",
+      "modules": [],
+      "entities": [],
+      "paths": [],
+      "keywords": [],
+      "summary": "Generated test commands and test-file inventory.",
+      "valid_from_commit": "",
+      "evidence_count": 0,
+      "token_estimate": 19,
+      "updated_at": ""
+    }
+  ]
+}
