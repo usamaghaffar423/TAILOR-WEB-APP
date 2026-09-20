@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { OrderRow } from '@/components/orders/OrderRow';
 import { OrderGroupRow } from '@/components/orders/OrderGroupRow';
 import { OrderCardModal } from '@/components/orders/OrderCardModal';
+import { EditOrderModal } from '@/components/orders/EditOrderModal';
 import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
@@ -24,11 +25,17 @@ export default function Orders() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [cardOrderId, setCardOrderId] = useState<number | null>(null);
+  const [editOrderId, setEditOrderId] = useState<number | null>(null);
   const [payOrderId, setPayOrderId] = useState<number | null>(null);
   const [customerBillOrderId, setCustomerBillOrderId] = useState<number | null>(null);
   const [karigarBillOrderId, setKarigarBillOrderId] = useState<number | null>(null);
 
   const { data: karigarsRes } = useQuery({ queryKey: ['karigars'], queryFn: () => karigarsApi.index() });
+  const { data: editOrderRes } = useQuery({
+    queryKey: ['orders', editOrderId],
+    queryFn: () => ordersApi.show(editOrderId!),
+    enabled: editOrderId !== null,
+  });
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['orders', { status, karigarId, q, from, to }],
     queryFn: () =>
@@ -117,6 +124,7 @@ export default function Orders() {
                       onAddPayment={setPayOrderId}
                       onCustomerBill={setCustomerBillOrderId}
                       onKarigarBill={setKarigarBillOrderId}
+                      onEdit={setEditOrderId}
                     />
                   ) : (
                     <OrderGroupRow
@@ -128,6 +136,7 @@ export default function Orders() {
                       onAddPayment={setPayOrderId}
                       onCustomerBill={setCustomerBillOrderId}
                       onKarigarBill={setKarigarBillOrderId}
+                      onEdit={setEditOrderId}
                     />
                   )
                 )}
@@ -138,6 +147,17 @@ export default function Orders() {
       )}
 
       <OrderCardModal orderId={cardOrderId} onClose={() => setCardOrderId(null)} />
+      {editOrderRes?.data && (
+        <EditOrderModal
+          order={editOrderRes.data}
+          open={editOrderId !== null}
+          onClose={() => setEditOrderId(null)}
+          onSaved={() => {
+            setEditOrderId(null);
+            refetch();
+          }}
+        />
+      )}
       <CustomerBillModal orderId={customerBillOrderId} onClose={() => setCustomerBillOrderId(null)} />
       <KarigarBillModal orderId={karigarBillOrderId} onClose={() => setKarigarBillOrderId(null)} />
       {payOrderId !== null && (

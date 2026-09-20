@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { ordersApi } from '@/api/orders';
 import { formatDateShort, formatCurrency } from '@/lib/format';
 import type { OrderListItem, OrderStatus } from '@/types';
-import { PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON } from '@/lib/garmentIcons';
+import { EDIT_ICON, PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON } from '@/lib/garmentIcons';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
 
@@ -14,9 +14,10 @@ interface OrderRowProps {
   onAddPayment: (id: number) => void;
   onCustomerBill: (id: number) => void;
   onKarigarBill: (id: number) => void;
+  onEdit: (id: number) => void;
 }
 
-export function OrderRow({ order, onViewCard, onAddPayment, onCustomerBill, onKarigarBill }: OrderRowProps) {
+export function OrderRow({ order, onViewCard, onAddPayment, onCustomerBill, onKarigarBill, onEdit }: OrderRowProps) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: (status: OrderStatus) => ordersApi.updateStatus(order.id, status),
@@ -59,6 +60,7 @@ export function OrderRow({ order, onViewCard, onAddPayment, onCustomerBill, onKa
       </td>
       <td>
         <div className="row-actions">
+          <button className="row-icon-btn" title="Edit order" onClick={() => onEdit(order.id)}>{EDIT_ICON}</button>
           <button className="row-icon-btn" title="View order card" onClick={() => onViewCard(order.id)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />

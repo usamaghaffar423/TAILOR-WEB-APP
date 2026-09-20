@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatCurrency, formatDateShort } from '@/lib/format';
+import { EDIT_ICON } from '@/lib/garmentIcons';
 import type { OrderListItem } from '@/types';
 
 interface OrderGroupRowProps {
@@ -11,9 +12,10 @@ interface OrderGroupRowProps {
   onAddPayment: (id: number) => void;
   onCustomerBill: (id: number) => void;
   onKarigarBill: (id: number) => void;
+  onEdit: (id: number) => void;
 }
 
-export function OrderGroupRow({ customerName, customerId, orders, onViewCard, onAddPayment, onCustomerBill, onKarigarBill }: OrderGroupRowProps) {
+export function OrderGroupRow({ customerName, customerId, orders, onViewCard, onAddPayment, onCustomerBill, onKarigarBill, onEdit }: OrderGroupRowProps) {
   const [expanded, setExpanded] = useState(false);
 
   const totalAmount = orders.reduce((sum, o) => sum + Number(o.total_amount), 0);
@@ -66,6 +68,7 @@ export function OrderGroupRow({ customerName, customerId, orders, onViewCard, on
           <td>{o.status}</td>
           <td>
             <div className="row-actions">
+              <button className="row-icon-btn" title="Edit order" onClick={(e) => { e.stopPropagation(); onEdit(o.id); }}>{EDIT_ICON}</button>
               <button className="row-icon-btn" title="View order card" onClick={(e) => { e.stopPropagation(); onViewCard(o.id); }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
