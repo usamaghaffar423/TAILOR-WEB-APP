@@ -80,6 +80,12 @@ export default function NewOrder() {
       if (latestOrder?.karigar_id) {
         setKarigarId(latestOrder.karigar_id);
       }
+      if (latestOrder?.deadline) {
+        setDeadline(latestOrder.deadline);
+      }
+      if (latestOrder?.items && latestOrder.items.length > 0) {
+        setItems(latestOrder.items.map((it) => ({ label: it.label, amount: String(it.amount) })));
+      }
     });
   }
 

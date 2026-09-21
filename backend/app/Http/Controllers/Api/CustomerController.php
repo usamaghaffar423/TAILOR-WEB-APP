@@ -96,7 +96,7 @@ class CustomerController extends Controller
                     ->groupBy(
                         'orders.id', 'orders.order_no', 'orders.status', 'orders.deadline',
                         'orders.assigned_date', 'orders.delivered_date', 'orders.total_amount',
-                        'orders.style', 'orders.karigar_id', 'karigars.name'
+                        'orders.style', 'orders.items', 'orders.karigar_id', 'karigars.name'
                     )
                     ->orderByDesc('orders.created_at')
                     ->get([
@@ -108,6 +108,7 @@ class CustomerController extends Controller
                         'orders.delivered_date',
                         'orders.total_amount',
                         'orders.style',
+                        'orders.items',
                         'orders.karigar_id',
                         'karigars.name as karigar_name',
                         DB::raw('COALESCE(SUM(payments.amount), 0) as paid_amount'),
@@ -115,6 +116,7 @@ class CustomerController extends Controller
 
                 $orders->each(function ($o) {
                     $o->style = is_string($o->style) ? json_decode($o->style, true) : $o->style;
+                    $o->items = is_string($o->items) ? json_decode($o->items, true) : $o->items;
                 });
 
                 return [

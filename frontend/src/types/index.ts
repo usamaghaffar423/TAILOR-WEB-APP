@@ -184,6 +184,7 @@ export interface CustomerOrderItem {
   delivered_date: string | null;
   total_amount: string;
   style: OrderStyle;
+  items: OrderItem[] | null;
   karigar_id: number;
   karigar_name: string;
   paid_amount: string;
