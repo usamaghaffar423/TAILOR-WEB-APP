@@ -163,6 +163,8 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
     },
     onSuccess: () => {
       toast.success('Order updated');
+      // Invalidate orders queries so the list and detail views show fresh data.
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
       // Measurement edits sync back to the customer's saved profile.
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       onSaved();

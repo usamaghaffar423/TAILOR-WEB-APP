@@ -54,7 +54,7 @@ export function OrderGroupRow({ customerName, customerId, orders, onViewCard, on
       {expanded && orders.map((o) => (
         <tr key={o.id} className="order-group-child">
           <td className="cell-mono" style={{ paddingLeft: 32 }}>{o.order_no}</td>
-          <td style={{ paddingLeft: 32 }} className="cell-muted">└</td>
+          <td style={{ paddingLeft: 32 }}>{o.customer_name}</td>
           <td>{o.karigar_name}</td>
           <td className="cell-mono cell-muted">{formatDateShort(o.assigned_date)}</td>
           <td className="cell-mono">{formatDateShort(o.deadline)}</td>

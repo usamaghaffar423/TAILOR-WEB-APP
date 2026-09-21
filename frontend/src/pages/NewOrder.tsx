@@ -13,7 +13,7 @@ import { settingsApi } from '@/api/settings';
 import { ordersApi } from '@/api/orders';
 import { uploadsApi } from '@/api/uploads';
 import { formatCurrency } from '@/lib/format';
-import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, supportsStyleCustomization, isWaistcoat } from '@/lib/styleFields';
+import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, supportsStyleCustomization, isWaistcoat, parseCustomStyleFields } from '@/lib/styleFields';
 import { ORDER_STATUS_OPTIONS, PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
 import type { Customer, OrderStatus, PaymentMethod } from '@/types';
 
@@ -59,12 +59,23 @@ export default function NewOrder() {
     setCPhone(customer.phone);
     setCAddress(customer.address || '');
     setCustSearch(`${customer.name} (${customer.customer_id})`);
-    customersApi.getMeasurements(customer.id).then((res) => {
-      const latest = [...res.data].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
-      if (latest) {
-        setTemplateKey(latest.template_key);
-        setFields(latest.fields);
-        setNotes(latest.notes || '');
+    customersApi.show(customer.id).then((res) => {
+      const { measurements, orders } = res.data;
+      const latestMeasurement = [...measurements].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
+      if (latestMeasurement) {
+        setTemplateKey(latestMeasurement.template_key);
+        setFields(latestMeasurement.fields);
+        setNotes(latestMeasurement.notes || '');
+      }
+      const latestOrder = [...orders].sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime())[0];
+      if (latestOrder?.style) {
+        const styleFromOrder: Record<string, string> = {};
+        STYLE_FIELDS.forEach((f) => {
+          const v = latestOrder.style[f.key];
+          if (v) styleFromOrder[f.key] = v as string;
+        });
+        setStyleValues(styleFromOrder);
+        setCustomStyleFields(parseCustomStyleFields(latestOrder.style.custom_fields));
       }
     });
   }

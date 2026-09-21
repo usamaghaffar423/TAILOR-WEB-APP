@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-19T11:41:00.117Z",
+  "generatedAt": "2026-09-21T08:05:09.400Z",
   "retrieval": "bounded-keyword-metadata-v2",
-  "entryCount": 9,
+  "entryCount": 17,
   "archivedEpisodeCount": 0,
   "entries": [
     {
@@ -148,6 +148,216 @@
       "evidence_count": 2,
       "token_estimate": 58,
       "updated_at": "2026-09-15T09:38:35.822Z"
+    },
+    {
+      "id": "iss-1069",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1069.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/lib/styleFields.ts",
+        "frontend/src/pages/NewOrder.tsx",
+        "frontend/src/components/orders/EditOrderModal.tsx",
+        "frontend/src/features/sales/pages/NewSalePage.tsx"
+      ],
+      "keywords": [
+        "frontend",
+        "src",
+        "lib",
+        "styleFields",
+        "frontend",
+        "src",
+        "pages",
+        "NewOrder",
+        "tsx",
+        "frontend",
+        "src",
+        "components",
+        "orders",
+        "EditOrderModal",
+        "tsx",
+        "frontend",
+        "src",
+        "features",
+        "sales",
+        "pages"
+      ],
+      "summary": "For waistcoat orders, replaced fixed style fields with custom key-value fields. Added isWaistcoat() helper to styleFields.ts. Updated NewOrder.tsx, EditOrderModal.tsx, NewSalePage.tsx to show only custom fields for waistcoat. Shalwar Qameez orders unchanged. TypeScript check passed.",
+      "valid_from_commit": "d5e2fef94d4be0b514e5baafa72cb29ab8c54d90",
+      "evidence_count": 5,
+      "token_estimate": 131,
+      "updated_at": "2026-09-19T11:51:32.883Z"
+    },
+    {
+      "id": "iss-1070",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1070.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/components/orders/OrderRow.tsx",
+        "frontend/src/components/orders/OrderGroupRow.tsx",
+        "frontend/src/pages/Orders.tsx"
+      ],
+      "keywords": [
+        "frontend",
+        "src",
+        "components",
+        "orders",
+        "OrderRow",
+        "tsx",
+        "frontend",
+        "src",
+        "components",
+        "orders",
+        "OrderGroupRow",
+        "tsx",
+        "frontend",
+        "src",
+        "pages",
+        "Orders",
+        "tsx"
+      ],
+      "summary": "Added edit button (pencil icon) to each order row in the orders table. Reuses existing EditOrderModal and EDIT_ICON. Changes: OrderRow.tsx, OrderGroupRow.tsx, Orders.tsx. TypeScript check passed.",
+      "valid_from_commit": "d5e2fef94d4be0b514e5baafa72cb29ab8c54d90",
+      "evidence_count": 4,
+      "token_estimate": 99,
+      "updated_at": "2026-09-20T10:03:12.049Z"
+    },
+    {
+      "id": "iss-1071",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1071.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/components/orders/OrderGroupRow.tsx"
+      ],
+      "keywords": [
+        "frontend",
+        "src",
+        "components",
+        "orders",
+        "OrderGroupRow",
+        "tsx"
+      ],
+      "summary": "Fixed OrderGroupRow.tsx:57 - replaced tree connector char with customer name",
+      "valid_from_commit": "358506b15d80fc4566c4edf0d449e147128ade35",
+      "evidence_count": 2,
+      "token_estimate": 50,
+      "updated_at": "2026-09-21T07:55:04.873Z"
+    },
+    {
+      "id": "iss-1072",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1072.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/pages/NewOrder.tsx"
+      ],
+      "keywords": [
+        "frontend",
+        "src",
+        "pages",
+        "NewOrder",
+        "tsx"
+      ],
+      "summary": "Fixed NewOrder.tsx selectCustomer: fetch customer detail with orders to load style customization from latest order",
+      "valid_from_commit": "358506b15d80fc4566c4edf0d449e147128ade35",
+      "evidence_count": 2,
+      "token_estimate": 73,
+      "updated_at": "2026-09-21T07:56:31.641Z"
+    },
+    {
+      "id": "iss-1073",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1073.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/components/orders/EditOrderModal.tsx"
+      ],
+      "keywords": [
+        "frontend",
+        "src",
+        "components",
+        "orders",
+        "EditOrderModal",
+        "tsx"
+      ],
+      "summary": "Added queryClient.invalidateQueries for orders query in EditOrderModal onSuccess handler",
+      "valid_from_commit": "358506b15d80fc4566c4edf0d449e147128ade35",
+      "evidence_count": 2,
+      "token_estimate": 53,
+      "updated_at": "2026-09-21T08:03:32.533Z"
+    },
+    {
+      "id": "module-neworder-customer-style-preload-when-selecting-existing-c-d42e19b675",
+      "type": "module",
+      "status": "verified",
+      "priority": "high",
+      "file": "modules/module-neworder-customer-style-preload-when-selecting-existing-c-d42e19b675.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/pages/NewOrder.tsx"
+      ],
+      "keywords": [],
+      "summary": "When selecting existing customer on NewOrder page, use customersApi.show() (not getMeasurements) to get both measurements AND style from latest order",
+      "valid_from_commit": "358506b15d80fc4566c4edf0d449e147128ade35",
+      "evidence_count": 2,
+      "token_estimate": 38,
+      "updated_at": "2026-09-21T07:56:31.695Z"
+    },
+    {
+      "id": "module-ordergrouprow-customer-name-display-in-ordergrouprow-expa-1d40a3b56a",
+      "type": "module",
+      "status": "verified",
+      "priority": "high",
+      "file": "modules/module-ordergrouprow-customer-name-display-in-ordergrouprow-expa-1d40a3b56a.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/components/orders/OrderGroupRow.tsx"
+      ],
+      "keywords": [],
+      "summary": "In OrderGroupRow expanded child rows, use o.customer_name for Customer column instead of tree connector characters like └ which may render as L in some fonts/browsers",
+      "valid_from_commit": "358506b15d80fc4566c4edf0d449e147128ade35",
+      "evidence_count": 2,
+      "token_estimate": 42,
+      "updated_at": "2026-09-21T07:55:14.374Z"
+    },
+    {
+      "id": "module-orders-added-edit-button-to-orders-table-rows-pattern-add-5c37467d28",
+      "type": "module",
+      "status": "verified",
+      "priority": "high",
+      "file": "modules/module-orders-added-edit-button-to-orders-table-rows-pattern-add-5c37467d28.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/components/orders/OrderRow.tsx",
+        "frontend/src/components/orders/OrderGroupRow.tsx",
+        "frontend/src/pages/Orders.tsx"
+      ],
+      "keywords": [],
+      "summary": "Added edit button to orders table rows. Pattern: add onEdit callback prop, fetch full Order via ordersApi.show(), render EditOrderModal.",
+      "valid_from_commit": "d5e2fef94d4be0b514e5baafa72cb29ab8c54d90",
+      "evidence_count": 4,
+      "token_estimate": 34,
+      "updated_at": "2026-09-20T10:03:12.105Z"
     },
     {
       "id": "project-architecture",
