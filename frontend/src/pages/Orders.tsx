@@ -60,7 +60,12 @@ export default function Orders() {
         map.set(o.customer_id, { customerName: o.customer_name, customerId: o.customer_id, orders: [o] });
       }
     }
-    return Array.from(map.values());
+    // When orders in a group have different customer names (data inconsistency),
+    // show all distinct names so the user sees the actual customers.
+    return Array.from(map.values()).map((g) => {
+      const distinctNames = [...new Set(g.orders.map((o) => o.customer_name))];
+      return { ...g, customerName: distinctNames.join(' / ') };
+    });
   }, [orders]);
 
   return (
