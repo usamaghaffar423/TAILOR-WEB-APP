@@ -77,6 +77,9 @@ export default function NewOrder() {
         setStyleValues(styleFromOrder);
         setCustomStyleFields(parseCustomStyleFields(latestOrder.style.custom_fields));
       }
+      if (latestOrder?.karigar_id) {
+        setKarigarId(latestOrder.karigar_id);
+      }
     });
   }
 
