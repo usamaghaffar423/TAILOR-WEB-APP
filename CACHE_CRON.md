@@ -21,9 +21,15 @@ directly.
      ```
      php /home/u463999436/domains/darkred-mosquito-143226.hostingersite.com/laravel/backend/artisan schedule:run >> /dev/null 2>&1
      ```
-     Adjust the path if the backend ever moves — it must point at the
-     `artisan` file inside `backend/`, not the repo root (this is a
-     monorepo; `artisan` only exists under `backend/`).
+     This path is confirmed correct. It must point at the `artisan` file inside
+     `backend/`, not the repo root (this is a monorepo; `artisan` only exists
+     under `backend/`).
+
+     Note: the public URL is `https://darkred-mosquito-143226.hostingersite.com/api/...`
+     even though the files live under `/laravel/backend/`, because the
+     subdomain's document root is already set to `laravel/backend/public`.
+     Requesting `/laravel/backend/public/api/ping` over HTTP returns 404 and
+     does **not** mean this path is wrong.
    - If hPanel's cron UI asks you to pick a PHP version separately from
      the command line, choose the same version the site actually runs on
      (currently PHP 8.3 — check `GET /api/ping` if unsure, it reports

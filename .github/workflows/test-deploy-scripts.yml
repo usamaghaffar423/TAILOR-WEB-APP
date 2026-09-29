@@ -1,0 +1,57 @@
+name: Test Deploy Scripts
+
+# The deploy workflow runs scripts against a live Hostinger account and a live
+# database. These checks cover the pure-shell logic those scripts rely on so a
+# mistake is caught on a runner instead of in production.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/**'
+  pull_request:
+    paths:
+      - '.github/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell syntax
+        run: |
+          set -euo pipefail
+          for f in .github/scripts/*.sh .github/test-*.sh; do
+            printf 'checking %s ... ' "$f"
+            bash -n "$f"
+            echo ok
+          done
+
+      - name: .env parsing
+        run: .github/test-deploy-script.sh
+
+      - name: Host key pinning
+        run: .github/test-hostkey-pinning.sh
+
+      - name: Deploy git logic
+        run: |
+          chmod +x .github/test-deploy-git.sh
+          .github/test-deploy-git.sh
+
+      - name: Workflow YAML is valid
+        run: |
+          set -euo pipefail
+          python3 -c "
+          import yaml, sys
+          d = yaml.safe_load(open('.github/workflows/deploy-backend.yml'))
+          assert 'jobs' in d and d['jobs'], 'no jobs defined'
+          print('deploy-backend.yml parses, jobs:', list(d['jobs']))
+          "

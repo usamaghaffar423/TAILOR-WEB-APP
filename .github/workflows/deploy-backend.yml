@@ -1,0 +1,154 @@
+name: Deploy Backend
+
+# Deploys backend/ to Hostinger over SSH whenever backend-relevant files
+# change on the default branch. Frontend-only pushes deliberately do not
+# trigger this — the API does not need rebuilding for a CSS change.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/scripts/deploy-backend.sh'
+      - '.github/workflows/deploy-backend.yml'
+  # Manual trigger for the first deploy and any recovery from a bad one.
+  workflow_dispatch:
+    inputs:
+      skip_db_backup:
+        description: 'Skip the pre-migration database backup'
+        required: false
+        type: boolean
+        default: false
+
+# Never let two deploys run at once: concurrent composer/migrate runs against
+# the same app directory corrupt vendor/ and the migration table.
+concurrency:
+  group: deploy-backend-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Hostinger
+    runs-on: ubuntu-latest
+    # The deploy script is streamed from this repo to the server over SSH.
+    # Least privilege: nothing beyond reading the repo is needed.
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate configuration
+        env:
+          # The SSH key is read here only to test whether it is non-empty.
+          # It is passed via env, never interpolated into the script body, so
+          # it cannot land in the command line or be echoed to the log.
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for var in DEPLOY_HOST DEPLOY_PORT DEPLOY_PATH; do
+            if [ -z "${!var}" ]; then
+              echo "::error::Repository variable '$var' is not set (Settings → Secrets and variables → Actions → Variables)."
+              missing=1
+            fi
+          done
+          if [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::Repository secret 'DEPLOY_SSH_KEY' is not set."
+            missing=1
+          fi
+          [ "$missing" -eq 0 ] || exit 1
+          echo "host=$DEPLOY_HOST port=$DEPLOY_PORT path=$DEPLOY_PATH"
+
+      - name: Set up SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          KNOWN_HOSTS_FINGERPRINT: ${{ vars.KNOWN_HOSTS_FINGERPRINT }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Pin the host key rather than trusting whatever answers first.
+          # KNOWN_HOSTS_FINGERPRINT is a comma-separated allowlist, and every
+          # key the server offers must appear in it. A server presenting any
+          # additional or substituted key fails the deploy instead of being
+          # trusted, so a MITM cannot silently take over the connection.
+          ssh-keyscan -p "$DEPLOY_PORT" "$DEPLOY_HOST" > /tmp/hostkeys 2>/dev/null
+          [ -s /tmp/hostkeys ] || { echo "::error::ssh-keyscan returned no keys for $DEPLOY_HOST:$DEPLOY_PORT"; exit 1; }
+
+          if [ -n "$KNOWN_HOSTS_FINGERPRINT" ]; then
+            bad=""
+            # `ssh-keygen -lf` prints "<bits> <fingerprint> <comment> (<type>)",
+            # so the fingerprint is the second field, not the first.
+            while read -r _bits fp _rest; do
+              [ -n "$fp" ] || continue
+              if ! echo ",$KNOWN_HOSTS_FINGERPRINT," | grep -qF ",$fp,"; then
+                bad="$bad $fp"
+              fi
+            done < <(ssh-keygen -lf /tmp/hostkeys)
+            if [ -n "$bad" ]; then
+              echo "::error::Unrecognised host key(s):$bad"
+              echo "::error::If Hostinger rotated its host keys, verify the new fingerprint from hPanel before updating KNOWN_HOSTS_FINGERPRINT."
+              exit 1
+            fi
+            echo "All offered host keys match the pinned fingerprints."
+          else
+            echo "::warning::KNOWN_HOSTS_FINGERPRINT not set — trusting host key on first contact."
+          fi
+
+          cat /tmp/hostkeys >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          SKIP_DB_BACKUP: ${{ inputs.skip_db_backup && '1' || '0' }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key \
+              -p "$DEPLOY_PORT" \
+              -o BatchMode=yes \
+              -o IdentitiesOnly=yes \
+              -o StrictHostKeyChecking=yes \
+              "${{ vars.DEPLOY_USER }}@$DEPLOY_HOST" \
+              'bash -s' < .github/scripts/deploy-backend.sh
+
+      - name: Verify API health
+        env:
+          HEALTHCHECK_URL: ${{ vars.HEALTHCHECK_URL }}
+        run: |
+          set -euo pipefail
+          url="$HEALTHCHECK_URL"
+          if [ -z "$url" ]; then
+            echo "::warning::HEALTHCHECK_URL not set, skipping post-deploy check."
+            exit 0
+          fi
+          ok=0
+          for attempt in 1 2 3 4 5; do
+            sleep 5
+            if body="$(curl -fsS --max-time 20 "$url" 2>&1)"; then
+              if echo "$body" | grep -q '"status":"ok"'; then
+                echo "API healthy after deploy: $body"
+                ok=1
+                break
+              fi
+              echo "Attempt $attempt: unexpected body: $body"
+            else
+              echo "Attempt $attempt: request failed: $body"
+            fi
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::API did not report healthy after 5 attempts — roll back or investigate."
+            exit 1
+          fi

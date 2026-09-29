@@ -1,0 +1,17 @@
+# Shell scripts and CI workflows must be LF-terminated.
+# A shebang line ending in CRLF (#!/usr/bin/env bash\r) fails outright on the
+# Linux runners and on Hostinger, so these are pinned. Scoped narrowly on
+# purpose — a repo-wide `* text=auto` would renormalise hundreds of existing
+# files and bury the meaningful changes.
+*.sh                 text eol=lf
+.github/workflows/*.yml text eol=lf
+
+# Binary assets must never be line-ending mangled.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
