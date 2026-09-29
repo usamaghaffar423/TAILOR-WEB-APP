@@ -18,8 +18,23 @@ import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
 import type { OrderStatus, OrderListItem } from '@/types';
 
 export default function Orders() {
-  const [searchParams] = useSearchParams();
-  const [q, setQ] = useState(searchParams.get('q') || '');
+  const [searchParams, setSearchParams] = useSearchParams();
+  // The term lives in the URL, not in local state. Orders stays mounted when
+  // only the query string changes, so a useState initialised from
+  // searchParams would keep its first value forever and drop whatever the
+  // Topbar search put in the URL. replace:true keeps keystrokes out of the
+  // history stack.
+  const q = searchParams.get('q') || '';
+  const setQ = (value: string) =>
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (value) next.set('q', value);
+        else next.delete('q');
+        return next;
+      },
+      { replace: true },
+    );
   const [status, setStatus] = useState<OrderStatus | ''>('');
   const [karigarId, setKarigarId] = useState('');
   const [from, setFrom] = useState('');
