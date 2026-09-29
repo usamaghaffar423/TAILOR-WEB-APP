@@ -44,10 +44,16 @@ jobs:
           # It is passed via env, never interpolated into the script body, so
           # it cannot land in the command line or be echoed to the log.
           # Its value is never printed — only set/unset.
+          #
+          # Connection settings resolve from the Variables tab first and fall
+          # back to the Secrets tab (`||` yields the first non-empty), so a
+          # setting works no matter which of the two tabs it was added under.
+          # The private key deliberately has NO fallback: it must be a secret,
+          # because variables are echoed into build output.
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
-          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST || secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || secrets.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH }}
         run: |
           set -euo pipefail
           missing=""
@@ -73,7 +79,7 @@ jobs:
 
           if [ -z "$DEPLOY_SSH_KEY" ]; then
             missing="$missing DEPLOY_SSH_KEY"
-            echo "| \`DEPLOY_SSH_KEY\` | missing | Settings → Secrets and variables → Actions → **Secrets** |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| \`DEPLOY_SSH_KEY\` | missing | Settings → Secrets and variables → Actions → **Secrets** (the private key) |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| \`DEPLOY_SSH_KEY\` | yes | |" >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -93,9 +99,9 @@ jobs:
       - name: Set up SSH
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
-          KNOWN_HOSTS_FINGERPRINT: ${{ vars.KNOWN_HOSTS_FINGERPRINT }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST || secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || secrets.DEPLOY_PORT }}
+          KNOWN_HOSTS_FINGERPRINT: ${{ vars.KNOWN_HOSTS_FINGERPRINT || secrets.KNOWN_HOSTS_FINGERPRINT }}
         run: |
           set -euo pipefail
           install -m 700 -d ~/.ssh
@@ -135,10 +141,10 @@ jobs:
 
       - name: Deploy
         env:
-          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
-          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
-          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST || secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || secrets.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER || secrets.DEPLOY_USER }}
           SKIP_DB_BACKUP: ${{ inputs.skip_db_backup && '1' || '0' }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
@@ -148,12 +154,12 @@ jobs:
               -o BatchMode=yes \
               -o IdentitiesOnly=yes \
               -o StrictHostKeyChecking=yes \
-              "${{ vars.DEPLOY_USER }}@$DEPLOY_HOST" \
+              "$DEPLOY_USER@$DEPLOY_HOST" \
               'bash -s' < .github/scripts/deploy-backend.sh
 
       - name: Verify API health
         env:
-          HEALTHCHECK_URL: ${{ vars.HEALTHCHECK_URL }}
+          HEALTHCHECK_URL: ${{ vars.HEALTHCHECK_URL || secrets.HEALTHCHECK_URL }}
         run: |
           set -euo pipefail
           url="$HEALTHCHECK_URL"
