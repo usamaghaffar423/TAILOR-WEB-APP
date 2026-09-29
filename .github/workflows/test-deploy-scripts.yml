@@ -36,15 +36,17 @@ jobs:
           done
 
       - name: .env parsing
-        run: .github/test-deploy-script.sh
+        # Invoked through bash rather than directly: the executable bit is set
+        # on the scripts, but relying on it means a plain re-checkout on a
+        # filesystem that drops the bit (Windows, some network mounts) breaks
+        # the run for a reason unrelated to what is being tested.
+        run: bash .github/test-deploy-script.sh
 
       - name: Host key pinning
-        run: .github/test-hostkey-pinning.sh
+        run: bash .github/test-hostkey-pinning.sh
 
       - name: Deploy git logic
-        run: |
-          chmod +x .github/test-deploy-git.sh
-          .github/test-deploy-git.sh
+        run: bash .github/test-deploy-git.sh
 
       - name: Workflow YAML is valid
         run: |

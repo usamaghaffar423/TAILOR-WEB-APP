@@ -43,25 +43,52 @@ jobs:
           # The SSH key is read here only to test whether it is non-empty.
           # It is passed via env, never interpolated into the script body, so
           # it cannot land in the command line or be echoed to the log.
+          # Its value is never printed — only set/unset.
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
           DEPLOY_PORT: ${{ vars.DEPLOY_PORT }}
           DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
         run: |
           set -euo pipefail
-          missing=0
+          missing=""
+
+          # Written to the run summary because the API strips logs from
+          # unauthenticated readers, and a missing variable is exactly the
+          # kind of failure an operator needs to read without a token.
+          {
+            echo "### Deploy configuration"
+            echo
+            echo "| Setting | Set? | Where to add |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
           for var in DEPLOY_HOST DEPLOY_PORT DEPLOY_PATH; do
             if [ -z "${!var}" ]; then
-              echo "::error::Repository variable '$var' is not set (Settings → Secrets and variables → Actions → Variables)."
-              missing=1
+              missing="$missing $var"
+              echo "| \`$var\` | missing | Settings → Secrets and variables → Actions → **Variables** |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| \`$var\` | yes | |" >> "$GITHUB_STEP_SUMMARY"
             fi
           done
+
           if [ -z "$DEPLOY_SSH_KEY" ]; then
-            echo "::error::Repository secret 'DEPLOY_SSH_KEY' is not set."
-            missing=1
+            missing="$missing DEPLOY_SSH_KEY"
+            echo "| \`DEPLOY_SSH_KEY\` | missing | Settings → Secrets and variables → Actions → **Secrets** |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| \`DEPLOY_SSH_KEY\` | yes | |" >> "$GITHUB_STEP_SUMMARY"
           fi
-          [ "$missing" -eq 0 ] || exit 1
-          echo "host=$DEPLOY_HOST port=$DEPLOY_PORT path=$DEPLOY_PATH"
+
+          if [ -n "$missing" ]; then
+            echo
+            echo "**Not set:** $missing" >> "$GITHUB_STEP_SUMMARY"
+            for v in $missing; do
+              echo "::error::Repository $v is not set — see the run summary for details."
+            done
+            exit 1
+          fi
+
+          echo
+          echo "All settings present. host=$DEPLOY_HOST port=$DEPLOY_PORT" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up SSH
         env:
