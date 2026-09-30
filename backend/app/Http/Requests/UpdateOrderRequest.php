@@ -14,6 +14,10 @@ class UpdateOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // An order can be moved to a different customer — that is the only
+            // way to split a record the old phone-dedup overwrite collapsed
+            // two people into (see OrderController::update()).
+            'customer_id' => ['sometimes', 'integer', 'exists:customers,id'],
             'karigar_id' => ['required', 'integer', 'exists:karigars,id'],
             'assigned_date' => ['sometimes', 'date'],
             'deadline' => ['required', 'date'],

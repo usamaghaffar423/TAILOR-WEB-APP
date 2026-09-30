@@ -23,6 +23,7 @@ export interface CreateOrderPayload {
 }
 
 export interface UpdateOrderPayload {
+  customer_id?: number;
   karigar_id?: number;
   assigned_date?: string;
   deadline?: string;

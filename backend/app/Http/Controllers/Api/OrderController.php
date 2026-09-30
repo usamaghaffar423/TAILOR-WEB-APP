@@ -275,6 +275,21 @@ class OrderController extends Controller
                 );
             }
 
+            // Move the order to another customer. This is how a record the old
+            // phone-dedup overwrite collapsed two people into gets split back
+            // apart: reassign one of the orders (and its snapshot) to the
+            // person it actually belongs to. Applied after the measurement
+            // push-back above so profile writes still land on the customer the
+            // order was filed under.
+            $customerChanged = false;
+            if ($request->has('customer_id')) {
+                $newCustomerId = (int) $request->input('customer_id');
+                if ($newCustomerId !== (int) $order->customer_id) {
+                    $order->customer_id = $newCustomerId;
+                    $customerChanged = true;
+                }
+            }
+
             $order->save();
 
             Sale::where('legacy_order_id', $order->id)->update([
@@ -285,7 +300,10 @@ class OrderController extends Controller
             ]);
 
             $this->cacheBuster->bustOrders();
-            if ($touchesMeasurement) {
+            if ($touchesMeasurement || $customerChanged) {
+                // Both cached customer show() and the customer list embed this
+                // order's membership, and the JOINed name on the orders list
+                // changes too (bustOrders above covers that one).
                 $this->cacheBuster->bustCustomers();
             }
 

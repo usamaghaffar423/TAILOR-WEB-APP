@@ -32,6 +32,21 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
   const [deadline, setDeadline] = useState(toDateInputValue(order.deadline));
   const [status, setStatus] = useState<OrderStatus>(order.status);
 
+  // ---- Customer ----
+  // An order can be moved to a different customer. That is how a record the
+  // old phone-dedup overwrite collapsed two people into is split apart: pick
+  // the person the order really belongs to and the Orders list regroups under
+  // two names instead of one.
+  const [customerId, setCustomerId] = useState(order.customer_id);
+  const [customerLabel, setCustomerLabel] = useState(order.customer?.name || `Customer #${order.customer_id}`);
+  const [custSearch, setCustSearch] = useState('');
+  const { data: custResultsRes } = useQuery({
+    queryKey: ['customers', custSearch],
+    queryFn: () => customersApi.index(custSearch),
+    enabled: custSearch.trim().length > 0,
+  });
+  const customerMoved = customerId !== order.customer_id;
+
   const [items, setItems] = useState<{ label: string; amount: string }[]>(() =>
     order.items && order.items.length > 0
       ? order.items.map((it) => ({ label: it.label, amount: String(it.amount) }))
@@ -138,6 +153,7 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
         .map((it) => ({ label: it.label.trim(), amount: parseFloat(it.amount) }));
 
       await ordersApi.update(order.id, {
+        ...(customerMoved ? { customer_id: customerId } : {}),
         karigar_id: karigarId,
         assigned_date: assignedDate,
         deadline,
@@ -162,7 +178,7 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
       }
     },
     onSuccess: () => {
-      toast.success('Order updated');
+      toast.success(customerMoved ? `${order.order_no} moved to ${customerLabel}` : 'Order updated');
       // Invalidate orders queries so the list and detail views show fresh data.
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       // Measurement edits sync back to the customer's saved profile.
@@ -207,6 +223,39 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
       }
     >
       <div className="form-grid cols-2">
+        <div className="field span-2">
+          <label>Customer</label>
+          <input
+            type="text"
+            placeholder="Search name, phone, or customer ID to move this order to another customer…"
+            value={custSearch}
+            onChange={(e) => setCustSearch(e.target.value)}
+          />
+          {custSearch.trim() && (
+            <div style={{ maxHeight: 160, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, marginTop: 6 }}>
+              {(custResultsRes?.data.length ?? 0) === 0 ? (
+                <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-faint)' }}>No matching customer — add them from the Customers page first.</div>
+              ) : (
+                custResultsRes!.data.map((c) => (
+                  <div
+                    key={c.id}
+                    style={{ padding: '10px 12px', fontSize: 12.5, cursor: 'pointer', borderBottom: '1px solid var(--border)' }}
+                    onClick={() => {
+                      setCustomerId(c.id);
+                      setCustomerLabel(c.name);
+                      setCustSearch('');
+                    }}
+                  >
+                    <b>{c.name}</b> <span style={{ color: 'var(--text-faint)' }}>{c.customer_id} · {c.phone}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+          <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-faint)' }}>
+            {customerMoved ? `Will move from ${order.customer?.name || `#${order.customer_id}`} to ${customerLabel} on save.` : `${customerLabel} · ${order.customer?.phone || 'no phone'}`}
+          </div>
+        </div>
         <div className="field">
           <label>Karigar</label>
           <Dropdown
