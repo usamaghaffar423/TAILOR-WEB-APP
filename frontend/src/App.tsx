@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { lazy, Suspense, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth';
 import { authApi } from '@/api/auth';
 import { AppShell } from '@/components/layout/AppShell';
@@ -38,6 +39,44 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Stale sessions are how "still broken" reports happen: an open tab keeps
+// running the bundle it loaded hours ago, so fixes never reach it until the
+// user happens to reload. Poll the shell for a newer build and offer a
+// refresh — never force one, the user may have unsaved form state.
+function useAppUpdateCheck() {
+  useEffect(() => {
+    const loaded = document.documentElement.outerHTML.match(/assets\/index-[\w-]+\.js/)?.[0];
+    if (!loaded || import.meta.env.DEV) return;
+    let notified = false;
+    const check = async () => {
+      if (notified) return;
+      try {
+        const res = await fetch(`/?build=${Date.now()}`, { cache: 'no-store' });
+        const html = await res.text();
+        const latest = html.match(/assets\/index-[\w-]+\.js/)?.[0];
+        if (latest && latest !== loaded) {
+          notified = true;
+          toast.info('A newer version of the app is live', {
+            description: 'Refresh to load the latest fixes.',
+            duration: Infinity,
+            action: { label: 'Refresh', onClick: () => window.location.reload() },
+          });
+        }
+      } catch {
+        // Offline or dev-server hiccup — silently retry on the next tick.
+      }
+    };
+    const interval = setInterval(check, 60_000);
+    const onVisible = () => { if (!document.hidden) check(); };
+    document.addEventListener('visibilitychange', onVisible);
+    check();
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
+}
 
 // Auth guard — wraps all protected routes. A token alone in localStorage
 // doesn't carry the admin/shop payload, so hydrate it via /auth/me before
@@ -104,6 +143,7 @@ const router = createBrowserRouter([
 ]);
 
 export default function App() {
+  useAppUpdateCheck();
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
