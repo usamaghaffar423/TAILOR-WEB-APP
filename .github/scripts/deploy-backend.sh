@@ -257,7 +257,15 @@ log "rebuilding caches"
 $PHP_BIN artisan config:clear
 $PHP_BIN artisan config:cache
 $PHP_BIN artisan route:cache
-$PHP_BIN artisan view:cache
+# view:cache walks resources/views with Symfony's Finder, which throws
+# "directory does not exist" when the path is absent. This app serves a JSON
+# API with no Blade views, so there is nothing to compile — compile only when
+# the directory is actually there.
+if [ -d resources/views ]; then
+  $PHP_BIN artisan view:cache
+else
+  log "no resources/views directory — skipping view:cache"
+fi
 
 # ---------------------------------------------------------------------------
 # 8. Report
