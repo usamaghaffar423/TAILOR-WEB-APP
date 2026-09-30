@@ -149,13 +149,25 @@ jobs:
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          ssh -i ~/.ssh/deploy_key \
-              -p "$DEPLOY_PORT" \
-              -o BatchMode=yes \
-              -o IdentitiesOnly=yes \
-              -o StrictHostKeyChecking=yes \
-              "$DEPLOY_USER@$DEPLOY_HOST" \
-              'bash -s' < .github/scripts/deploy-backend.sh
+          # This step's env lives on the runner, but the script executes on the
+          # server: `ssh host 'bash -s'` gives the remote shell a clean
+          # environment (SSH does not forward variables, and a shared-hosting
+          # account cannot widen AcceptEnv in sshd_config). Forwarding the
+          # values as leading export lines on the same stdin stream keeps them
+          # inside the encrypted connection — never as a command argument, so
+          # they cannot leak into the log or `ps`.
+          {
+            for name in DEPLOY_PATH DEPLOY_USER SKIP_DB_BACKUP GITHUB_REF_NAME; do
+              printf 'export %s=%q\n' "$name" "${!name}"
+            done
+            cat .github/scripts/deploy-backend.sh
+          } | ssh -i ~/.ssh/deploy_key \
+                  -p "$DEPLOY_PORT" \
+                  -o BatchMode=yes \
+                  -o IdentitiesOnly=yes \
+                  -o StrictHostKeyChecking=yes \
+                  "$DEPLOY_USER@$DEPLOY_HOST" \
+                  'bash -s'
 
       - name: Verify API health
         env:
