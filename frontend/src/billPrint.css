@@ -204,6 +204,52 @@
   font-weight: 600;
 }
 
+/*
+ * Tailoring bills (Customer Bill + Karigar Bill) render one size up — the
+ * shop asked for ~2px more legible text. Only font-size moves, so the
+ * label/value columns, spacing and margins stay exactly where they were.
+ * POS receipts keep the original sizes.
+ */
+.bill-print--tailoring {
+  font-size: 16px;
+}
+
+.bill-print--tailoring .bill-shop {
+  font-size: 22px;
+}
+
+.bill-print--tailoring .bill-shop-meta {
+  font-size: 14px;
+}
+
+.bill-print--tailoring .bill-row {
+  font-size: 16px;
+}
+
+.bill-print--tailoring .bill-total {
+  font-size: 18px;
+}
+
+.bill-print--tailoring .bill-section {
+  font-size: 14px;
+}
+
+.bill-print--tailoring .bill-group-heading {
+  font-size: 14px;
+}
+
+.bill-print--tailoring .bill-item-detail {
+  font-size: 14px;
+}
+
+.bill-print--tailoring .bill-note {
+  font-size: 15px;
+}
+
+.bill-print--tailoring .bill-footer {
+  font-size: 15px;
+}
+
 /* ==========================================================================
  * Thermal print — 80mm roll, ~72mm printable text column.
  *
@@ -337,5 +383,46 @@
     font-size: 10px;
     font-weight: 600;
     margin-top: 3mm;
+  }
+
+  /* Same +2px lift on the thermal roll for the two tailoring bills. */
+  .bill-print--tailoring {
+    font-size: 13px;
+  }
+
+  .bill-print--tailoring .bill-shop {
+    font-size: 15px;
+  }
+
+  .bill-print--tailoring .bill-shop-meta {
+    font-size: 12px;
+  }
+
+  .bill-print--tailoring .bill-row {
+    font-size: 13px;
+  }
+
+  .bill-print--tailoring .bill-total {
+    font-size: 15px;
+  }
+
+  .bill-print--tailoring .bill-section {
+    font-size: 12px;
+  }
+
+  .bill-print--tailoring .bill-group-heading {
+    font-size: 14px;
+  }
+
+  .bill-print--tailoring .bill-item-detail {
+    font-size: 12px;
+  }
+
+  .bill-print--tailoring .bill-note {
+    font-size: 12px;
+  }
+
+  .bill-print--tailoring .bill-footer {
+    font-size: 12px;
   }
 }

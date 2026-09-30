@@ -71,7 +71,7 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
       {isLoading && <p style={{ color: 'var(--text-faint)' }}>Loading bill…</p>}
       {error && <p style={{ color: 'var(--red-bright)' }}>Failed to load order.</p>}
       {order && (
-        <div className="bill-print" ref={billRef}>
+        <div className="bill-print bill-print--tailoring" ref={billRef}>
           {/* Header — logo front and center */}
           <div className="bill-head">
             {logoUrl ? (

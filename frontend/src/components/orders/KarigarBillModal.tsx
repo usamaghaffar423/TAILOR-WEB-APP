@@ -70,7 +70,7 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
       {isLoading && <p style={{ color: 'var(--text-faint)' }}>لوڈ ہو رہا ہے…</p>}
       {error && <p style={{ color: 'var(--red-bright)' }}>آرڈر لوڈ نہیں ہو سکا۔</p>}
       {order && (
-        <div className="bill-print bill-print--urdu" dir="rtl" ref={billRef}>
+        <div className="bill-print bill-print--urdu bill-print--tailoring" dir="rtl" ref={billRef}>
           {/* Minimal work-order header — order no + customer + deadline */}
           <div className="bill-row"><span>آرڈر نمبر</span><b><bdi>{order.order_no}</bdi></b></div>
           <div className="bill-row"><span>گاہک</span><b><bdi>{order.customer?.name || '—'}</bdi></b></div>
