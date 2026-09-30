@@ -109,6 +109,14 @@ export function KarigarBillModal({ orderId, onClose }: KarigarBillModalProps) {
               ))}
             </>
           )}
+
+          {order.measurement_snapshot.notes && (
+            <>
+              <hr className="bill-divider" />
+              <div className="bill-section">نوٹس</div>
+              <div className="bill-text"><bdi>{order.measurement_snapshot.notes}</bdi></div>
+            </>
+          )}
         </div>
       )}
     </Dialog>

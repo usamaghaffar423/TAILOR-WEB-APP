@@ -116,6 +116,14 @@ class OrderController extends Controller
                 ->first();
             $template = MeasurementTemplate::query()->where('template_key', $templateKey)->first();
 
+            // The note the form submitted for this order wins; the saved
+            // measurement row is the fallback for callers that don't send
+            // notes on create.
+            $notes = $request->input('measurement_notes');
+            if (! is_string($notes) || trim($notes) === '') {
+                $notes = $measurement?->notes;
+            }
+
             $order = Order::query()->create([
                 'order_no' => $this->nextOrderNo(),
                 'customer_id' => $request->input('customer_id'),
@@ -125,7 +133,7 @@ class OrderController extends Controller
                     'template_key' => $templateKey,
                     'template_label' => $template->label ?? $templateKey,
                     'fields' => $measurement?->fields ?? [],
-                    'notes' => $measurement?->notes,
+                    'notes' => $notes,
                 ],
                 'karigar_id' => $request->input('karigar_id'),
                 'assigned_date' => Carbon::today()->toDateString(),

@@ -20,6 +20,7 @@ export interface CreateOrderPayload {
   total_amount: number;
   advance_amount?: number;
   advance_method?: string;
+  measurement_notes?: string | null;
 }
 
 export interface UpdateOrderPayload {

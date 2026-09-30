@@ -16,6 +16,7 @@ class StoreOrderRequest extends FormRequest
         return [
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
             'template_key' => ['required', 'string'],
+            'measurement_notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'karigar_id' => ['required', 'integer', 'exists:karigars,id'],
             'style' => ['required', 'array'],
             'items' => ['sometimes', 'array'],

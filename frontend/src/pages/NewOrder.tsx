@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -53,6 +53,11 @@ export default function NewOrder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preCustomerId]);
 
+  // Notes already typed by the shop owner must survive the (async) customer
+  // preload below — it lands whenever the request resolves and used to wipe
+  // whatever was in the box, so the note never reached the order.
+  const notesTouchedRef = useRef(false);
+
   function selectCustomer(customer: Customer) {
     setSelectedCustomer(customer);
     setCName(customer.name);
@@ -65,7 +70,7 @@ export default function NewOrder() {
       if (latestMeasurement) {
         setTemplateKey(latestMeasurement.template_key);
         setFields(latestMeasurement.fields);
-        setNotes(latestMeasurement.notes || '');
+        if (!notesTouchedRef.current) setNotes(latestMeasurement.notes || '');
       }
       const latestOrder = [...orders].sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime())[0];
       if (latestOrder?.style) {
@@ -197,6 +202,7 @@ export default function NewOrder() {
       const orderRes = await ordersApi.store({
         customer_id: customerId,
         template_key: templateKey,
+        measurement_notes: notes.trim() || null,
         style,
         items: orderItems,
         karigar_id: karigarId as number,
@@ -446,7 +452,7 @@ export default function NewOrder() {
               className="notes-big"
               placeholder="Fit preferences, special instructions, style notes — anything the karigar or customer bill should carry..."
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e) => { notesTouchedRef.current = true; setNotes(e.target.value); }}
             />
           </div>
         </div>
