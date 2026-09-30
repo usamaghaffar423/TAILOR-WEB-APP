@@ -13,7 +13,7 @@ import { settingsApi } from '@/api/settings';
 import { ordersApi } from '@/api/orders';
 import { uploadsApi } from '@/api/uploads';
 import { formatCurrency } from '@/lib/format';
-import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, supportsStyleCustomization, isWaistcoat, parseCustomStyleFields } from '@/lib/styleFields';
+import { STYLE_FIELDS, styleFieldOptions, styleSelectionValue, supportsStyleCustomization, isWaistcoat, parseCustomStyleFields } from '@/lib/styleFields';
 import { ORDER_STATUS_OPTIONS, PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
 import type { Customer, OrderStatus, PaymentMethod } from '@/types';
 
@@ -374,7 +374,7 @@ export default function NewOrder() {
             <>
             <div className="form-grid cols-2" style={{ marginTop: 16 }}>
               {STYLE_FIELDS.map((f) => {
-                const options = STYLE_FIELD_OPTIONS[f.key] || [];
+                const options = styleFieldOptions(f.key);
                 return (
                   <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
                     <label>{f.label}</label>
@@ -387,7 +387,7 @@ export default function NewOrder() {
                     ) : (
                       <Dropdown
                         value={styleValues[f.key] || ''}
-                        onChange={(v) => setStyleField(f.key, v)}
+                        onChange={(v) => setStyleField(f.key, styleSelectionValue(v))}
                         options={options}
                       />
                     )}

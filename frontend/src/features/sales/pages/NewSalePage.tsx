@@ -11,7 +11,7 @@ import { customersApi } from '@/api/customers';
 import { karigarsApi } from '@/api/karigars';
 import { settingsApi } from '@/api/settings';
 import { formatCurrency } from '@/lib/format';
-import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, supportsStyleCustomization, isWaistcoat } from '@/lib/styleFields';
+import { STYLE_FIELDS, styleFieldOptions, styleSelectionValue, supportsStyleCustomization, isWaistcoat } from '@/lib/styleFields';
 import { PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
 import { useRetailProducts } from '@/features/retail/hooks/useRetailProducts';
 import { salesApi } from '../api/sales';
@@ -521,7 +521,7 @@ export default function NewSalePage() {
                         /* Shalwar Qameez: fixed fields */
                         <div className="form-grid cols-2" style={{ marginTop: 12 }}>
                           {STYLE_FIELDS.map((f) => {
-                            const options = STYLE_FIELD_OPTIONS[f.key] || [];
+                            const options = styleFieldOptions(f.key);
                             return (
                               <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
                                 <label>{f.label}</label>
@@ -534,7 +534,7 @@ export default function NewSalePage() {
                                 ) : (
                                   <Dropdown
                                     value={line.styleValues[f.key] || ''}
-                                    onChange={(v) => updateLine(line.uid, { styleValues: { ...line.styleValues, [f.key]: v } })}
+                                    onChange={(v) => updateLine(line.uid, { styleValues: { ...line.styleValues, [f.key]: styleSelectionValue(v) } })}
                                     options={options}
                                   />
                                 )}

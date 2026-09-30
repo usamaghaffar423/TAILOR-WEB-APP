@@ -14,7 +14,7 @@ import { uploadsApi } from '@/api/uploads';
 import { useAuthedImage } from '@/lib/useAuthedImage';
 import { toDateInputValue, formatCurrency } from '@/lib/format';
 import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
-import { STYLE_FIELDS, STYLE_FIELD_OPTIONS, parseCustomStyleFields, supportsStyleCustomization, isWaistcoat } from '@/lib/styleFields';
+import { STYLE_FIELDS, styleFieldOptions, styleSelectionValue, parseCustomStyleFields, supportsStyleCustomization, isWaistcoat } from '@/lib/styleFields';
 import type { Order, OrderStatus } from '@/types';
 
 interface EditOrderModalProps {
@@ -391,7 +391,7 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
             <>
             <div className="form-grid cols-2" style={{ marginTop: 12 }}>
               {STYLE_FIELDS.map((f) => {
-                const options = STYLE_FIELD_OPTIONS[f.key] || [];
+                const options = styleFieldOptions(f.key);
                 return (
                   <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
                     <label>{f.label}</label>
@@ -404,7 +404,7 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
                     ) : (
                       <Dropdown
                         value={styleValues[f.key] || ''}
-                        onChange={(v) => setStyleField(f.key, v)}
+                        onChange={(v) => setStyleField(f.key, styleSelectionValue(v))}
                         options={options}
                       />
                     )}

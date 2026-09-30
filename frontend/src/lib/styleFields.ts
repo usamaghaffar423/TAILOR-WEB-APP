@@ -46,6 +46,23 @@ export const STYLE_FIELD_OPTIONS: Partial<Record<keyof OrderStyle, string[]>> = 
   design: ['Yes', 'No'],
 };
 
+// Appended to every style dropdown. The Dropdown component has no way to go
+// back to "Select…" once a value is picked, so choosing Delete clears the
+// field: an empty value is dropped at save time (only filled fields are sent)
+// and the karigar bill prints a style row only for fields that hold a value —
+// so a deleted customization never reaches the bill.
+export const STYLE_DELETE_OPTION = 'Delete';
+
+/** Options for one style dropdown — the field's own list, plus Delete last. */
+export function styleFieldOptions(key: keyof OrderStyle): string[] {
+  return [...(STYLE_FIELD_OPTIONS[key] ?? []), STYLE_DELETE_OPTION];
+}
+
+/** Maps a dropdown selection to the value to store; Delete clears the field. */
+export function styleSelectionValue(selection: string): string {
+  return selection === STYLE_DELETE_OPTION ? '' : selection;
+}
+
 export interface CustomStyleField {
   label: string;
   value: string;
