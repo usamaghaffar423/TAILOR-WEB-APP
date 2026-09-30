@@ -16,7 +16,7 @@ import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
 import { EDIT_ICON, PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON, DELETE_ICON } from '@/lib/garmentIcons';
-import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
+import { STYLE_FIELDS, parseCustomStyleFields, printableStyleValue } from '@/lib/styleFields';
 import { formatCurrency, formatDate, formatDateShort } from '@/lib/format';
 
 export default function CustomerDetail() {
@@ -195,8 +195,14 @@ export default function CustomerDetail() {
               if (!latestOrder?.style) return null;
               const style = latestOrder.style;
               const styleRows: Array<[string, string]> = [
-                ...STYLE_FIELDS.filter((f) => style[f.key]).map((f): [string, string] => [f.label, style[f.key] as string]),
-                ...parseCustomStyleFields(style.custom_fields).map((f): [string, string] => [f.label, f.value]),
+                ...STYLE_FIELDS.flatMap((f): [string, string][] => {
+                  const value = printableStyleValue(style[f.key]);
+                  return value ? [[f.label, value]] : [];
+                }),
+                ...parseCustomStyleFields(style.custom_fields).flatMap((f): [string, string][] => {
+                  const value = printableStyleValue(f.value);
+                  return value ? [[f.label, value]] : [];
+                }),
               ];
               if (styleRows.length === 0) return null;
               return (

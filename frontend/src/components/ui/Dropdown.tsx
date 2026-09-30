@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 export interface DropdownOption {
   value: string;
   label: string;
+  /** Renders the option in the brand red (destructive actions like Delete). */
+  danger?: boolean;
 }
 
 interface DropdownProps {
@@ -26,6 +28,24 @@ export function Dropdown({ value, onChange, options, placeholder = 'Select…', 
   const rootRef = useRef<HTMLDivElement>(null);
   const normalized: DropdownOption[] = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
   const selected = normalized.find((o) => o.value === value);
+
+  const renderOption = (o: DropdownOption) => (
+    <div
+      key={o.value}
+      role="option"
+      aria-selected={o.value === value}
+      className={`dropdown-option${o.value === value ? ' selected' : ''}${o.danger ? ' danger' : ''}`}
+      onClick={() => { onChange(o.value); setOpen(false); }}
+    >
+      {o.label}
+    </div>
+  );
+
+  // Danger options (Delete) sit outside the scroll area so they stay visible
+  // no matter how many values a field has — they used to be the last row of a
+  // scrollable menu, which pushed them below the fold on long lists.
+  const dangerOptions = normalized.filter((o) => o.danger);
+  const listOptions = normalized.filter((o) => !o.danger);
 
   useEffect(() => {
     if (!open) return;
@@ -58,17 +78,10 @@ export function Dropdown({ value, onChange, options, placeholder = 'Select…', 
       </button>
       {open && (
         <div className="dropdown-menu" role="listbox">
-          {normalized.map((o) => (
-            <div
-              key={o.value}
-              role="option"
-              aria-selected={o.value === value}
-              className={`dropdown-option${o.value === value ? ' selected' : ''}`}
-              onClick={() => { onChange(o.value); setOpen(false); }}
-            >
-              {o.label}
-            </div>
-          ))}
+          <div className="dropdown-menu-scroll" role="presentation">
+            {listOptions.map(renderOption)}
+          </div>
+          {dangerOptions.map(renderOption)}
         </div>
       )}
     </div>

@@ -524,7 +524,18 @@ export default function NewSalePage() {
                             const options = styleFieldOptions(f.key);
                             return (
                               <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
-                                <label>{f.label}</label>
+                                <div className={f.freeText ? 'style-label-row' : undefined}>
+                                  <label>{f.label}</label>
+                                  {f.freeText && (
+                                    <button
+                                      type="button"
+                                      className="style-delete-btn"
+                                      onClick={() => updateLine(line.uid, { styleValues: { ...line.styleValues, [f.key]: '' } })}
+                                    >
+                                      Delete
+                                    </button>
+                                  )}
+                                </div>
                                 {f.freeText ? (
                                   <input
                                     type="text"

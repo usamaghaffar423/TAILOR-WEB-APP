@@ -321,6 +321,16 @@ nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shr
 .field.freetext input{border-style:dashed;}
 .field.freetext input:focus{border-style:solid;}
 
+/* Free-text style fields have no dropdown to hold a Delete row, so they carry
+   a red Delete action beside the label — same affordance, same colour. */
+.style-label-row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.style-delete-btn{
+  background:none; border:none; padding:0; cursor:pointer;
+  font-size:10.5px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase;
+  color:var(--red-bright);
+}
+.style-delete-btn:hover{text-decoration:underline;}
+
 /* Brand-styled dropdown — replaces native <select> so the open option list
    never falls back to the OS's blue accent color (unfixable via CSS on a
    real <select> in Chrome/Edge on Windows). */
@@ -340,11 +350,16 @@ nav.nav{padding:8px 14px; display:flex; flex-direction:column; gap:2px; flex-shr
 .dropdown-menu{
   position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
   background:var(--surface); border:1px solid var(--border-strong); border-radius:10px;
-  box-shadow:var(--shadow-sm), 0 4px 14px rgba(0,0,0,0.18); max-height:230px; overflow-y:auto; padding:5px;
+  box-shadow:var(--shadow-sm), 0 4px 14px rgba(0,0,0,0.18); padding:5px;
 }
+/* Values scroll inside the menu; danger rows (Delete) are pinned below the
+   scroll area so they are always visible, however long the option list is. */
+.dropdown-menu-scroll{max-height:230px; overflow-y:auto; padding-right:2px;}
 .dropdown-option{padding:8px 10px; border-radius:7px; font-size:13px; color:var(--text); cursor:pointer; transition:background .12s, color .12s;}
 .dropdown-option:hover{background:var(--red-pale); color:var(--red-bright);}
 .dropdown-option.selected{background:var(--red); color:#fff; font-weight:600;}
+.dropdown-option.danger{color:var(--red-bright); font-weight:700;}
+.dropdown-menu > .dropdown-option.danger{border-top:1px dashed var(--border-strong); margin-top:4px; border-radius:0 0 7px 7px;}
 
 /* Brand date input — shows dd/mm/yyyy regardless of browser/OS locale,
    while still using a real <input type="date"> underneath for the picker. */

@@ -53,14 +53,36 @@ export const STYLE_FIELD_OPTIONS: Partial<Record<keyof OrderStyle, string[]>> = 
 // so a deleted customization never reaches the bill.
 export const STYLE_DELETE_OPTION = 'Delete';
 
+/** One entry in a style dropdown. `danger` marks the red Delete action. */
+export interface StyleFieldOption {
+  value: string;
+  label: string;
+  danger?: boolean;
+}
+
 /** Options for one style dropdown — the field's own list, plus Delete last. */
-export function styleFieldOptions(key: keyof OrderStyle): string[] {
-  return [...(STYLE_FIELD_OPTIONS[key] ?? []), STYLE_DELETE_OPTION];
+export function styleFieldOptions(key: keyof OrderStyle): StyleFieldOption[] {
+  return [
+    ...(STYLE_FIELD_OPTIONS[key] ?? []).map((v): StyleFieldOption => ({ value: v, label: v })),
+    { value: STYLE_DELETE_OPTION, label: STYLE_DELETE_OPTION, danger: true },
+  ];
 }
 
 /** Maps a dropdown selection to the value to store; Delete clears the field. */
 export function styleSelectionValue(selection: string): string {
   return selection === STYLE_DELETE_OPTION ? '' : selection;
+}
+
+/**
+ * A style value worth showing on a bill, order card or WhatsApp text: never
+ * blank and never the Delete marker, so a field left empty — or cleared with
+ * Delete — stays off the printout entirely.
+ */
+export function printableStyleValue(value: string | undefined): string | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === STYLE_DELETE_OPTION) return null;
+  return trimmed;
 }
 
 export interface CustomStyleField {

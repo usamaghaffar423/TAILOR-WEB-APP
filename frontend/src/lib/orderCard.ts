@@ -1,7 +1,7 @@
 import type { Order, MeasurementTemplate, Customer, Karigar } from '@/types';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { STATUS_LABEL } from '@/components/ui/Badge';
-import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
+import { STYLE_FIELDS, parseCustomStyleFields, printableStyleValue } from '@/lib/styleFields';
 
 export function buildOrderWhatsAppText(
   order: Order,
@@ -36,8 +36,14 @@ export function buildOrderWhatsAppText(
   }
 
   const styleParts = [
-    ...STYLE_FIELDS.filter((f) => style[f.key]).map((f) => `${f.label}: ${style[f.key]}`),
-    ...parseCustomStyleFields(style.custom_fields).map((f) => `${f.label}: ${f.value}`),
+    ...STYLE_FIELDS.flatMap((f) => {
+      const value = printableStyleValue(style[f.key]);
+      return value ? [`${f.label}: ${value}`] : [];
+    }),
+    ...parseCustomStyleFields(style.custom_fields).flatMap((f) => {
+      const value = printableStyleValue(f.value);
+      return value ? [`${f.label}: ${value}`] : [];
+    }),
   ];
   if (styleParts.length) {
     lines.push('STYLE');

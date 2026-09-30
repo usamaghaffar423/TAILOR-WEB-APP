@@ -6,7 +6,7 @@ import { ordersApi } from '@/api/orders';
 import { settingsApi } from '@/api/settings';
 import { formatDate } from '@/lib/format';
 import { printBillElement } from '@/lib/printBill';
-import { STYLE_FIELDS, parseCustomStyleFields } from '@/lib/styleFields';
+import { STYLE_FIELDS, parseCustomStyleFields, printableStyleValue } from '@/lib/styleFields';
 import type { Order } from '@/types';
 import '@/billPrint.css';
 
@@ -16,12 +16,18 @@ interface KarigarBillModalProps {
 }
 
 // Style rows in Urdu, ordered for display — only fields the order actually
-// has a value for are shown.
+// has a value for are shown (empty fields and the Delete marker never print).
 function buildUrduStyleRows(order: Order) {
   const style = order.style || {};
   return [
-    ...STYLE_FIELDS.filter((f) => style[f.key]).map((f): [string, string] => [f.labelUrdu, style[f.key] as string]),
-    ...parseCustomStyleFields(style.custom_fields).map((f): [string, string] => [f.label, f.value]),
+    ...STYLE_FIELDS.flatMap((f): [string, string][] => {
+      const value = printableStyleValue(style[f.key]);
+      return value ? [[f.labelUrdu, value]] : [];
+    }),
+    ...parseCustomStyleFields(style.custom_fields).flatMap((f): [string, string][] => {
+      const value = printableStyleValue(f.value);
+      return value ? [[f.label, value]] : [];
+    }),
   ];
 }
 
