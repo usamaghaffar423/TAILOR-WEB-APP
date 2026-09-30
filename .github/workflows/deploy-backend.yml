@@ -172,6 +172,9 @@ jobs:
       - name: Verify API health
         env:
           HEALTHCHECK_URL: ${{ vars.HEALTHCHECK_URL || secrets.HEALTHCHECK_URL }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST || secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER || secrets.DEPLOY_USER }}
         run: |
           set -euo pipefail
           url="$HEALTHCHECK_URL"
@@ -179,21 +182,37 @@ jobs:
             echo "::warning::HEALTHCHECK_URL not set, skipping post-deploy check."
             exit 0
           fi
-          ok=0
-          for attempt in 1 2 3 4 5; do
-            sleep 5
-            if body="$(curl -fsS --max-time 20 "$url" 2>&1)"; then
-              if echo "$body" | grep -q '"status":"ok"'; then
-                echo "API healthy after deploy: $body"
-                ok=1
-                break
-              fi
-              echo "Attempt $attempt: unexpected body: $body"
-            else
-              echo "Attempt $attempt: request failed: $body"
+
+          # Probe from the runner first, but without -f: a blocked request
+          # still shows the status code and body instead of just
+          # "curl: (22)", which is the difference between a diagnosis and
+          # another blind iteration. Two user agents, because WAFs treat
+          # curl's default UA differently from a browser's.
+          tmp="$(mktemp)"
+          trap 'rm -f "$tmp"' EXIT
+          for ua in "curl" "Mozilla/5.0 (compatible; deploy-healthcheck)"; do
+            code="$(curl -sS -A "$ua" -o "$tmp" -w '%{http_code}' \
+                      --max-time 20 "$url" 2>/dev/null || true)"
+            body="$(head -c 300 "$tmp" 2>/dev/null || true)"
+            if [ "$code" = "200" ] && echo "$body" | grep -q '"status":"ok"'; then
+              echo "API healthy (checked from the runner): $body"
+              exit 0
             fi
+            echo "runner probe (UA $ua): HTTP ${code:-000} — $body"
           done
-          if [ "$ok" -ne 1 ]; then
-            echo "::error::API did not report healthy after 5 attempts — roll back or investigate."
-            exit 1
-          fi
+
+          # The runner's datacenter IP is refused by the host's bot protection,
+          # which says nothing about the app. Re-check from the server over
+          # SSH: same URL, real vhost, PHP-FPM and MySQL. The URL travels on
+          # the ssh stdin stream (export line + script), never as an argument.
+          echo "runner probe blocked or unhealthy — re-checking from the server"
+          {
+            printf 'export HEALTHCHECK_URL=%q\n' "$url"
+            cat .github/scripts/healthcheck.sh
+          } | ssh -i ~/.ssh/deploy_key \
+                  -p "$DEPLOY_PORT" \
+                  -o BatchMode=yes \
+                  -o IdentitiesOnly=yes \
+                  -o StrictHostKeyChecking=yes \
+                  "$DEPLOY_USER@$DEPLOY_HOST" \
+                  'bash -s'
