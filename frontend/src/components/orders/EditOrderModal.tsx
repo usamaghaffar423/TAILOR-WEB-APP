@@ -341,7 +341,7 @@ export function EditOrderModal({ order, open, onClose, onSaved }: EditOrderModal
         <textarea
           className="notes-big"
           style={{ marginTop: 12 }}
-          placeholder="Fit preferences, special instructions — anything the karigar or customer bill should carry…"
+          placeholder="Fit preferences, special instructions — anything the karigar bill should carry…"
           value={measurementNotes}
           onChange={(e) => setMeasurementNotes(e.target.value)}
         />

@@ -31,7 +31,7 @@ export function buildOrderWhatsAppText(
   if (meas && template) {
     lines.push('MEASUREMENTS');
     template.fields.forEach((f) => lines.push(`${f.label}: ${meas.fields?.[f.key] || '—'}`));
-    if (meas.notes) lines.push(`Notes: ${meas.notes}`);
+    if (audience === 'karigar' && meas.notes) lines.push(`Notes: ${meas.notes}`);
     lines.push('');
   }
 

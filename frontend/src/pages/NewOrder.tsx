@@ -455,7 +455,7 @@ export default function NewOrder() {
           <div className="field span-3">
             <textarea
               className="notes-big"
-              placeholder="Fit preferences, special instructions, style notes — anything the karigar or customer bill should carry..."
+              placeholder="Fit preferences, special instructions, style notes — anything the karigar bill should carry..."
               value={notes}
               onChange={(e) => { notesTouchedRef.current = true; setNotes(e.target.value); }}
             />

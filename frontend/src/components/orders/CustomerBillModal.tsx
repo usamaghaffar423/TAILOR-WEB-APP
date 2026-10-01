@@ -132,14 +132,6 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
             </>
           )}
 
-          {order.measurement_snapshot.notes && (
-            <>
-              <hr className="bill-divider" />
-              <div className="bill-section">Notes</div>
-              <div className="bill-text">{order.measurement_snapshot.notes}</div>
-            </>
-          )}
-
           <hr className="bill-divider" />
 
           <div className="bill-footer">Thank you for your order.</div>
