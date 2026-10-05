@@ -46,12 +46,10 @@ class SettingsController extends Controller
         try {
             $settings = ShopSettings::query()->find(1);
 
-            $settings->update([
-                'name' => $request->input('name'),
-                'address' => $request->input('address'),
-                'phone' => $request->input('phone'),
-                'theme_default' => $request->input('theme_default'),
-            ]);
+            // Persist only the fields that were sent: $request->input() would
+            // hand back null for an absent key, and theme_default is a NOT
+            // NULL enum, so saving shop details alone would abort the write.
+            $settings->update($request->safe()->only(['name', 'address', 'phone', 'theme_default']));
 
             $this->cacheBuster->bustSettings();
 

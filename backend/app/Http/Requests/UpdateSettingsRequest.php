@@ -13,11 +13,15 @@ class UpdateSettingsRequest extends FormRequest
 
     public function rules(): array
     {
+        // Partial updates only: the settings screen PUTs {name,phone,address}
+        // from "Save Shop Details" and {theme_default} from the theme chip as
+        // two separate payloads, so each field is validated only when sent —
+        // requiring both made every partial payload fail with a 422.
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'address' => ['nullable', 'string', 'max:500'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'theme_default' => ['required', 'in:dark,light'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'address' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'theme_default' => ['sometimes', 'required', 'in:dark,light'],
         ];
     }
 }
