@@ -21,6 +21,13 @@ export const authApi = {
   logout: () =>
     apiFetch<{ message: string }>('/auth/logout', { method: 'POST' }),
 
-  me: () =>
-    apiFetch<{ data: MeResponse }>('/auth/me'),
+  // Bounded wait: fetch has no timeout of its own, so a hung backend would
+  // otherwise leave the app waiting on a blank screen forever.
+  me: () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20_000);
+    return apiFetch<{ data: MeResponse }>('/auth/me', { signal: controller.signal }).finally(() =>
+      clearTimeout(timer)
+    );
+  },
 };

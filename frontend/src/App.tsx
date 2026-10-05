@@ -78,6 +78,28 @@ function useAppUpdateCheck() {
   }, []);
 }
 
+// Shown while /auth/me is in flight. Returning nothing here is what produced
+// the reported "empty screen": a slow or unreachable backend meant the guard
+// rendered an unstyled blank page with no feedback and no way out.
+function SessionLoading() {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <p style={{ color: 'var(--text-faint)' }}>Connecting to the server…</p>
+    </div>
+  );
+}
+
+// The session probe failed (backend down, timeout, network blocked). Give the
+// user a retry instead of an empty shell with no admin payload.
+function SessionError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, background: 'var(--bg)' }}>
+      <p style={{ color: 'var(--text-faint)' }}>Could not reach the server.</p>
+      <button className="btn btn-primary" type="button" onClick={onRetry}>Retry</button>
+    </div>
+  );
+}
+
 // Auth guard — wraps all protected routes. A token alone in localStorage
 // doesn't carry the admin/shop payload, so hydrate it via /auth/me before
 // rendering anything that depends on it (Sidebar brand, Topbar avatar).
@@ -87,7 +109,7 @@ function AuthGuard() {
   const admin = useAuthStore((s) => s.admin);
   const setAuth = useAuthStore((s) => s.setAuth);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: () => authApi.me(),
     enabled: isAuthenticated && admin === null,
@@ -100,8 +122,11 @@ function AuthGuard() {
     }
   }, [data, token, setAuth]);
 
+  // 401 is handled inside apiFetch (clearAuth + redirect), so an expired
+  // token never parks the user here.
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (admin === null && isLoading) return null;
+  if (admin === null && isLoading) return <SessionLoading />;
+  if (admin === null && isError) return <SessionError onRetry={() => refetch()} />;
 
   return <Outlet />;
 }
