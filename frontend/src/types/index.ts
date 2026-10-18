@@ -157,6 +157,7 @@ export interface OrderListItem {
   karigar_id: number;
   karigar_name: string;
   paid_amount: string;
+  created_at: string;
 }
 
 // Order row shape as returned inside GET /api/karigars/{id} (already scoped to

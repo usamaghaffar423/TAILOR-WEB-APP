@@ -81,6 +81,7 @@ class OrderController extends Controller
                         'karigars.id', 'karigars.name'
                     )
                     ->orderByDesc('orders.created_at')
+                    ->orderByDesc('orders.id')
                     ->get([
                         'orders.id',
                         'orders.order_no',
@@ -89,6 +90,7 @@ class OrderController extends Controller
                         'orders.assigned_date',
                         'orders.delivered_date',
                         'orders.total_amount',
+                        'orders.created_at',
                         'customers.id as customer_id',
                         'customers.name as customer_name',
                         'customers.phone as customer_phone',

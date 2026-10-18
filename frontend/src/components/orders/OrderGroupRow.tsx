@@ -2,12 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatCurrency, formatDateShort } from '@/lib/format';
 import { EDIT_ICON } from '@/lib/garmentIcons';
-import type { OrderListItem } from '@/types';
+import type { OrderGroup } from '@/lib/orderGrouping';
 
 interface OrderGroupRowProps {
-  customerName: string;
-  customerId: number;
-  orders: OrderListItem[];
+  group: OrderGroup;
   onViewCard: (id: number) => void;
   onAddPayment: (id: number) => void;
   onCustomerBill: (id: number) => void;
@@ -15,12 +13,13 @@ interface OrderGroupRowProps {
   onEdit: (id: number) => void;
 }
 
-export function OrderGroupRow({ customerName, customerId, orders, onViewCard, onAddPayment, onCustomerBill, onKarigarBill, onEdit }: OrderGroupRowProps) {
+export function OrderGroupRow({ group, onViewCard, onAddPayment, onCustomerBill, onKarigarBill, onEdit }: OrderGroupRowProps) {
   const [expanded, setExpanded] = useState(false);
-
-  const totalAmount = orders.reduce((sum, o) => sum + Number(o.total_amount), 0);
-  const totalPaid = orders.reduce((sum, o) => sum + Number(o.paid_amount ?? 0), 0);
-  const totalBalance = totalAmount - totalPaid;
+  // Orders are sorted most-recent-first, so orders[0] is the newest and the
+  // last entry is the oldest.
+  const { customerName, customerId, orders, totalAmount, totalPaid, totalBalance } = group;
+  const firstOrder = orders[0].order_no;
+  const lastOrder = orders[orders.length - 1].order_no;
 
   return (
     <>
@@ -30,14 +29,18 @@ export function OrderGroupRow({ customerName, customerId, orders, onViewCard, on
             <svg className={`group-chevron ${expanded ? 'open' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
-            <span className="group-order-range">{orders[0].order_no} – {orders[orders.length - 1].order_no}</span>
+            <span className="group-order-range">{firstOrder === lastOrder ? firstOrder : `${firstOrder} – ${lastOrder}`}</span>
           </div>
         </td>
         <td>
           <div className="group-customer">
-            <Link to={`/customers/${customerId}`} className="group-customer-name" onClick={(e) => e.stopPropagation()}>
-              {customerName}
-            </Link>
+            {customerId ? (
+              <Link to={`/customers/${customerId}`} className="group-customer-name" onClick={(e) => e.stopPropagation()}>
+                {customerName}
+              </Link>
+            ) : (
+              <span className="group-customer-name">{customerName}</span>
+            )}
             <span className="group-count">{orders.length} {orders.length === 1 ? 'order' : 'orders'}</span>
           </div>
         </td>

@@ -15,7 +15,8 @@ import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { DateInput } from '@/components/ui/DateInput';
 import { ORDER_STATUS_OPTIONS } from '@/lib/orderOptions';
-import type { OrderStatus, OrderListItem } from '@/types';
+import { groupOrders } from '@/lib/orderGrouping';
+import type { OrderStatus } from '@/types';
 
 export default function Orders() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -65,23 +66,7 @@ export default function Orders() {
 
   const orders = data?.data || [];
 
-  const groups = useMemo(() => {
-    const map = new Map<number, { customerName: string; customerId: number; orders: OrderListItem[] }>();
-    for (const o of orders) {
-      const existing = map.get(o.customer_id);
-      if (existing) {
-        existing.orders.push(o);
-      } else {
-        map.set(o.customer_id, { customerName: o.customer_name, customerId: o.customer_id, orders: [o] });
-      }
-    }
-    // When orders in a group have different customer names (data inconsistency),
-    // show all distinct names so the user sees the actual customers.
-    return Array.from(map.values()).map((g) => {
-      const distinctNames = [...new Set(g.orders.map((o) => o.customer_name))];
-      return { ...g, customerName: distinctNames.join(' / ') };
-    });
-  }, [orders]);
+  const groups = useMemo(() => groupOrders(orders), [orders]);
 
   return (
     <>
@@ -148,10 +133,8 @@ export default function Orders() {
                     />
                   ) : (
                     <OrderGroupRow
-                      key={g.customerId}
-                      customerName={g.customerName}
-                      customerId={g.customerId}
-                      orders={g.orders}
+                      key={g.key}
+                      group={g}
                       onViewCard={setCardOrderId}
                       onAddPayment={setPayOrderId}
                       onCustomerBill={setCustomerBillOrderId}
