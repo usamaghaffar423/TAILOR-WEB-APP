@@ -1,8 +1,8 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-21T08:05:09.400Z",
+  "generatedAt": "2026-09-30T09:01:10.221Z",
   "retrieval": "bounded-keyword-metadata-v2",
-  "entryCount": 17,
+  "entryCount": 19,
   "archivedEpisodeCount": 0,
   "entries": [
     {
@@ -304,6 +304,48 @@
       "updated_at": "2026-09-21T08:03:32.533Z"
     },
     {
+      "id": "iss-1077",
+      "type": "episode",
+      "status": "verified",
+      "priority": "normal",
+      "file": "episodes/iss-1077.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/lib/styleFields.ts",
+        "frontend/src/pages/NewOrder.tsx",
+        "frontend/src/components/orders/EditOrderModal.tsx",
+        "frontend/src/features/sales/pages/NewSalePage.tsx"
+      ],
+      "keywords": [
+        "frontend",
+        "src",
+        "lib",
+        "styleFields",
+        "frontend",
+        "src",
+        "pages",
+        "NewOrder",
+        "tsx",
+        "frontend",
+        "src",
+        "components",
+        "orders",
+        "EditOrderModal",
+        "tsx",
+        "frontend",
+        "src",
+        "features",
+        "sales",
+        "pages"
+      ],
+      "summary": "Style Customization dropdowns now offer a Delete option; choosing it clears the field so the customization is never stored and never printed on the karigar bill.",
+      "valid_from_commit": "8dd73001b32ac1e4fc723424116d81fc60233fc6",
+      "evidence_count": 7,
+      "token_estimate": 248,
+      "updated_at": "2026-09-30T09:00:42.172Z"
+    },
+    {
       "id": "module-neworder-customer-style-preload-when-selecting-existing-c-d42e19b675",
       "type": "module",
       "status": "verified",
@@ -358,6 +400,27 @@
       "evidence_count": 4,
       "token_estimate": 34,
       "updated_at": "2026-09-20T10:03:12.105Z"
+    },
+    {
+      "id": "module-style-customization-style-customization-dropdowns-must-ex-a708787097",
+      "type": "module",
+      "status": "verified",
+      "priority": "high",
+      "file": "modules/module-style-customization-style-customization-dropdowns-must-ex-a708787097.md",
+      "modules": [],
+      "entities": [],
+      "paths": [
+        "frontend/src/lib/styleFields.ts",
+        "frontend/src/pages/NewOrder.tsx",
+        "frontend/src/components/orders/EditOrderModal.tsx",
+        "frontend/src/features/sales/pages/NewSalePage.tsx"
+      ],
+      "keywords": [],
+      "summary": "Style customization dropdowns must expose Delete through styleFieldOptions()/styleSelectionValue() in frontend/src/lib/styleFields.ts: Delete maps to '' so the field is dropped from the save payload (all three form sites send only non-empty style values, OrderController::update replaces style wholesale) and KarigarBillModal builds rows from truthy style values only.",
+      "valid_from_commit": "8dd73001b32ac1e4fc723424116d81fc60233fc6",
+      "evidence_count": 7,
+      "token_estimate": 92,
+      "updated_at": "2026-09-30T09:00:42.244Z"
     },
     {
       "id": "project-architecture",
