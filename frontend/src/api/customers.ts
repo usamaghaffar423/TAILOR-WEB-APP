@@ -34,6 +34,12 @@ export const customersApi = {
   getMeasurements: (id: number) =>
     apiFetch<{ data: Measurement[] }>(`/customers/${id}/measurements`),
 
+  // The customer's most recently updated measurement profile — fetched the
+  // moment an existing customer is picked on the New Order form so their
+  // fields pre-fill (null when the customer has no saved measurements yet).
+  latestMeasurement: (id: number) =>
+    apiFetch<{ data: Measurement | null }>(`/customers/${id}/measurements/latest`),
+
   upsertMeasurement: (id: number, templateKey: string, fields: Record<string, string | string[]>, notes?: string | null) =>
     apiFetch<{ data: Measurement }>(`/customers/${id}/measurements/${templateKey}`, {
       method: 'PUT',

@@ -29,6 +29,14 @@ export interface Customer {
   created_at: string;
   total_orders?: number;
   last_order_date?: string | null;
+  // Account financials — appended by the API (index + show) so every screen
+  // shows the same server-computed numbers:
+  //   total_spent         = SUM(orders.total_amount) over all their orders
+  //   total_paid          = SUM(payments.amount) over all their orders' sales
+  //   total_unpaid_balance = total_spent - total_paid (whole outstanding debt)
+  total_spent?: string;
+  total_paid?: string;
+  total_unpaid_balance?: string;
 }
 
 export interface MeasurementTemplateField {
@@ -138,6 +146,12 @@ export interface Order {
   payments?: Payment[];
   paid_amount?: string;
   pending_amount?: string;
+  // Account-level roll-up appended by GET /orders/{id} so the printed bill can
+  // show what the customer owes across their whole account, not just this
+  // order: previous_outstanding = their unpaid balance on ALL OTHER orders;
+  // grand_total_due = this order's pending + that previous outstanding.
+  previous_outstanding?: string;
+  grand_total_due?: string;
 }
 
 // GET /api/orders — a flat, lightweight row shape (no style/measurement_snapshot,

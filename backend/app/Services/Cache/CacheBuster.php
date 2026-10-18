@@ -31,6 +31,11 @@ class CacheBuster
     public function bustCustomers(): void
     {
         $this->bump(CacheKeys::RESOURCE_CUSTOMERS);
+        // Customer financials (total_spent / total_paid / total_unpaid_balance)
+        // are derived from orders and payments, so a customer-facing balance
+        // can never be fresher than the dashboard KPIs that show the same
+        // money. Keep them in lockstep.
+        $this->bustDashboard();
     }
 
     public function bustKarigars(): void
@@ -50,6 +55,11 @@ class CacheBuster
         $this->bustOrders();
         // Same reason, now also true of cached sales listings/detail.
         $this->bustSales();
+        // A payment changes the paying customer's total_paid and
+        // total_unpaid_balance, which are cached on the customer list/profile
+        // (up to a 30-minute TTL) — bust them so the outstanding balance drops
+        // immediately everywhere.
+        $this->bustCustomers();
     }
 
     public function bustSettings(): void

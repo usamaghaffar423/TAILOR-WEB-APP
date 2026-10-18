@@ -51,6 +51,11 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
   const paid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const total = order ? Number(order.total_amount) : 0;
   const pending = Math.max(0, total - paid);
+  // Server-computed account roll-up from GET /orders/{id}: what the customer
+  // still owes on ALL their other orders, and the grand total due across the
+  // whole account (this order's balance + that previous outstanding).
+  const previousOutstanding = order ? Number(order.previous_outstanding ?? 0) : 0;
+  const grandTotalDue = order ? Number(order.grand_total_due ?? pending + previousOutstanding) : 0;
   const items = order?.items || [];
 
   return (
@@ -111,12 +116,16 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
             <div key={idx} className="bill-row"><span>{it.label}</span><span>{formatCurrency(it.amount)}</span></div>
           ))}
           {items.length > 0 && <hr className="bill-divider" />}
-          <div className="bill-row"><span>Total</span><span>{formatCurrency(total)}</span></div>
-          <div className="bill-row"><span>Paid</span><span>{formatCurrency(paid)}</span></div>
+          <div className="bill-row"><span>Order Total</span><span>{formatCurrency(total)}</span></div>
+          <div className="bill-row"><span>Deposit / Paid</span><span>{formatCurrency(paid)}</span></div>
+          <div className="bill-row"><span>Order Balance</span><span>{pending > 0 ? formatCurrency(pending) : 'Paid in full'}</span></div>
+          {previousOutstanding > 0 && (
+            <div className="bill-row"><span>Previous Outstanding Balance</span><span>{formatCurrency(previousOutstanding)}</span></div>
+          )}
           <hr className="bill-divider bill-divider--strong" />
           <div className="bill-row bill-total">
-            <span>Balance</span>
-            <span>{pending > 0 ? formatCurrency(pending) : 'Paid in full'}</span>
+            <span>{previousOutstanding > 0 ? 'Grand Total Amount Due' : 'Balance'}</span>
+            <span>{grandTotalDue > 0 ? formatCurrency(grandTotalDue) : 'Paid in full'}</span>
           </div>
 
           {payments.length > 0 && (

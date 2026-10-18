@@ -99,8 +99,16 @@ export default function CustomerDetail() {
   if (error || !data) return <EmptyState title="Customer not found" subtitle="It may have been removed." />;
 
   const { customer, measurements, orders } = data.data;
-  const totalSpent = orders.reduce((s, o) => s + Number(o.paid_amount ?? 0), 0);
-  const totalPending = orders.reduce((s, o) => s + Math.max(0, Number(o.total_amount) - Number(o.paid_amount ?? 0)), 0);
+  // Server-computed account financials (SUM over ALL the customer's orders
+  // and payments — Customer::loadFinancials()), so the profile shows the
+  // whole outstanding debt even if the orders list here is filtered or from
+  // an older cache. Fallback sums the loaded orders if the fields are absent.
+  const totalSpent = customer.total_spent !== undefined
+    ? Number(customer.total_spent)
+    : orders.reduce((s, o) => s + Number(o.total_amount), 0);
+  const totalPending = customer.total_unpaid_balance !== undefined
+    ? Number(customer.total_unpaid_balance)
+    : orders.reduce((s, o) => s + Math.max(0, Number(o.total_amount) - Number(o.paid_amount ?? 0)), 0);
 
   function startEditContact() {
     setEditName(customer.name);
@@ -133,7 +141,16 @@ export default function CustomerDetail() {
         <div>
           <div className="hero-eyebrow">Order Studio</div>
           <div className="hero-title display">{customer.name.toUpperCase()}</div>
-          <div className="hero-date">{customer.customer_id} · {customer.phone}</div>
+          <div className="hero-date">
+            {customer.customer_id} · {customer.phone}
+            <span
+              className={`badge ${totalPending > 0 ? 'badge-progress' : 'badge-ready'}`}
+              style={{ marginLeft: 10, verticalAlign: 'middle' }}
+              title="Total Outstanding Balance across all orders"
+            >
+              {totalPending > 0 ? `${formatCurrency(totalPending)} outstanding` : 'All settled'}
+            </span>
+          </div>
         </div>
         <div className="hero-actions">
           <Link to={`/orders/new?customerId=${customer.id}`}><Button>+ New Order</Button></Link>
@@ -221,7 +238,7 @@ export default function CustomerDetail() {
             <div className="panel">
               <div className="panel-head"><h3>Summary</h3></div>
               <div className="oc-kv"><span>Total Spent</span><b className="mono">{formatCurrency(totalSpent)}</b></div>
-              <div className="oc-kv"><span>Pending Balance</span><b className={`mono ${totalPending > 0 ? 'balance-pending' : 'balance-paid'}`}>{formatCurrency(totalPending)}</b></div>
+              <div className="oc-kv"><span>Total Outstanding Balance</span><b className={`mono ${totalPending > 0 ? 'balance-pending' : 'balance-paid'}`}>{formatCurrency(totalPending)}</b></div>
               <div className="oc-kv"><span>Total Orders</span><b className="mono">{orders.length}</b></div>
             </div>
 

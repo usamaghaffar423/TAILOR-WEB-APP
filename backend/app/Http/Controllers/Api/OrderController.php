@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Requests\UpdateOrderRequest;
 use App\Http\Requests\UpdateOrderStatusRequest;
+use App\Models\Customer;
 use App\Models\Measurement;
 use App\Models\MeasurementTemplate;
 use App\Models\Order;
@@ -155,6 +156,13 @@ class OrderController extends Controller
                 'status' => $this->mapOrderStatusToSaleStatus($order->status),
             ]);
 
+            // Payment isolation: this brand-new order gets its OWN mirror
+            // sale above, so it starts with a paid_amount of exactly 0 and
+            // can only ever carry the advance recorded right here. Nothing
+            // from the customer's previous orders/balances leaks onto it —
+            // paid_amount is always SUM(payments) over THIS sale only. The
+            // frontend sends advance_amount solely for today's deposit; when
+            // it's absent/zero no Payment row is written at all.
             $advanceAmount = $request->input('advance_amount');
             if ($advanceAmount && (float) $advanceAmount > 0) {
                 Payment::query()->create([
@@ -168,7 +176,11 @@ class OrderController extends Controller
 
             $order->load(['customer', 'karigar', 'photos', 'payments']);
 
+            // bustOrders covers orders+dashboard; also bust customers so the
+            // new order immediately shows up in that customer's financial
+            // totals (total_spent / total_unpaid_balance) and profile.
             $this->cacheBuster->bustOrders();
+            $this->cacheBuster->bustCustomers();
             if ($advanceAmount && (float) $advanceAmount > 0) {
                 $this->cacheBuster->bustPayments();
             }
@@ -192,7 +204,30 @@ class OrderController extends Controller
                 return response()->json(['message' => 'Not found.'], 404);
             }
 
-            return response()->json(['data' => $order]);
+            // Compute this order's own paid/pending (isolated to this order's
+            // mirror sale) plus the customer's PREVIOUS outstanding balance —
+            // everything they still owe on their OTHER orders — so the printed
+            // bill can show a grand total due across the whole account.
+            $paid = (float) Payment::query()
+                ->whereHas('sale', fn ($q) => $q->where('legacy_order_id', $order->id))
+                ->sum('amount');
+            $total = (float) $order->total_amount;
+            $pending = max(0, $total - $paid);
+
+            $financials = $order->customer_id
+                ? Customer::financialSummary((int) $order->customer_id)
+                : null;
+            $previousOutstanding = $financials
+                ? max(0, (float) $financials['total_unpaid_balance'] - $pending)
+                : 0;
+
+            $payload = $order->toArray();
+            $payload['paid_amount'] = number_format($paid, 2, '.', '');
+            $payload['pending_amount'] = number_format($pending, 2, '.', '');
+            $payload['previous_outstanding'] = number_format($previousOutstanding, 2, '.', '');
+            $payload['grand_total_due'] = number_format($pending + $previousOutstanding, 2, '.', '');
+
+            return response()->json(['data' => $payload]);
         } catch (Throwable $e) {
             report($e);
 
@@ -291,12 +326,10 @@ class OrderController extends Controller
             // person it actually belongs to. Applied after the measurement
             // push-back above so profile writes still land on the customer the
             // order was filed under.
-            $customerChanged = false;
             if ($request->has('customer_id')) {
                 $newCustomerId = (int) $request->input('customer_id');
                 if ($newCustomerId !== (int) $order->customer_id) {
                     $order->customer_id = $newCustomerId;
-                    $customerChanged = true;
                 }
             }
 
@@ -310,12 +343,9 @@ class OrderController extends Controller
             ]);
 
             $this->cacheBuster->bustOrders();
-            if ($touchesMeasurement || $customerChanged) {
-                // Both cached customer show() and the customer list embed this
-                // order's membership, and the JOINed name on the orders list
-                // changes too (bustOrders above covers that one).
-                $this->cacheBuster->bustCustomers();
-            }
+            // total_amount / customer membership may have changed — the
+            // customer's total_spent & total_unpaid_balance derive from orders.
+            $this->cacheBuster->bustCustomers();
 
             return response()->json(['data' => $order, 'message' => 'Updated successfully.']);
         } catch (Throwable $e) {
@@ -341,7 +371,10 @@ class OrderController extends Controller
             Sale::where('legacy_order_id', $order->id)->delete();
             $order->delete();
 
+            // Deleting an order changes the customer's total_spent /
+            // total_unpaid_balance, so their cached financials must refresh.
             $this->cacheBuster->bustOrders();
+            $this->cacheBuster->bustCustomers();
 
             return response()->json(['message' => 'Deleted successfully.']);
         } catch (Throwable $e) {

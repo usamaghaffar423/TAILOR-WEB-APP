@@ -30,7 +30,13 @@ class CustomerController extends Controller
             $customers = Cache::remember(CacheKeys::customers($q), CacheKeys::CUSTOMERS_TTL, function () use ($q) {
                 $query = Customer::query()
                     ->selectRaw('customers.*, (select count(*) from orders where orders.customer_id = customers.id) as total_orders')
-                    ->selectRaw('(select max(orders.created_at) from orders where orders.customer_id = customers.id) as last_order_date');
+                    ->selectRaw('(select max(orders.created_at) from orders where orders.customer_id = customers.id) as last_order_date')
+                    // Financial aggregates for the outstanding-balance badge on
+                    // each customer card. Same SQL fragments the show()/summary
+                    // path uses, so the list and the profile always agree.
+                    ->selectRaw(Customer::FINANCIAL_SELECT_SQL['total_spent'].' as total_spent')
+                    ->selectRaw(Customer::FINANCIAL_SELECT_SQL['total_paid'].' as total_paid')
+                    ->selectRaw('('.Customer::FINANCIAL_SELECT_SQL['total_spent'].' - '.Customer::FINANCIAL_SELECT_SQL['total_paid'].') as total_unpaid_balance');
 
                 if ($q) {
                     $query->where(function ($sub) use ($q) {
@@ -119,6 +125,11 @@ class CustomerController extends Controller
                     $o->items = is_string($o->items) ? json_decode($o->items, true) : $o->items;
                 });
 
+                // Account-level totals so the profile shows the whole
+                // outstanding debt, not just a number the client summed from
+                // whatever page of orders it happens to hold.
+                $customer->loadFinancials();
+
                 return [
                     'customer' => $customer,
                     'measurements' => $measurements,
@@ -179,6 +190,36 @@ class CustomerController extends Controller
             );
 
             return response()->json(['data' => $measurements]);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => 'Server error.'], 500);
+        }
+    }
+
+    /**
+     * GET /api/customers/{id}/measurements/latest — the customer's most
+     * recently updated measurement profile, for pre-filling the New Order
+     * form the moment an existing customer is picked.
+     */
+    public function latestMeasurement(Request $request, int $id): JsonResponse
+    {
+        try {
+            $customer = Customer::query()->find($id);
+
+            if (! $customer) {
+                return response()->json(['message' => 'Not found.'], 404);
+            }
+
+            $measurements = Cache::remember(
+                CacheKeys::customerMeasurements($id),
+                CacheKeys::CUSTOMERS_TTL,
+                fn () => Measurement::query()->where('customer_id', $id)->get()
+            );
+
+            $latest = $measurements->sortByDesc('updated_at')->first();
+
+            return response()->json(['data' => $latest]);
         } catch (Throwable $e) {
             report($e);
 

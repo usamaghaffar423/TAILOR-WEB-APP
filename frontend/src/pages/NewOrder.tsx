@@ -64,9 +64,27 @@ export default function NewOrder() {
     setCPhone(customer.phone);
     setCAddress(customer.address || '');
     setCustSearch(`${customer.name} (${customer.customer_id})`);
-    customersApi.show(customer.id).then((res) => {
-      const { measurements, orders } = res.data;
-      const latestMeasurement = [...measurements].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
+    // Payment inputs always start clean for a NEW order — nothing typed for a
+    // previous selection (or implied by the customer's payment history) may
+    // carry over. paid_amount on the new order is 0 unless a deposit is
+    // entered here.
+    setPaymentStatus('none');
+    setMethod('cash');
+    setAdvance('');
+    // Pre-fill this order from the customer's saved profile: latest
+    // measurement fields from the dedicated endpoint, plus style/order
+    // defaults from their most recent order on the detail response. The
+    // tailor can still adjust everything — adjustments are snapshotted onto
+    // this order, and the saved profile row is only updated on save.
+    void (async () => {
+      const [detailRes, latestRes] = await Promise.all([
+        customersApi.show(customer.id),
+        customersApi.latestMeasurement(customer.id).catch(() => ({ data: null })),
+      ]);
+      const { measurements, orders } = detailRes.data;
+      const latestMeasurement =
+        latestRes.data ??
+        [...measurements].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
       if (latestMeasurement) {
         setTemplateKey(latestMeasurement.template_key);
         setFields(latestMeasurement.fields);
@@ -91,7 +109,7 @@ export default function NewOrder() {
       if (latestOrder?.items && latestOrder.items.length > 0) {
         setItems(latestOrder.items.map((it) => ({ label: it.label, amount: String(it.amount) })));
       }
-    });
+    })();
   }
 
   // ---- Measurements ----
