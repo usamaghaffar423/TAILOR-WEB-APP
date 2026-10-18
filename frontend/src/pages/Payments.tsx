@@ -39,7 +39,12 @@ export default function Payments() {
   const balances = balancesRes?.data || [];
   const history = historyRes?.data || [];
   // The balances endpoint already filters to pending > 0 orders only.
+  // Derive the Total Pending KPI from the same rows so the amount, the
+  // "across N orders" count, and the Order Balances table always agree
+  // (summary.totalPending uses different filters: non-delivered only,
+  // with negative pending not clamped).
   const pendingBalanceCount = balances.length;
+  const pendingBalanceTotal = balances.reduce((s, b) => s + Number(b.pending_amount || 0), 0);
 
   function refreshAll() {
     refetchBalances();
@@ -79,7 +84,7 @@ export default function Payments() {
           <KpiCard
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M4 4l7 7M20 4l-7 7M12 11v9M8 20h8" /></svg>}
             label="Total Pending"
-            value={formatCurrency(summary.totalPending)}
+            value={formatCurrency(pendingBalanceTotal)}
             sub={`across ${pendingBalanceCount} order${pendingBalanceCount === 1 ? '' : 's'}`}
           />
         </div>
