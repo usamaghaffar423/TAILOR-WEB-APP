@@ -50,12 +50,11 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
   const payments = order?.payments || [];
   const paid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const total = order ? Number(order.total_amount) : 0;
+  // The bill covers THIS order only. The account roll-up GET /orders/{id}
+  // also returns (previous_outstanding / grand_total_due) is deliberately not
+  // printed: other orders' balances belong on their own bills, and the
+  // account-wide total is on the customer profile.
   const pending = Math.max(0, total - paid);
-  // Server-computed account roll-up from GET /orders/{id}: what the customer
-  // still owes on ALL their other orders, and the grand total due across the
-  // whole account (this order's balance + that previous outstanding).
-  const previousOutstanding = order ? Number(order.previous_outstanding ?? 0) : 0;
-  const grandTotalDue = order ? Number(order.grand_total_due ?? pending + previousOutstanding) : 0;
   const items = order?.items || [];
 
   return (
@@ -119,13 +118,10 @@ export function CustomerBillModal({ orderId, onClose }: CustomerBillModalProps) 
           <div className="bill-row"><span>Order Total</span><span>{formatCurrency(total)}</span></div>
           <div className="bill-row"><span>Deposit / Paid</span><span>{formatCurrency(paid)}</span></div>
           <div className="bill-row"><span>Order Balance</span><span>{pending > 0 ? formatCurrency(pending) : 'Paid in full'}</span></div>
-          {previousOutstanding > 0 && (
-            <div className="bill-row"><span>Previous Outstanding Balance</span><span>{formatCurrency(previousOutstanding)}</span></div>
-          )}
           <hr className="bill-divider bill-divider--strong" />
           <div className="bill-row bill-total">
-            <span>{previousOutstanding > 0 ? 'Grand Total Amount Due' : 'Balance'}</span>
-            <span>{grandTotalDue > 0 ? formatCurrency(grandTotalDue) : 'Paid in full'}</span>
+            <span>Balance</span>
+            <span>{pending > 0 ? formatCurrency(pending) : 'Paid in full'}</span>
           </div>
 
           {payments.length > 0 && (
