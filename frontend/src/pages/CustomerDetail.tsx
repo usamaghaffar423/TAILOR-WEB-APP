@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { customersApi } from '@/api/customers';
@@ -15,6 +15,7 @@ import { OrderCardModal } from '@/components/orders/OrderCardModal';
 import { CustomerBillModal } from '@/components/orders/CustomerBillModal';
 import { KarigarBillModal } from '@/components/orders/KarigarBillModal';
 import { AddPaymentModal } from '@/components/payments/AddPaymentModal';
+import { RepeatOrderModal } from '@/components/orders/RepeatOrderModal';
 import { EDIT_ICON, PAYMENT_ICON, CUSTOMER_BILL_ICON, KARIGAR_BILL_ICON, DELETE_ICON } from '@/lib/garmentIcons';
 import { STYLE_FIELDS, parseCustomStyleFields, printableStyleValue } from '@/lib/styleFields';
 import { formatCurrency, formatDate, formatDateShort } from '@/lib/format';
@@ -42,6 +43,7 @@ export default function CustomerDetail() {
   const [customerBillOrderId, setCustomerBillOrderId] = useState<number | null>(null);
   const [karigarBillOrderId, setKarigarBillOrderId] = useState<number | null>(null);
   const [deleteOrderId, setDeleteOrderId] = useState<{ id: number; orderNo: string } | null>(null);
+  const [newOrderOpen, setNewOrderOpen] = useState(false);
 
   function refresh() {
     queryClient.invalidateQueries({ queryKey: ['customers', customerId] });
@@ -153,7 +155,7 @@ export default function CustomerDetail() {
           </div>
         </div>
         <div className="hero-actions">
-          <Link to={`/orders/new?customerId=${customer.id}`}><Button>+ New Order</Button></Link>
+          <Button onClick={() => setNewOrderOpen(true)}>+ New Order</Button>
           <Button variant="outline" onClick={handleWhatsAppSummary}>WhatsApp Summary</Button>
           <Button variant="outline" onClick={() => window.print()}>Print</Button>
           <Button variant="outline" onClick={handleDelete} disabled={deleteMutation.isPending}>Delete</Button>
@@ -279,6 +281,7 @@ export default function CustomerDetail() {
       </div>
 
       <OrderCardModal orderId={cardOrderId} startInEdit={cardStartInEdit} onClose={() => setCardOrderId(null)} />
+      <RepeatOrderModal customerId={newOrderOpen ? customer.id : null} onClose={() => setNewOrderOpen(false)} />
       <CustomerBillModal orderId={customerBillOrderId} onClose={() => setCustomerBillOrderId(null)} />
       <KarigarBillModal orderId={karigarBillOrderId} onClose={() => setKarigarBillOrderId(null)} />
       {payOrderId !== null && (

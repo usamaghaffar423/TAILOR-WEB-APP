@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -7,15 +7,18 @@ import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { DateInput } from '@/components/ui/DateInput';
 import { MeasurementFieldsForm } from '@/components/measurements/MeasurementFieldsForm';
+import { StyleCustomizationFields } from '@/components/orders/StyleCustomizationFields';
+import { RepeatOrderModal } from '@/components/orders/RepeatOrderModal';
 import { customersApi } from '@/api/customers';
 import { karigarsApi } from '@/api/karigars';
 import { settingsApi } from '@/api/settings';
 import { ordersApi } from '@/api/orders';
 import { uploadsApi } from '@/api/uploads';
 import { formatCurrency } from '@/lib/format';
-import { STYLE_FIELDS, styleFieldOptions, styleSelectionValue, supportsStyleCustomization, isWaistcoat, parseCustomStyleFields } from '@/lib/styleFields';
+import { STYLE_FIELDS, supportsStyleCustomization } from '@/lib/styleFields';
+import type { CustomStyleField } from '@/lib/styleFields';
 import { ORDER_STATUS_OPTIONS, PAYMENT_METHOD_OPTIONS } from '@/lib/orderOptions';
-import type { Customer, OrderStatus, PaymentMethod } from '@/types';
+import type { OrderStatus, PaymentMethod } from '@/types';
 
 type PaymentStatus = 'none' | 'partial' | 'full';
 
@@ -34,82 +37,27 @@ export default function NewOrder() {
   const { data: karigarsRes } = useQuery({ queryKey: ['karigars'], queryFn: () => karigarsApi.index() });
 
   // ---- Customer ----
+  // This page creates orders for NEW customers. Picking an existing customer
+  // opens RepeatOrderModal instead, which loads everything from their last
+  // order before the form appears.
   const [custSearch, setCustSearch] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  // ?customerId= (old "+ New Order" links) opens the popup straight away.
+  const [repeatCustomerId, setRepeatCustomerId] = useState<number | null>(() => {
+    const pre = searchParams.get('customerId');
+    return pre ? Number(pre) : null;
+  });
   const [cName, setCName] = useState('');
   const [cPhone, setCPhone] = useState('');
   const [cAddress, setCAddress] = useState('');
   const { data: custResultsRes } = useQuery({
     queryKey: ['customers', custSearch],
     queryFn: () => customersApi.index(custSearch),
-    enabled: custSearch.trim().length > 0 && selectedCustomer === null,
+    enabled: custSearch.trim().length > 0 && repeatCustomerId === null,
   });
 
-  const preCustomerId = searchParams.get('customerId');
-  useEffect(() => {
-    if (preCustomerId) {
-      customersApi.show(Number(preCustomerId)).then((res) => selectCustomer(res.data.customer));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preCustomerId]);
-
-  // Notes already typed by the shop owner must survive the (async) customer
-  // preload below — it lands whenever the request resolves and used to wipe
-  // whatever was in the box, so the note never reached the order.
-  const notesTouchedRef = useRef(false);
-
-  function selectCustomer(customer: Customer) {
-    setSelectedCustomer(customer);
-    setCName(customer.name);
-    setCPhone(customer.phone);
-    setCAddress(customer.address || '');
-    setCustSearch(`${customer.name} (${customer.customer_id})`);
-    // Payment inputs always start clean for a NEW order — nothing typed for a
-    // previous selection (or implied by the customer's payment history) may
-    // carry over. paid_amount on the new order is 0 unless a deposit is
-    // entered here.
-    setPaymentStatus('none');
-    setMethod('cash');
-    setAdvance('');
-    // Pre-fill this order from the customer's saved profile: latest
-    // measurement fields from the dedicated endpoint, plus style/order
-    // defaults from their most recent order on the detail response. The
-    // tailor can still adjust everything — adjustments are snapshotted onto
-    // this order, and the saved profile row is only updated on save.
-    void (async () => {
-      const [detailRes, latestRes] = await Promise.all([
-        customersApi.show(customer.id),
-        customersApi.latestMeasurement(customer.id).catch(() => ({ data: null })),
-      ]);
-      const { measurements, orders } = detailRes.data;
-      const latestMeasurement =
-        latestRes.data ??
-        [...measurements].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0];
-      if (latestMeasurement) {
-        setTemplateKey(latestMeasurement.template_key);
-        setFields(latestMeasurement.fields);
-        if (!notesTouchedRef.current) setNotes(latestMeasurement.notes || '');
-      }
-      const latestOrder = [...orders].sort((a, b) => new Date(b.deadline).getTime() - new Date(a.deadline).getTime())[0];
-      if (latestOrder?.style) {
-        const styleFromOrder: Record<string, string> = {};
-        STYLE_FIELDS.forEach((f) => {
-          const v = latestOrder.style[f.key];
-          if (v) styleFromOrder[f.key] = v as string;
-        });
-        setStyleValues(styleFromOrder);
-        setCustomStyleFields(parseCustomStyleFields(latestOrder.style.custom_fields));
-      }
-      if (latestOrder?.karigar_id) {
-        setKarigarId(latestOrder.karigar_id);
-      }
-      if (latestOrder?.deadline) {
-        setDeadline(latestOrder.deadline);
-      }
-      if (latestOrder?.items && latestOrder.items.length > 0) {
-        setItems(latestOrder.items.map((it) => ({ label: it.label, amount: String(it.amount) })));
-      }
-    })();
+  function closeRepeatOrder() {
+    setRepeatCustomerId(null);
+    setCustSearch('');
   }
 
   // ---- Measurements ----
@@ -138,23 +86,7 @@ export default function NewOrder() {
 
   // Per-order custom style fields — not saved to the shared field list, so
   // adding one here can never affect (or drop) fields on other orders.
-  const [customStyleFields, setCustomStyleFields] = useState<{ label: string; value: string }[]>([]);
-  const [addingCustomStyleField, setAddingCustomStyleField] = useState(false);
-  const [newCustomStyleFieldLabel, setNewCustomStyleFieldLabel] = useState('');
-
-  function addCustomStyleField() {
-    const label = newCustomStyleFieldLabel.trim();
-    if (!label) return;
-    setCustomStyleFields((f) => [...f, { label, value: '' }]);
-    setNewCustomStyleFieldLabel('');
-    setAddingCustomStyleField(false);
-  }
-  function updateCustomStyleField(idx: number, value: string) {
-    setCustomStyleFields((f) => f.map((cf, i) => (i === idx ? { ...cf, value } : cf)));
-  }
-  function removeCustomStyleField(idx: number) {
-    setCustomStyleFields((f) => f.filter((_, i) => i !== idx));
-  }
+  const [customStyleFields, setCustomStyleFields] = useState<CustomStyleField[]>([]);
 
   // ---- Photos ----
   const [photos, setPhotos] = useState<File[]>([]);
@@ -193,13 +125,8 @@ export default function NewOrder() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      let customerId = selectedCustomer?.id;
-      if (customerId) {
-        await customersApi.update(customerId, { name: cName.trim(), phone: cPhone.trim(), address: cAddress.trim() || null });
-      } else {
-        const res = await customersApi.store({ name: cName.trim(), phone: cPhone.trim(), address: cAddress.trim() || null });
-        customerId = res.data.id;
-      }
+      const res = await customersApi.store({ name: cName.trim(), phone: cPhone.trim(), address: cAddress.trim() || null });
+      const customerId = res.data.id;
 
       await customersApi.upsertMeasurement(customerId, templateKey, fields, notes.trim() || null);
 
@@ -302,18 +229,15 @@ export default function NewOrder() {
               type="text"
               placeholder="Start typing to find a repeat customer..."
               value={custSearch}
-              onChange={(e) => {
-                setCustSearch(e.target.value);
-                setSelectedCustomer(null);
-              }}
+              onChange={(e) => setCustSearch(e.target.value)}
             />
-            {custSearch.trim() && !selectedCustomer && (
+            {custSearch.trim() && repeatCustomerId === null && (
               <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 10, marginTop: 6 }}>
                 {(custResultsRes?.data.length ?? 0) === 0 ? (
-                  <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-faint)' }}>No matching customers — this will be a new customer.</div>
+                  <div style={{ padding: '10px 12px', fontSize: 12, color: 'var(--text-faint)' }}>No matching customers — fill in the details below for a new customer.</div>
                 ) : (
                   custResultsRes!.data.map((c) => (
-                    <div key={c.id} style={{ padding: '10px 12px', fontSize: 12.5, cursor: 'pointer', borderBottom: '1px solid var(--border)' }} onClick={() => selectCustomer(c)}>
+                    <div key={c.id} style={{ padding: '10px 12px', fontSize: 12.5, cursor: 'pointer', borderBottom: '1px solid var(--border)' }} onClick={() => setRepeatCustomerId(c.id)}>
                       <b>{c.name}</b> <span style={{ color: 'var(--text-faint)' }}>{c.customer_id} · {c.phone}</span>
                     </div>
                   ))
@@ -329,7 +253,7 @@ export default function NewOrder() {
         <div className="form-grid">
           <div className="field"><label>Full Name</label><input type="text" placeholder="e.g. Ahmad Khan" value={cName} onChange={(e) => setCName(e.target.value)} /></div>
           <div className="field"><label>Phone</label><input type="text" placeholder="+92 3xx xxxxxxx" value={cPhone} onChange={(e) => setCPhone(e.target.value)} /></div>
-          <div className="field mono"><label>Customer ID</label><input type="text" value={selectedCustomer?.customer_id || 'Auto-generated on save'} disabled /></div>
+          <div className="field mono"><label>Customer ID</label><input type="text" value="Auto-generated on save" disabled /></div>
           <div className="field span-3"><label>Address</label><input type="text" placeholder="Street, area, city" value={cAddress} onChange={(e) => setCAddress(e.target.value)} /></div>
         </div>
       </div>
@@ -356,110 +280,13 @@ export default function NewOrder() {
       <div className="form-section">
         <div className="form-section-title"><span className="num">3</span>Style Customization</div>
         {hasStyleFields ? (
-          <>
-          {isWaistcoat(templateKey) ? (
-            /* Waistcoat: only custom key-value fields, no fixed STYLE_FIELDS */
-            <div style={{ marginTop: 16 }}>
-              {customStyleFields.length > 0 && (
-                <div className="form-grid cols-2">
-                  {customStyleFields.map((cf, idx) => (
-                    <div className="field freetext" key={idx}>
-                      <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>{cf.label}</span>
-                        <button type="button" className="row-icon-btn" title="Remove field" onClick={() => removeCustomStyleField(idx)}>&minus;</button>
-                      </label>
-                      <input type="text" value={cf.value} onChange={(e) => updateCustomStyleField(idx, e.target.value)} />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ marginTop: 14 }}>
-                {addingCustomStyleField ? (
-                  <form onSubmit={(e) => { e.preventDefault(); addCustomStyleField(); }} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      value={newCustomStyleFieldLabel}
-                      onChange={(e) => setNewCustomStyleFieldLabel(e.target.value)}
-                      placeholder="Field name, e.g. Length, Buttons"
-                      autoFocus
-                      style={{ flex: 1, maxWidth: 260 }}
-                    />
-                    <button type="submit" className="row-icon-btn" title="Add field" disabled={!newCustomStyleFieldLabel.trim()}>+</button>
-                    <button type="button" className="row-icon-btn" title="Cancel" onClick={() => { setAddingCustomStyleField(false); setNewCustomStyleFieldLabel(''); }}>&times;</button>
-                  </form>
-                ) : (
-                  <Button type="button" variant="outline" sm onClick={() => setAddingCustomStyleField(true)}>+ Add Custom Field</Button>
-                )}
-              </div>
-            </div>
-          ) : (
-            /* Shalwar Qameez: fixed fields + custom fields */
-            <>
-            <div className="form-grid cols-2" style={{ marginTop: 16 }}>
-              {STYLE_FIELDS.map((f) => {
-                const options = styleFieldOptions(f.key);
-                return (
-                  <div className={`field${f.freeText ? ' freetext' : ''}`} key={f.key}>
-                    <div className={f.freeText ? 'style-label-row' : undefined}>
-                      <label>{f.label}</label>
-                      {f.freeText && (
-                        <button type="button" className="style-delete-btn" onClick={() => setStyleField(f.key, '')}>Delete</button>
-                      )}
-                    </div>
-                    {f.freeText ? (
-                      <input
-                        type="text"
-                        value={styleValues[f.key] || ''}
-                        onChange={(e) => setStyleField(f.key, e.target.value)}
-                      />
-                    ) : (
-                      <Dropdown
-                        value={styleValues[f.key] || ''}
-                        onChange={(v) => setStyleField(f.key, styleSelectionValue(v))}
-                        options={options}
-                      />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {customStyleFields.length > 0 && (
-              <div className="form-grid cols-2" style={{ marginTop: 14 }}>
-                {customStyleFields.map((cf, idx) => (
-                  <div className="field freetext" key={idx}>
-                    <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>{cf.label}</span>
-                      <button type="button" className="row-icon-btn" title="Remove field" onClick={() => removeCustomStyleField(idx)}>&minus;</button>
-                    </label>
-                    <input type="text" value={cf.value} onChange={(e) => updateCustomStyleField(idx, e.target.value)} />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div style={{ marginTop: 14 }}>
-              {addingCustomStyleField ? (
-                <form onSubmit={(e) => { e.preventDefault(); addCustomStyleField(); }} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                  <input
-                    type="text"
-                    value={newCustomStyleFieldLabel}
-                    onChange={(e) => setNewCustomStyleFieldLabel(e.target.value)}
-                    placeholder="Field name, e.g. Special Request"
-                    autoFocus
-                    style={{ flex: 1, maxWidth: 260 }}
-                  />
-                  <button type="submit" className="row-icon-btn" title="Add field" disabled={!newCustomStyleFieldLabel.trim()}>+</button>
-                  <button type="button" className="row-icon-btn" title="Cancel" onClick={() => { setAddingCustomStyleField(false); setNewCustomStyleFieldLabel(''); }}>&times;</button>
-                </form>
-              ) : (
-                <Button type="button" variant="outline" sm onClick={() => setAddingCustomStyleField(true)}>+ Add Custom Field</Button>
-              )}
-            </div>
-            </>
-          )}
-          </>
+          <StyleCustomizationFields
+            templateKey={templateKey}
+            styleValues={styleValues}
+            onStyleChange={setStyleField}
+            customFields={customStyleFields}
+            onCustomFieldsChange={setCustomStyleFields}
+          />
         ) : (
           <p style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 10 }}>
             Style customization options are defined for Shalwar Qameez and Waistcoat orders.
@@ -475,7 +302,7 @@ export default function NewOrder() {
               className="notes-big"
               placeholder="Fit preferences, special instructions, style notes — anything the karigar bill should carry..."
               value={notes}
-              onChange={(e) => { notesTouchedRef.current = true; setNotes(e.target.value); }}
+              onChange={(e) => setNotes(e.target.value)}
             />
           </div>
         </div>
@@ -603,6 +430,12 @@ export default function NewOrder() {
         <Button variant="outline" onClick={() => navigate('/orders')}>Cancel</Button>
         <Button onClick={handleSave} disabled={saveMutation.isPending}>{saveMutation.isPending ? 'Saving…' : 'Save Order'}</Button>
       </div>
+
+      <RepeatOrderModal
+        customerId={repeatCustomerId}
+        onClose={closeRepeatOrder}
+        onCreated={(order) => navigate(`/orders?q=${encodeURIComponent(order.order_no)}`)}
+      />
     </>
   );
 }
